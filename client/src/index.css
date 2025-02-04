@@ -1,0 +1,306 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  font-family: 'Playfair Display', serif
+}
+@layer base {
+  :root {
+    --background: #fed1d6;
+    --foreground: #2c3315;
+    --card: #ffffff;
+    --card-foreground: #333333;
+    --primary: #1c1c1c;
+    --primary-foreground: #f0f0f0;
+    --secondary: #2b2b2b;
+    --secondary-foreground: #e0e0e0;
+    --muted: #2f2f2f;
+    --muted-foreground: #999999;
+    --accent: #de3956;
+    --accent-foreground: #f0f0f0;
+    --destructive: #e53935;
+    --destructive-foreground: #ffffff;
+    --border: #bdbdbd;
+    --input: #bdbdbd;
+    --ring: #333333;
+    --radius: 0.5rem;
+    --chart-1: #f44336;
+    --chart-2: #2196f3;
+    --chart-3: #4caf50;
+    --chart-4: #ff9800;
+    --chart-5: #9c27b0;
+  }
+
+  .dark {
+    --background: #222222;
+    --foreground: #f0f0f0;
+    --card: #333333;
+    --card-foreground: #f0f0f0;
+    --primary: #333333;
+    --primary-foreground: #f0f0f0;
+    --secondary: #444444;
+    --secondary-foreground: #f0f0f0;
+    --muted: #555555;
+    --muted-foreground: #cccccc;
+    --accent: #666666;
+    --accent-foreground: #f0f0f0;
+    --destructive: #d32f2f;
+    --destructive-foreground: #ffffff;
+    --border: #444444;
+    --input: #444444;
+    --ring: #ffffff;
+    --chart-1: #f44336;
+    --chart-2: #2196f3;
+  }
+}
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .glow-effect {
+    box-shadow: 0 0 10px 2px rgba(211, 47, 47, 0.5),
+                0 0 20px 4px rgba(211, 47, 47, 0.3),
+                0 0 30px 6px rgba(211, 47, 47, 0.2);
+    transition: box-shadow 0.3s ease-in-out;
+  }
+
+  .glow-effect:hover {
+    box-shadow: 0 0 15px 4px rgba(211, 47, 47, 0.7),
+                0 0 30px 8px rgba(211, 47, 47, 0.5),
+                0 0 45px 12px rgba(211, 47, 47, 0.3);
+  }
+}
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar {
+  height: 80vh;
+  overflow-y: auto;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 12px; 
+  display: block; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+
+
+
+.bg-auth-bg {
+  background-image: url('./assets/login.png');
+  background-size: cover;
+  background-position: center;
+}
+
+
+.animate-quote-in {
+  animation: quote-in 1s ease-out forwards;
+  animation-delay: 0.5s; /* adjust the delay to your liking */
+}
+
+.animate-quote-out {
+  animation: none;
+}
+
+@keyframes quote-in {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes quote-out {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.slick-slide>div{
+    margin: 10px;
+}
+.slick-icons {
+  position: absolute;
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid var(--foreground);
+  border-radius: 50%;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.slick-icons:hover {
+  cursor: pointer;
+  background-color: var(--destructive-foreground);
+}
+
+.slick-icons--left,
+.slick-icons--right {
+  font-size: 2rem;
+}
+
+.slick-icons--left {
+ top: -5rem;
+  right: 5rem;
+}
+
+.slick-icons--right {
+  top: -5rem;
+  right: 0rem;
+}
+
+@media screen and (max-width: 768px) {
+  .slick-icons--left {
+    top: -4rem;
+    right: 5rem;
+  }
+
+  .slick-icons--right {
+    top: -4rem;
+    right: 0rem;
+  }
+  
+}
+
+/* Add the following custom animations in your global styles (Tailwind CSS config or a custom file) */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0% {
+    transform: rotate(-5deg);
+  }
+  25% {
+    transform: rotate(5deg);
+  }
+  50% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1.2s forwards;
+}
+
+.animate-shake {
+  animation: shake 0.8s ease-in-out infinite;
+}
+
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-slide-up {
+  animation: fadeSlideUp 1s ease-out forwards;
+}
+
+.announcement-bar {
+  display: none;
+  background-color: var(--foreground);
+  width: 100%;
+  color: white;
+  font-size: 0.875rem;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  padding: 0 1rem;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .announcement-bar {
+    display: flex;
+  }
+}
+
+.message-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 96rem;
+  margin: 0 auto;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.animate-scroll {
+  position: absolute;
+  animation: scroll 8s linear infinite;
+  white-space: nowrap;
+}
+
+
