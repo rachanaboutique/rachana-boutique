@@ -6,59 +6,71 @@ const initialState = {
   productList: [],
 };
 
+// Add New Product
 export const addNewProduct = createAsyncThunk(
   "/products/addnewproduct",
-  async (formData) => {
-    const result = await axios.post(
-      "http://localhost:5000/api/admin/products/add",
-      formData,
-      {
+  async (formData, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/admin/products/add`;
+    try {
+      const result = await axios.post(url, formData, {
         headers: {
           "Content-Type": "application/json",
         },
-      }
-    );
-
-    return result?.data;
+      });
+      return result.data;
+    } catch (error) {
+      console.error("Error adding new product from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Fetch All Products
 export const fetchAllProducts = createAsyncThunk(
   "/products/fetchAllProducts",
-  async () => {
-    const result = await axios.get(
-      "http://localhost:5000/api/admin/products/get"
-    );
-
-    return result?.data;
+  async (_, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/admin/products/get`;
+    try {
+      const result = await axios.get(url);
+      return result.data;
+    } catch (error) {
+      console.error("Error fetching all products from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Edit Product
 export const editProduct = createAsyncThunk(
   "/products/editProduct",
-  async ({ id, formData }) => {
-    const result = await axios.put(
-      `http://localhost:5000/api/admin/products/edit/${id}`,
-      formData,
-      {
+  async ({ id, formData }, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/admin/products/edit/${id}`;
+    try {
+      const result = await axios.put(url, formData, {
         headers: {
           "Content-Type": "application/json",
         },
-      }
-    );
-
-    return result?.data;
+      });
+      return result.data;
+    } catch (error) {
+      console.error("Error editing product from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Delete Product
 export const deleteProduct = createAsyncThunk(
   "/products/deleteProduct",
-  async (id) => {
-    const result = await axios.delete(
-      `http://localhost:5000/api/admin/products/delete/${id}`
-    );
-
-    return result?.data;
+  async (id, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/admin/products/delete/${id}`;
+    try {
+      const result = await axios.delete(url);
+      return result.data;
+    } catch (error) {
+      console.error("Error deleting product from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
@@ -68,6 +80,7 @@ const AdminProductsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Handle fetchAllProducts lifecycle
       .addCase(fetchAllProducts.pending, (state) => {
         state.isLoading = true;
       })
@@ -75,7 +88,7 @@ const AdminProductsSlice = createSlice({
         state.isLoading = false;
         state.productList = action.payload.data;
       })
-      .addCase(fetchAllProducts.rejected, (state, action) => {
+      .addCase(fetchAllProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
       });

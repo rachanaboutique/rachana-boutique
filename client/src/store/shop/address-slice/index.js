@@ -6,49 +6,63 @@ const initialState = {
   addressList: [],
 };
 
+// Add New Address
 export const addNewAddress = createAsyncThunk(
   "/addresses/addNewAddress",
-  async (formData) => {
-    const response = await axios.post(
-      "http://localhost:5000/api/shop/address/add",
-      formData
-    );
-
-    return response.data;
+  async (formData, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/address/add`;
+    try {
+      const response = await axios.post(url, formData);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding new address from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Fetch All Addresses for a User
 export const fetchAllAddresses = createAsyncThunk(
   "/addresses/fetchAllAddresses",
-  async (userId) => {
-    const response = await axios.get(
-      `http://localhost:5000/api/shop/address/get/${userId}`
-    );
-
-    return response.data;
+  async (userId, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/address/get/${userId}`;
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching addresses for user from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Edit an Address
 export const editaAddress = createAsyncThunk(
   "/addresses/editaAddress",
-  async ({ userId, addressId, formData }) => {
-    const response = await axios.put(
-      `http://localhost:5000/api/shop/address/update/${userId}/${addressId}`,
-      formData
-    );
-
-    return response.data;
+  async ({ userId, addressId, formData }, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/address/update/${userId}/${addressId}`;
+    try {
+      const response = await axios.put(url, formData);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating address from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Delete an Address
 export const deleteAddress = createAsyncThunk(
   "/addresses/deleteAddress",
-  async ({ userId, addressId }) => {
-    const response = await axios.delete(
-      `http://localhost:5000/api/shop/address/delete/${userId}/${addressId}`
-    );
-
-    return response.data;
+  async ({ userId, addressId }, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/address/delete/${userId}/${addressId}`;
+    try {
+      const response = await axios.delete(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting address from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
@@ -58,15 +72,17 @@ const addressSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Add New Address
       .addCase(addNewAddress.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(addNewAddress.fulfilled, (state, action) => {
+      .addCase(addNewAddress.fulfilled, (state) => {
         state.isLoading = false;
       })
       .addCase(addNewAddress.rejected, (state) => {
         state.isLoading = false;
       })
+      // Fetch All Addresses
       .addCase(fetchAllAddresses.pending, (state) => {
         state.isLoading = true;
       })

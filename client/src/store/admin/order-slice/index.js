@@ -4,41 +4,52 @@ import axios from "axios";
 const initialState = {
   orderList: [],
   orderDetails: null,
+  isLoading: false,
 };
 
+// Get All Orders for Admin
 export const getAllOrdersForAdmin = createAsyncThunk(
   "/order/getAllOrdersForAdmin",
-  async () => {
-    const response = await axios.get(
-      `http://localhost:5000/api/admin/orders/get`
-    );
-
-    return response.data;
+  async (_, { rejectWithValue }) => {
+    // Construct the URL using Vite's environment variable
+    const url = `${import.meta.env.VITE_BACKEND_URL}/admin/orders/get`;
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching all orders for admin from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Get Order Details for Admin
 export const getOrderDetailsForAdmin = createAsyncThunk(
   "/order/getOrderDetailsForAdmin",
-  async (id) => {
-    const response = await axios.get(
-      `http://localhost:5000/api/admin/orders/details/${id}`
-    );
-
-    return response.data;
+  async (id, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/admin/orders/details/${id}`;
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching order details for admin from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Update Order Status
 export const updateOrderStatus = createAsyncThunk(
   "/order/updateOrderStatus",
-  async ({ id, orderStatus }) => {
-    const response = await axios.put(
-      `http://localhost:5000/api/admin/orders/update/${id}`,
-      {
-        orderStatus,
-      }
-    );
-
-    return response.data;
+  async ({ id, orderStatus }, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/admin/orders/update/${id}`;
+    try {
+      const response = await axios.put(url, { orderStatus });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating order status from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
@@ -48,12 +59,12 @@ const adminOrderSlice = createSlice({
   reducers: {
     resetOrderDetails: (state) => {
       console.log("resetOrderDetails");
-
       state.orderDetails = null;
     },
   },
   extraReducers: (builder) => {
     builder
+      // Get All Orders for Admin
       .addCase(getAllOrdersForAdmin.pending, (state) => {
         state.isLoading = true;
       })
@@ -65,6 +76,7 @@ const adminOrderSlice = createSlice({
         state.isLoading = false;
         state.orderList = [];
       })
+      // Get Order Details for Admin
       .addCase(getOrderDetailsForAdmin.pending, (state) => {
         state.isLoading = true;
       })
@@ -80,5 +92,4 @@ const adminOrderSlice = createSlice({
 });
 
 export const { resetOrderDetails } = adminOrderSlice.actions;
-
 export default adminOrderSlice.reducer;

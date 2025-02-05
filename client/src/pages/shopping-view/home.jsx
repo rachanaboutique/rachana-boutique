@@ -118,6 +118,7 @@ function ShoppingHome() {
 
   const formattedFeatureImageList = () => {
     const { featureImageList } = useSelector((state) => state.commonFeature);
+    
 
     // Define titles and text for the images
     const additionalData = [
@@ -146,6 +147,7 @@ function ShoppingHome() {
     }));
   };
   const featureImageList = formattedFeatureImageList();
+  console.log(featureImageList, "featureImageList");
 
 
   const dispatch = useDispatch();

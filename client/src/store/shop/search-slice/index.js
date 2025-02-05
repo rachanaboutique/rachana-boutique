@@ -6,14 +6,20 @@ const initialState = {
   searchResults: [],
 };
 
+// Get Search Results
 export const getSearchResults = createAsyncThunk(
   "/order/getSearchResults",
-  async (keyword) => {
-    const response = await axios.get(
-      `http://localhost:5000/api/shop/search/${keyword}`
-    );
-
-    return response.data;
+  async (keyword, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/search/${keyword}`;
+    console.log("Fetching search results from URL:", url);
+    try {
+      const response = await axios.get(url);
+      console.log("Search results response:", response);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching search results from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 

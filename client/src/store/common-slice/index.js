@@ -7,25 +7,34 @@ const initialState = {
 };
 
 export const getFeatureImages = createAsyncThunk(
-  "/order/getFeatureImages",
-  async () => {
-    const response = await axios.get(
-      `http://localhost:5000/api/common/feature/get`
-    );
+  "order/getFeatureImages",
+  async (_, { rejectWithValue }) => {
+    // Construct the URL using Vite's environment variable
+    const url = `${import.meta.env.VITE_BACKEND_URL}/common/feature/get`;
 
-    return response.data;
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching feature images from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
 export const addFeatureImage = createAsyncThunk(
-  "/order/addFeatureImage",
-  async (image) => {
-    const response = await axios.post(
-      `http://localhost:5000/api/common/feature/add`,
-      { image }
-    );
+  "order/addFeatureImage",
+  async (image, { rejectWithValue }) => {
+    // Construct the URL using Vite's environment variable
+    const url = `${import.meta.env.VITE_BACKEND_URL}/common/feature/add`;
 
-    return response.data;
+    try {
+      const response = await axios.post(url, { image });
+      return response.data;
+    } catch (error) {
+      console.error("Error adding feature image from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 

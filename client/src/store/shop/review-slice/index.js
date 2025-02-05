@@ -6,25 +6,35 @@ const initialState = {
   reviews: [],
 };
 
+// Add Review
 export const addReview = createAsyncThunk(
   "/order/addReview",
-  async (formdata) => {
-    const response = await axios.post(
-      `http://localhost:5000/api/shop/review/add`,
-      formdata
-    );
-
-    return response.data;
+  async (formdata, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/review/add`;
+    try {
+      const response = await axios.post(url, formdata);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding review from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
-export const getReviews = createAsyncThunk("/order/getReviews", async (id) => {
-  const response = await axios.get(
-    `http://localhost:5000/api/shop/review/${id}`
-  );
-
-  return response.data;
-});
+// Get Reviews
+export const getReviews = createAsyncThunk(
+  "/order/getReviews",
+  async (id, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/review/${id}`;
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching reviews from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
 
 const reviewSlice = createSlice({
   name: "reviewSlice",

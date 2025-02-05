@@ -6,57 +6,63 @@ const initialState = {
   isLoading: false,
 };
 
+// Add to Cart
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
-  async ({ userId, productId, quantity }) => {
-    const response = await axios.post(
-      "http://localhost:5000/api/shop/cart/add",
-      {
-        userId,
-        productId,
-        quantity,
-      }
-    );
-
-    return response.data;
+  async ({ userId, productId, quantity }, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/cart/add`;
+    try {
+      const response = await axios.post(url, { userId, productId, quantity });
+      return response.data;
+    } catch (error) {
+      console.error("Error adding to cart from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Fetch Cart Items
 export const fetchCartItems = createAsyncThunk(
   "cart/fetchCartItems",
-  async (userId) => {
-    const response = await axios.get(
-      `http://localhost:5000/api/shop/cart/get/${userId}`
-    );
-
-    return response.data;
+  async (userId, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/cart/get/${userId}`;
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching cart items from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Delete Cart Item
 export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
-  async ({ userId, productId }) => {
-    const response = await axios.delete(
-      `http://localhost:5000/api/shop/cart/${userId}/${productId}`
-    );
-
-    return response.data;
+  async ({ userId, productId }, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/cart/${userId}/${productId}`;
+    try {
+      const response = await axios.delete(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting cart item from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
+// Update Cart Quantity
 export const updateCartQuantity = createAsyncThunk(
   "cart/updateCartQuantity",
-  async ({ userId, productId, quantity }) => {
-    const response = await axios.put(
-      "http://localhost:5000/api/shop/cart/update-cart",
-      {
-        userId,
-        productId,
-        quantity,
-      }
-    );
-
-    return response.data;
+  async ({ userId, productId, quantity }, { rejectWithValue }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/cart/update-cart`;
+    try {
+      const response = await axios.put(url, { userId, productId, quantity });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating cart quantity from URL:", url, error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
   }
 );
 
@@ -66,6 +72,7 @@ const shoppingCartSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Add to Cart
       .addCase(addToCart.pending, (state) => {
         state.isLoading = true;
       })
@@ -77,6 +84,7 @@ const shoppingCartSlice = createSlice({
         state.isLoading = false;
         state.cartItems = [];
       })
+      // Fetch Cart Items
       .addCase(fetchCartItems.pending, (state) => {
         state.isLoading = true;
       })
@@ -88,6 +96,7 @@ const shoppingCartSlice = createSlice({
         state.isLoading = false;
         state.cartItems = [];
       })
+      // Update Cart Quantity
       .addCase(updateCartQuantity.pending, (state) => {
         state.isLoading = true;
       })
@@ -99,6 +108,7 @@ const shoppingCartSlice = createSlice({
         state.isLoading = false;
         state.cartItems = [];
       })
+      // Delete Cart Item
       .addCase(deleteCartItem.pending, (state) => {
         state.isLoading = true;
       })
