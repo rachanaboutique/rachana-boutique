@@ -15,13 +15,13 @@ body {
     --foreground: #2c3315;
     --card: #ffffff;
     --card-foreground: #333333;
-    --primary: #1c1c1c;
+    --primary: #2c3315;
     --primary-foreground: #f0f0f0;
     --secondary: #2b2b2b;
     --secondary-foreground: #e0e0e0;
-    --muted: #2f2f2f;
-    --muted-foreground: #999999;
-    --accent: #de3956;
+    --muted: #e0e0e0;
+    --muted-foreground:#2c3315;
+    --accent: #424c1f;
     --accent-foreground: #f0f0f0;
     --destructive: #e53935;
     --destructive-foreground: #ffffff;

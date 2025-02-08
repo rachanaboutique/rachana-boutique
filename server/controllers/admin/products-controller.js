@@ -28,7 +28,9 @@ const addProduct = async (req, res) => {
       title,
       description,
       category,
-      brand,
+      isNewArrival,
+      isFeatured, 
+      isFastMoving,
       price,
       salePrice,
       totalStock,
@@ -42,7 +44,9 @@ const addProduct = async (req, res) => {
       title,
       description,
       category,
-      brand,
+      isNewArrival,
+      isFeatured,
+      isFastMoving,
       price,
       salePrice,
       totalStock,
@@ -90,41 +94,71 @@ const editProduct = async (req, res) => {
       title,
       description,
       category,
-      brand,
+      isNewArrival,
+      isFeatured,
+      isFastMoving,
       price,
       salePrice,
       totalStock,
       averageReview,
     } = req.body;
 
-    let findProduct = await Product.findById(id);
-    if (!findProduct)
+    const findProduct = await Product.findById(id);
+    if (!findProduct) {
       return res.status(404).json({
         success: false,
         message: "Product not found",
       });
+    }
 
-    findProduct.title = title || findProduct.title;
-    findProduct.description = description || findProduct.description;
-    findProduct.category = category || findProduct.category;
-    findProduct.brand = brand || findProduct.brand;
-    findProduct.price = price === "" ? 0 : price || findProduct.price;
-    findProduct.salePrice =
-      salePrice === "" ? 0 : salePrice || findProduct.salePrice;
-    findProduct.totalStock = totalStock || findProduct.totalStock;
-    findProduct.image = image || findProduct.image;
-    findProduct.averageReview = averageReview || findProduct.averageReview;
+    // Update only if the property exists in the request body.
+    if (typeof title !== 'undefined') {
+      findProduct.title = title;
+    }
+    if (typeof description !== 'undefined') {
+      findProduct.description = description;
+    }
+    if (typeof category !== 'undefined') {
+      findProduct.category = category;
+    }
+    if (req.body.hasOwnProperty('isNewArrival')) {
+      findProduct.isNewArrival = isNewArrival;
+    }
+
+    if(req.body.hasOwnProperty('isFeatured')) {
+      findProduct.isFeatured = isFeatured;
+    }
+
+    if(req.body.hasOwnProperty('isFastMoving')) {
+      findProduct.isFastMoving = isFastMoving;
+    }
+    // For price and salePrice, check for empty string explicitly.
+    if (typeof price !== 'undefined') {
+      findProduct.price = price === "" ? 0 : price;
+    }
+    if (typeof salePrice !== 'undefined') {
+      findProduct.salePrice = salePrice === "" ? 0 : salePrice;
+    }
+    if (typeof totalStock !== 'undefined') {
+      findProduct.totalStock = totalStock;
+    }
+    if (typeof image !== 'undefined') {
+      findProduct.image = image;
+    }
+    if (typeof averageReview !== 'undefined') {
+      findProduct.averageReview = averageReview;
+    }
 
     await findProduct.save();
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: findProduct,
     });
   } catch (e) {
-    console.log(e);
-    res.status(500).json({
+    console.error(e);
+    return res.status(500).json({
       success: false,
-      message: "Error occured",
+      message: "Error occurred",
     });
   }
 };

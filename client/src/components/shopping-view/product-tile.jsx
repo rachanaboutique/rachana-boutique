@@ -39,10 +39,16 @@ function ShoppingProductTile({
           <Badge className="absolute top-2 left-2 bg-orange-500 text-white text-sm py-1 px-2 rounded">
             {`Only ${product?.totalStock} left`}
           </Badge>
-        ) : product?.salePrice > 0 ? (
+        ) : product?.salePrice > 0 ? (<>
           <Badge className="absolute top-2 left-2 bg-green-500 text-white text-sm py-1 px-2 rounded">
             Sale
           </Badge>
+           {product?.isFeatured && (
+            <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-sm font-semibold bg-green-50 text-green-700">
+              Featured
+            </div>
+          )}
+         </>
         ) : null}
       </div>
       {/* Card Content */}
@@ -50,6 +56,7 @@ function ShoppingProductTile({
         <h2 className="text-lg font-semibold mb-1 text-gray-800 truncate">
           {product?.title}
         </h2>
+        
         <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
           {/* <span>{categoryOptionsMap[product?.category]}</span>
           <span>{brandOptionsMap[product?.brand]}</span> */}

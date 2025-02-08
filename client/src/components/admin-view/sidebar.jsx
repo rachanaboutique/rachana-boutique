@@ -1,4 +1,6 @@
 import {
+  Layers,
+  Film,
   BadgeCheck,
   ChartNoAxesCombined,
   LayoutDashboard,
@@ -16,6 +18,19 @@ const adminSidebarMenuItems = [
     icon: <LayoutDashboard />,
   },
   {
+    id: "banners",
+    label: "Banners",
+    path: "/admin/banners",
+    icon:<Layers />,
+  },
+  {
+    id: "categories",
+    label: "Categories",
+    path: "/admin/categories",
+    icon: <ShoppingBasket />,
+  },
+
+  {
     id: "products",
     label: "Products",
     path: "/admin/products",
@@ -26,6 +41,12 @@ const adminSidebarMenuItems = [
     label: "Orders",
     path: "/admin/orders",
     icon: <BadgeCheck />,
+  },
+  {
+    id: "instafeed",
+    label: "Instafeed",
+    path: "/admin/instafeed",
+    icon: <Film />,
   },
 ];
 

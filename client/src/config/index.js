@@ -66,17 +66,19 @@ export const addProductFormElements = [
     ],
   },
   {
-    label: "Brand",
-    name: "brand",
-    componentType: "select",
-    options: [
-      { id: "nike", label: "Nike" },
-      { id: "adidas", label: "Adidas" },
-      { id: "puma", label: "Puma" },
-      { id: "levi", label: "Levi's" },
-      { id: "zara", label: "Zara" },
-      { id: "h&m", label: "H&M" },
-    ],
+    label: "Is New Arrival",
+    name: "isNewArrival",
+    componentType: "toggle",
+  },
+  {
+    label: "Is Featured",
+    name: "isFeatured",
+    componentType: "toggle",
+  },
+  {
+    label: "Is Fast Moving",
+    name: "isFastMoving",
+    componentType: "toggle",
   },
   {
     label: "Price",
@@ -100,6 +102,42 @@ export const addProductFormElements = [
     placeholder: "Enter total stock",
   },
 ];
+
+
+export const addCategoryFormElements = [
+  {
+    label: "Name",
+    name: "name",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter category Name",
+  },
+  {
+    label: "Description",
+    name: "description",
+    componentType: "textarea",
+    placeholder: "Enter category description",
+  },
+];
+
+export const addBannerFormElements = [
+  {
+    label: "Description",
+    name: "description",
+    componentType: "textarea",
+    placeholder: "Enter banner description",
+  },
+
+]
+
+export const addInstafeedFormElements = [
+  {
+    label: "Instagram Url",
+    name: "postUrl",
+    componentType: "textarea",
+    placeholder: "Enter instagram url",
+  },
+]
 
 export const shoppingViewHeaderMenuItems = [
   {

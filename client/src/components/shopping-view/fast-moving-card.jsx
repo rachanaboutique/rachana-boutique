@@ -17,8 +17,8 @@ const FastMovingCard = ({ item, index, activeItem }) => {
       {/* Image */}
       <img
         className="absolute right-0 top-1/2 h-auto w-24 max-w-none -translate-y-1/2 object-cover md:left-1/2 md:h-[640px] md:w-[590px] md:-translate-x-1/2"
-        src={item.img}
-        alt={item.name}
+        src={item?.image}
+        alt={item?.title}
         width="590px"
         height="640px"
       />
@@ -43,9 +43,9 @@ const FastMovingCard = ({ item, index, activeItem }) => {
             : "md:translate-x-4 md:opacity-0"
         )}
       >
-        <p className="text-sm uppercase text-white md:text-lg">{item.title}</p>
+        <p className="text-sm uppercase text-white md:text-lg">SAREES</p>
         <p className="leading-tight text-white text-lg font-bold md:text-4xl">
-          {item.name}
+          {item?.title}
         </p>
         <button
           onClick={handleButtonClick}

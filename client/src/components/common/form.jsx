@@ -9,6 +9,7 @@ import {
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
+import { Switch } from "../ui/switch"; // Import toggle switch component
 
 function CommonForm({
   formControls,
@@ -39,8 +40,8 @@ function CommonForm({
             }
           />
         );
-
         break;
+
       case "select":
         element = (
           <Select
@@ -66,8 +67,8 @@ function CommonForm({
             </SelectContent>
           </Select>
         );
-
         break;
+
       case "textarea":
         element = (
           <Textarea
@@ -83,7 +84,20 @@ function CommonForm({
             }
           />
         );
+        break;
 
+      case "toggle":
+        element = (
+          <Switch
+            checked={!!value} // Convert the value to a boolean
+            onCheckedChange={(checked) =>
+              setFormData({
+                ...formData,
+                [getControlItem.name]: checked,
+              })
+            }
+          />
+        );
         break;
 
       default:
@@ -118,7 +132,7 @@ function CommonForm({
           </div>
         ))}
       </div>
-      <Button disabled={isBtnDisabled} type="submit" className="mt-2 w-full">
+      <Button disabled={isBtnDisabled} type="submit" className="mt-2 w-full hover:bg-accent">
         {buttonText || "Submit"}
       </Button>
     </form>

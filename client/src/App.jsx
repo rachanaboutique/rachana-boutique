@@ -27,6 +27,9 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import NewArrivals from "./pages/shopping-view/new-arrivals";
 import Contact from "./pages/shopping-view/contact";
+import AdminCategories from "./pages/admin-view/categories";
+import AdminBanners from "./pages/admin-view/banner";
+import AdminInstafeed from "./pages/admin-view/instafeed";
 
 
 
@@ -76,8 +79,11 @@ function App() {
           }
         >
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="banners" element={<AdminBanners />} />
           <Route path="products" element={<AdminProducts />} />
+          <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="instafeed" element={<AdminInstafeed />} />
           <Route path="features" element={<AdminFeatures />} />
         </Route>
         <Route
@@ -85,7 +91,7 @@ function App() {
           element={
             // <CheckAuth isAuthenticated={isAuthenticated} user={user}>
               <ShoppingLayout />
-          //  </CheckAuth>
+            // </CheckAuth>
           }
         >
           <Route path="home" element={<ShoppingHome />} />

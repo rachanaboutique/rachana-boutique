@@ -1,30 +1,26 @@
+import { Fragment, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Button } from "@/components/ui/button";
 import ProductImageUpload from "@/components/admin-view/image-upload";
 import AdminProductTile from "@/components/admin-view/product-tile";
 import CommonForm from "@/components/common/form";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { useToast } from "@/components/ui/use-toast";
-import { addProductFormElements } from "@/config";
-import {
-  addNewProduct,
-  deleteProduct,
-  editProduct,
-  fetchAllProducts,
-} from "@/store/admin/products-slice";
-import { Fragment, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { fetchCategories } from "@/store/shop/categories-slice";
+import { useToast } from "../../components/ui/use-toast";
+import {addProductFormElements} from "@/config";
+import { addNewProduct, deleteProduct, editProduct } from "@/store/admin/products-slice";
+import { fetchAllProducts } from "@/store/admin/products-slice";
+
+
 
 const initialFormData = {
   image: null,
   title: "",
   description: "",
   category: "",
-  brand: "",
+  isNewArrival: "",
+  isFeatured: "",
+  isFastMoving: "",
   price: "",
   salePrice: "",
   totalStock: "",
@@ -41,8 +37,28 @@ function AdminProducts() {
   const [currentEditedId, setCurrentEditedId] = useState(null);
 
   const { productList } = useSelector((state) => state.adminProducts);
+  console.log(productList);
+  const { categoriesList } = useSelector((state) => state.shopCategories); // Get categories from Redux
   const dispatch = useDispatch();
   const { toast } = useToast();
+
+  useEffect(() => {
+    dispatch(fetchCategories()); // Fetch categories (if not already loaded)
+    dispatch(fetchAllProducts());
+  }, [dispatch]);
+
+  // Updated form elements with dynamic categories
+  const dynamicAddProductFormElements = addProductFormElements.map((element) =>
+    element.name === "category"
+      ? {
+          ...element,
+          options: categoriesList.map((category) => ({
+            id: category._id,
+            label: category.name,
+          })), // Map categories to options
+        }
+      : element
+  );
 
   function onSubmit(event) {
     event.preventDefault();
@@ -51,11 +67,12 @@ function AdminProducts() {
       ? dispatch(
           editProduct({
             id: currentEditedId,
-            formData,
+            formData: {
+              ...formData,
+              image: uploadedImageUrl || formData.image, 
+            },
           })
         ).then((data) => {
-          console.log(data, "edit");
-
           if (data?.payload?.success) {
             dispatch(fetchAllProducts());
             setFormData(initialFormData);
@@ -75,7 +92,7 @@ function AdminProducts() {
             setImageFile(null);
             setFormData(initialFormData);
             toast({
-              title: "Product add successfully",
+              title: "Product added successfully",
             });
           }
         });
@@ -89,6 +106,25 @@ function AdminProducts() {
     });
   }
 
+  function handleEdit(product) {
+    setCurrentEditedId(product.id);
+    setFormData({
+      image: product.image,
+      title: product.title,
+      description: product.description,
+      category: product.category,
+      isNewArrival: product.isNewArrival,
+      isFeatured: product.isFeatured,
+      isFastMoving: product.isFastMoving,
+      price: product.price,
+      salePrice: product.salePrice,
+      totalStock: product.totalStock,
+      averageReview: product.averageReview || 0,
+    });
+    setUploadedImageUrl(product.image || ""); // Set existing image URL
+    setOpenCreateProductsDialog(true);
+  }
+
   function isFormValid() {
     return Object.keys(formData)
       .filter((currentKey) => currentKey !== "averageReview")
@@ -96,16 +132,17 @@ function AdminProducts() {
       .every((item) => item);
   }
 
-  useEffect(() => {
-    dispatch(fetchAllProducts());
-  }, [dispatch]);
-
-  console.log(formData, "productList");
-
   return (
     <Fragment>
       <div className="mb-5 w-full flex justify-end">
-        <Button onClick={() => setOpenCreateProductsDialog(true)}>
+        <Button
+          className="bg-primary hover:bg-accent"
+          onClick={() => {
+            setFormData(initialFormData);
+            setUploadedImageUrl("");
+            setOpenCreateProductsDialog(true);
+          }}
+        >
           Add New Product
         </Button>
       </div>
@@ -113,10 +150,12 @@ function AdminProducts() {
         {productList && productList.length > 0
           ? productList.map((productItem) => (
               <AdminProductTile
+                key={productItem.id}
                 setFormData={setFormData}
                 setOpenCreateProductsDialog={setOpenCreateProductsDialog}
                 setCurrentEditedId={setCurrentEditedId}
                 product={productItem}
+                handleEdit={() => handleEdit(productItem)}
                 handleDelete={handleDelete}
               />
             ))
@@ -143,7 +182,6 @@ function AdminProducts() {
             setUploadedImageUrl={setUploadedImageUrl}
             setImageLoadingState={setImageLoadingState}
             imageLoadingState={imageLoadingState}
-            isEditMode={currentEditedId !== null}
           />
           <div className="py-6">
             <CommonForm
@@ -151,7 +189,7 @@ function AdminProducts() {
               formData={formData}
               setFormData={setFormData}
               buttonText={currentEditedId !== null ? "Edit" : "Add"}
-              formControls={addProductFormElements}
+              formControls={dynamicAddProductFormElements} // Use updated form controls
               isBtnDisabled={!isFormValid()}
             />
           </div>
