@@ -1,46 +1,60 @@
-import ProductDetailsDialog from "@/components/shopping-view/product-details";
-import ShoppingProductTile from "@/components/shopping-view/product-tile";
+import React, { useState, useEffect, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
+import ShoppingProductTile from "@/components/shopping-view/product-tile";
+import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import { useToast } from "@/components/ui/use-toast";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
-import { fetchProductDetails } from "@/store/shop/products-slice";
-import {
-  getSearchResults,
-  resetSearchResults,
-} from "@/store/shop/search-slice";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 function SearchProducts() {
   const [keyword, setKeyword] = useState("");
-  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const dispatch = useDispatch();
-  const { searchResults } = useSelector((state) => state.shopSearch);
-  const { productDetails } = useSelector((state) => state.shopProducts);
+  const [openSuggestions, setOpenSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  // Create separate refs for the input box and suggestions container
+  const inputRef = useRef(null);
+  const suggestionsRef = useRef(null);
+
+  const { productList, productDetails } = useSelector(
+    (state) => state.shopProducts
+  );
+  const { cartItems } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
 
-  const { cartItems } = useSelector((state) => state.shopCart);
   const { toast } = useToast();
+
+  // Compute suggestions based on the search keyword
+  const suggestions =
+    keyword.trim().length > 0
+      ? productList.filter((product) =>
+          product.title.toLowerCase().includes(keyword.toLowerCase())
+        )
+      : [];
+
+  // Detect clicks outside the input and suggestions to hide the suggestion dropdown
   useEffect(() => {
-    if (keyword && keyword.trim() !== "" && keyword.trim().length > 3) {
-      setTimeout(() => {
-        setSearchParams(new URLSearchParams(`?keyword=${keyword}`));
-        dispatch(getSearchResults(keyword));
-      }, 1000);
-    } else {
-      setSearchParams(new URLSearchParams(`?keyword=${keyword}`));
-      dispatch(resetSearchResults());
+    function handleClickOutside(event) {
+      if (
+        inputRef.current && 
+        suggestionsRef.current &&
+        !inputRef.current.contains(event.target) &&
+        !suggestionsRef.current.contains(event.target)
+      ) {
+        setOpenSuggestions(false);
+      }
     }
-  }, [keyword]);
-  console.log("openDetailsDialog", openDetailsDialog);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   function handleAddtoCart(getCurrentProductId, getTotalStock) {
-    console.log(cartItems);
-    let getCartItems = cartItems.items || [];
-
+    const getCartItems = cartItems.items || [];
     if (getCartItems.length) {
       const indexOfCurrentItem = getCartItems.findIndex(
         (item) => item.productId === getCurrentProductId
@@ -52,7 +66,6 @@ function SearchProducts() {
             title: `Only ${getQuantity} quantity can be added for this item`,
             variant: "destructive",
           });
-
           return;
         }
       }
@@ -67,54 +80,105 @@ function SearchProducts() {
     ).then((data) => {
       if (data?.payload?.success) {
         dispatch(fetchCartItems(user?.id));
-        toast({
-          title: "Product is added to cart",
-        });
+        toast({ title: "Product is added to cart" });
       }
     });
   }
 
-  function handleGetProductDetails(getCurrentProductId) {
-    console.log(getCurrentProductId);
-    dispatch(fetchProductDetails(getCurrentProductId));
+  const handleViewDetails = (productId) => {
+    // Hide suggestions when navigating away
+    setOpenSuggestions(false);
+    navigate(`/shop/details/${productId}`);
+  };
+
+  function handleKeyDown(event) {
+    if (event.key === "ArrowDown") {
+      setHighlightedIndex((prevIndex) =>
+        prevIndex < suggestions.length - 1 ? prevIndex + 1 : 0
+      );
+    } else if (event.key === "ArrowUp") {
+      setHighlightedIndex((prevIndex) =>
+        prevIndex > 0 ? prevIndex - 1 : suggestions.length - 1
+      );
+    } else if (event.key === "Enter") {
+      if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+        handleViewDetails(suggestions[highlightedIndex]._id);
+      }
+      setOpenSuggestions(false);
+    }
   }
-
-  useEffect(() => {
-    if (productDetails !== null) setOpenDetailsDialog(true);
-  }, [productDetails]);
-
-  console.log(searchResults, "searchResults");
 
   return (
     <div className="container mx-auto md:px-6 px-4 py-8">
-      <div className="flex justify-center mb-8">
-        <div className="w-full flex items-center">
-          <Input
-            value={keyword}
-            name="keyword"
-            onChange={(event) => setKeyword(event.target.value)}
-            className="py-6"
-            placeholder="Search Products..."
-          />
-        </div>
+      <div className="relative mb-8">
+        <Input
+          ref={inputRef}
+          value={keyword}
+          name="keyword"
+          onChange={(event) => {
+            setKeyword(event.target.value);
+            setOpenSuggestions(true);
+            setHighlightedIndex(-1);
+          }}
+          onKeyDown={handleKeyDown}
+          className="py-6"
+          placeholder="Search Products..."
+        />
+
+        {/* Suggestions Dropdown */}
+        {openSuggestions && keyword.trim().length > 0 && suggestions.length > 0 && (
+          <div 
+            ref={suggestionsRef}
+            className="absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto"
+          >
+            {suggestions.map((product, index) => (
+              <div
+                key={product._id}
+                className={`flex items-center p-4 hover:bg-gray-100 cursor-pointer ${
+                  index === highlightedIndex ? "bg-gray-200" : ""
+                }`}
+                onMouseDown={() => handleViewDetails(product._id)}
+              >
+                <img
+                  src={product.image}
+                  alt={product.title}
+                  className="w-12 h-12 object-cover rounded mr-4"
+                />
+                <div className="flex-1">
+                  <h4 className="font-semibold">{product.title}</h4>
+                  <p className="text-sm text-gray-500">
+                    ${product.salePrice || product.price}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="ml-auto bg-primary hover:bg-accent text-white"
+                  onMouseDown={() => handleAddtoCart(product._id, product.stock)}
+                >
+                  Add to Cart
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      {!searchResults.length ? (
+
+      {/* Products Grid */}
+      {keyword.trim().length > 0 && suggestions.length === 0 ? (
         <h1 className="text-5xl font-extrabold">No result found!</h1>
       ) : null}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {searchResults.map((item) => (
-          <ShoppingProductTile
-            handleAddtoCart={handleAddtoCart}
-            product={item}
-            handleGetProductDetails={handleGetProductDetails}
-          />
-        ))}
-      </div>
-      <ProductDetailsDialog
-        open={openDetailsDialog}
-        setOpen={setOpenDetailsDialog}
-        productDetails={productDetails}
-      />
+      {keyword.trim().length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {suggestions.map((item) => (
+            <ShoppingProductTile
+              key={item._id}
+              handleAddtoCart={handleAddtoCart}
+              product={item}
+              handleGetProductDetails={handleViewDetails}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

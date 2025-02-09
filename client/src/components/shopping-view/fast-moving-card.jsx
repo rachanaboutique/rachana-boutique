@@ -6,8 +6,8 @@ import { ArrowRight } from "lucide-react";
 const FastMovingCard = ({ item, index, activeItem }) => {
   const navigate = useNavigate(); // Initialize useNavigate
 
-  const handleButtonClick = () => {
-    navigate("/shop/collections");
+  const handleViewDetails = (productId) => {
+    navigate(`/shop/details/${productId}`);
   };
 
   const isStripeOpen = activeItem === index; // Determine if the stripe is open
@@ -48,7 +48,7 @@ const FastMovingCard = ({ item, index, activeItem }) => {
           {item?.title}
         </p>
         <button
-          onClick={handleButtonClick}
+          onClick={() => handleViewDetails(item?._id)}
           className="mt-2 flex items-center px-3 py-2 text-sm text-white rounded-full bg-black hover:bg-accent transition-all duration-300 md:hidden"
         >
           Explore
@@ -59,8 +59,8 @@ const FastMovingCard = ({ item, index, activeItem }) => {
       {/* Transparent Button (Visible only when the stripe is open) */}
       {isStripeOpen && (
         <button
-          onClick={handleButtonClick}
-          className="hidden md:flex items-center absolute bottom-12 left-1/2 transform -translate-x-1/2 px-6 py-3 text-sm md:text-lg text-white rounded-full bg-black hover:bg-accent transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-accent focus:ring-opacity-50 glow-effect"
+          onClick={() => handleViewDetails(item?._id)}
+          className="hidden md:flex items-center absolute bottom-12 left-1/2 transform -translate-x-1/2 px-6 py-3 text-sm md:text-lg text-white rounded-full bg-black hover:bg-accent transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-accent focus:ring-opacity-50"
         >
           Explore
           <ArrowRight className="w-6 h-6 inline ml-2" />

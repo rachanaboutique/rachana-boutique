@@ -13,16 +13,11 @@ export const registerUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/auth/register`;
     try {
-      const response = await axios.post(
-        url,
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.post(url, formData, {
+        withCredentials: true,
+      });
       return response.data;
     } catch (error) {
-      console.error("Error registering user from URL:", url, error);
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -34,37 +29,42 @@ export const loginUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/auth/login`;
     try {
-      const response = await axios.post(
-        url,
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
-      return response.data;
+      const response = await axios.post(url, formData);
+      const { accessToken, refreshToken, user } = response.data;
+
+      // Store tokens in localStorage
+      if (accessToken && refreshToken) {
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+      }
+
+      return { user, success: response.data.success };
     } catch (error) {
-      console.error("Error logging in user from URL:", url, error);
       return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
 
-// Logout User
-export const logoutUser = createAsyncThunk(
-  "/auth/logout",
+export const refreshToken = createAsyncThunk(
+  "auth/refresh",
   async (_, { rejectWithValue }) => {
-    const url = `${import.meta.env.VITE_BACKEND_URL}/auth/logout`;
+    const url = `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`;
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    if (!refreshToken) {
+      return rejectWithValue("No refresh token found");
+    }
+
     try {
-      const response = await axios.post(
-        url,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-      return response.data;
+      const response = await axios.post(url, { refreshToken });
+      const { accessToken } = response.data;
+
+      // Store the new access token in localStorage
+      localStorage.setItem("accessToken", accessToken);
+
+      return { accessToken };
     } catch (error) {
-      console.error("Error logging out user from URL:", url, error);
+      localStorage.removeItem("refreshToken"); // Clear refresh token if invalid
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -72,26 +72,60 @@ export const logoutUser = createAsyncThunk(
 
 // Check Authentication
 export const checkAuth = createAsyncThunk(
-  "/auth/checkauth",
-  async (_, { rejectWithValue }) => {
+  "auth/checkauth",
+  async (_, { rejectWithValue, dispatch }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/auth/check-auth`;
+    let accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) {
+      return rejectWithValue("No access token found");
+    }
+
     try {
-      const response = await axios.get(
-        url,
-        {
-          withCredentials: true,
-          headers: {
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          },
-        }
-      );
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
       return response.data;
     } catch (error) {
-      console.error("Error checking auth from URL:", url, error);
+      if (error.response?.status === 401) {
+        // Attempt to refresh the token on expiration
+        try {
+          const refreshResponse = await dispatch(refreshToken()).unwrap();
+
+          accessToken = refreshResponse.accessToken;
+
+          if (accessToken) {
+            // Retry the check-auth request with the new access token
+            const retryResponse = await axios.get(url, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            });
+
+            return retryResponse.data;
+          }
+        } catch (refreshError) {
+          return rejectWithValue(refreshError.response?.data || refreshError.message);
+        }
+      }
+
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
+
+// Logout User
+export const logoutUser = createAsyncThunk("/auth/logout", async () => {
+  // Remove tokens from localStorage
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  return { success: true };
+});
 
 const authSlice = createSlice({
   name: "auth",
@@ -99,7 +133,7 @@ const authSlice = createSlice({
   reducers: {
     setUser: (state, action) => {
       state.user = action.payload;
-      state.isAuthenticated = action.payload ? true : false;
+      state.isAuthenticated = !!action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -108,7 +142,7 @@ const authSlice = createSlice({
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
@@ -124,10 +158,22 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.success ? action.payload.user : null;
+        state.user = action.payload.user || null;
         state.isAuthenticated = action.payload.success;
       })
       .addCase(loginUser.rejected, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+      })
+      // Refresh Token
+      .addCase(refreshToken.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(refreshToken.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(refreshToken.rejected, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
@@ -138,7 +184,7 @@ const authSlice = createSlice({
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.success ? action.payload.user : null;
+        state.user = action.payload.user || null;
         state.isAuthenticated = action.payload.success;
       })
       .addCase(checkAuth.rejected, (state) => {

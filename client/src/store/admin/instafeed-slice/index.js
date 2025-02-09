@@ -77,7 +77,10 @@ export const editInstaFeedPost = createAsyncThunk(
 export const deleteInstaFeedPost = createAsyncThunk(
   "/instafeed/deletePost",
   async (id, { rejectWithValue }) => {
-    const url = `${import.meta.env.VITE_BACKEND_URL}/admin/instafeed/delete/${id}`;
+    const encodedId = encodeURIComponent(id);
+const url = `${import.meta.env.VITE_BACKEND_URL}/admin/instafeed/delete/${encodedId}`;
+
+  
     try {
       const result = await axios.delete(url);
       return result.data;

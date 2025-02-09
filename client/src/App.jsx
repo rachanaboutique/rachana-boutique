@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import AuthLayout from "./components/auth/layout";
 import AuthLogin from "./pages/auth/login";
 import AuthRegister from "./pages/auth/register";
@@ -17,7 +17,7 @@ import CheckAuth from "./components/common/check-auth";
 import UnauthPage from "./pages/unauth-page";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
-import { checkAuth } from "./store/auth-slice";
+import { checkAuth, refreshToken } from "./store/auth-slice";
 import { Skeleton } from "@/components/ui/skeleton";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
@@ -30,35 +30,46 @@ import Contact from "./pages/shopping-view/contact";
 import AdminCategories from "./pages/admin-view/categories";
 import AdminBanners from "./pages/admin-view/banner";
 import AdminInstafeed from "./pages/admin-view/instafeed";
+import AdminFeedback from "./pages/admin-view/feedback";
 
 
 
 function App() {
-  const { user, isAuthenticated, isLoading } = useSelector(
-    (state) => state.auth
-  );
+  const { user, isAuthenticated, isLoading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(checkAuth());
+    const validateToken = async () => {
+      try {
+        // Attempt to validate the token
+        await dispatch(checkAuth()).unwrap();
+      } catch (error) {
+        if (error === "No access token found" || error?.status === 401) {
+          // Attempt to refresh the token if expired or not found
+          try {
+            await dispatch(refreshToken()).unwrap();
+            await dispatch(checkAuth()).unwrap(); // Retry after refreshing
+          } catch (refreshError) {
+            console.error("Failed to refresh token:", refreshError);
+          }
+        } else {
+          console.error("Authentication failed:", error);
+        }
+      }
+    };
+
+    validateToken();
   }, [dispatch]);
 
-  if (isLoading) return <Skeleton className="w-[800] bg-black h-[600px]" />;
-
-  console.log(isLoading, user);
+  if (isLoading) return <Skeleton className="w-[800px] bg-black h-[600px]" />;
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
       <Routes>
-        <Route
-          path="/"
-          element={
-            <CheckAuth
-              isAuthenticated={isAuthenticated}
-              user={user}
-            ></CheckAuth>
-          }
-        />
+        {/* Default Route: Redirect to /shop/home */}
+        <Route path="/" element={<Navigate to="/shop/home" />} />
+
+        {/* Auth Routes */}
         <Route
           path="/auth"
           element={
@@ -70,6 +81,8 @@ function App() {
           <Route path="login" element={<AuthLogin />} />
           <Route path="register" element={<AuthRegister />} />
         </Route>
+
+        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -84,16 +97,12 @@ function App() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="instafeed" element={<AdminInstafeed />} />
+          <Route path="feedback" element={<AdminFeedback />} />
           <Route path="features" element={<AdminFeatures />} />
         </Route>
-        <Route
-          path="/shop"
-          element={
-            // <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <ShoppingLayout />
-            // </CheckAuth>
-          }
-        >
+
+        {/* Shop Routes */}
+        <Route path="/shop" element={<ShoppingLayout />}>
           <Route path="home" element={<ShoppingHome />} />
           <Route path="details/:id" element={<ProductDetailsPage />} />
           <Route path="collections" element={<ShoppingListing />} />
@@ -105,11 +114,14 @@ function App() {
           <Route path="search" element={<SearchProducts />} />
           <Route path="contact" element={<Contact />} />
         </Route>
+
+        {/* Unauthenticated and Not Found Pages */}
         <Route path="/unauth-page" element={<UnauthPage />} />
-        {/* <Route path="*" element={<NotFound />} /> */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );
 }
+
 
 export default App;

@@ -34,7 +34,7 @@ export const loginFormControls = [
     name: "password",
     label: "Password",
     placeholder: "Enter your password",
-    componentType: "input",
+    componentType: "password",
     type: "password",
   },
 ];

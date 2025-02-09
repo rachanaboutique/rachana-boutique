@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import {
@@ -19,6 +20,14 @@ function CommonForm({
   buttonText,
   isBtnDisabled,
 }) {
+  const [passwordVisibility, setPasswordVisibility] = useState({});
+
+  function togglePasswordVisibility(name) {
+    setPasswordVisibility((prevState) => ({
+      ...prevState,
+      [name]: !prevState[name],
+    }));
+  }
   function renderInputsByComponentType(getControlItem) {
     let element = null;
     const value = formData[getControlItem.name] || "";
@@ -42,6 +51,34 @@ function CommonForm({
         );
         break;
 
+
+        case "password":
+          element = (
+            <div className="relative">
+              <Input
+                name={getControlItem.name}
+                placeholder={getControlItem.placeholder}
+                id={getControlItem.name}
+                type={passwordVisibility[getControlItem.name] ? "text" : "password"} // Toggle between text and password
+                value={value}
+                onChange={(event) =>
+                  setFormData({
+                    ...formData,
+                    [getControlItem.name]: event.target.value,
+                  })
+                }
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+                onClick={() => togglePasswordVisibility(getControlItem.name)}
+              >
+                {passwordVisibility[getControlItem.name] ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
+          );
+          break;
+    
       case "select":
         element = (
           <Select

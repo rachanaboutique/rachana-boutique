@@ -1,24 +1,34 @@
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
-import { brandOptionsMap, categoryOptionsMap } from "@/config";
 import { Badge } from "../ui/badge";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux"; // Import useSelector
+import { useToast } from "../ui/use-toast"; // Import useToast
 
-function ShoppingProductTile({
-  product,
-  handleGetProductDetails,
-  handleAddtoCart,
-}) {
-  const navigate = useNavigate(); // Initialize useNavigate
+function ShoppingProductTile({ product, handleAddtoCart }) {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state) => state.auth); // Get authentication status
+  const { toast } = useToast(); // Initialize toast
 
   const handleViewDetails = (productId) => {
     navigate(`/shop/details/${productId}`);
   };
 
+  const handleAddToCartClick = (productId, totalStock) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in to add items to the cart!",
+        variant: "destructive",
+      }); // Show toast message
+    } else {
+      handleAddtoCart(productId, totalStock); // Call the provided add-to-cart handler
+    }
+  };
+
   return (
     <Card className="w-full max-w-[320px] mx-auto shadow-lg rounded-lg overflow-hidden transition-transform transform">
       <div
-        onClick={() => handleGetProductDetails(product?._id)}
+        onClick={() => handleViewDetails(product?._id)}
         className="relative cursor-pointer"
       >
         <div className="relative group overflow-hidden">
@@ -39,28 +49,27 @@ function ShoppingProductTile({
           <Badge className="absolute top-2 left-2 bg-orange-500 text-white text-sm py-1 px-2 rounded">
             {`Only ${product?.totalStock} left`}
           </Badge>
-        ) : product?.salePrice > 0 ? (<>
-          <Badge className="absolute top-2 left-2 bg-green-500 text-white text-sm py-1 px-2 rounded">
-            Sale
-          </Badge>
-           {product?.isFeatured && (
-            <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-sm font-semibold bg-green-50 text-green-700">
-              Featured
-            </div>
-          )}
-         </>
+        ) : product?.salePrice > 0 ? (
+          <>
+            <Badge className="absolute top-2 left-2 bg-green-500 text-white text-sm py-1 px-2 rounded">
+              Sale
+            </Badge>
+            {product?.isFeatured && (
+              <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-sm font-semibold bg-green-50 text-green-700">
+                Featured
+              </div>
+            )}
+          </>
         ) : null}
       </div>
+
       {/* Card Content */}
       <CardContent className="p-4 bg-white">
         <h2 className="text-lg font-semibold mb-1 text-gray-800 truncate">
           {product?.title}
         </h2>
-        
-        <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
-          {/* <span>{categoryOptionsMap[product?.category]}</span>
-          <span>{brandOptionsMap[product?.brand]}</span> */}
-        </div>
+
+        <div className="flex justify-between items-center text-sm text-gray-500 mb-2"></div>
         <div className="flex justify-between items-center">
           <span
             className={`${
@@ -76,8 +85,10 @@ function ShoppingProductTile({
           )}
         </div>
       </CardContent>
+
       {/* Line */}
       <div className="border-t border-gray-200"></div>
+
       {/* Card Footer */}
       <CardFooter className="flex items-center gap-2 p-4">
         {product?.totalStock === 0 ? (
@@ -89,7 +100,7 @@ function ShoppingProductTile({
           </Button>
         ) : (
           <Button
-            onClick={() => handleAddtoCart(product?._id, product?.totalStock)}
+            onClick={() => handleAddToCartClick(product?._id, product?.totalStock)}
             className="w-full bg-foreground hover:bg-accent text-white"
           >
             Add to Cart

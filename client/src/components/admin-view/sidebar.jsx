@@ -5,6 +5,7 @@ import {
   ChartNoAxesCombined,
   LayoutDashboard,
   ShoppingBasket,
+  MessageSquareDot,
 } from "lucide-react";
 import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
@@ -47,6 +48,12 @@ const adminSidebarMenuItems = [
     label: "Instafeed",
     path: "/admin/instafeed",
     icon: <Film />,
+  },
+  {
+    id: "feedback",
+    label: "Feedback",
+    path: "/admin/feedback",
+    icon: <MessageSquareDot />,
   },
 ];
 

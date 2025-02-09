@@ -45,6 +45,7 @@ import FastMovingCard from "@/components/shopping-view/fast-moving-card";
 import InstagramFeed from "@/components/shopping-view/instagramFeed";
 import Testimonials from "@/components/shopping-view/testimonials";
 import Banner from "@/components/shopping-view/banner";
+import FeedbackCard from "@/components/shopping-view/feedback-card";
 
 
 
@@ -58,11 +59,12 @@ function ShoppingHome() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false)
   const { user } = useSelector((state) => state.auth);
   const { categoriesList } = useSelector((state) => state.shopCategories);
+  console.log(categoriesList, "categoriesList");
   const { instaFeedPosts } = useSelector((state) => state.shopInstaFeed);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const [activeItem, setActiveItem] = useState(0);
   const wrapperRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -75,6 +77,20 @@ function ShoppingHome() {
     rootMargin: window.innerWidth <= 768 ? "1750px" : "200px",
     threshold: 0.2,
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    // Listen to the resize event
+    window.addEventListener("resize", handleResize);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     if (!wrapperRef.current) return;
@@ -97,16 +113,8 @@ function ShoppingHome() {
       }
     };
   }, [activeItem]);
-  function handleNavigateToListingPage(getCurrentItem, section) {
-    sessionStorage.removeItem("filters");
-    const currentFilter = {
-      [section]: [getCurrentItem.id],
-    };
 
-    sessionStorage.setItem("filters", JSON.stringify(currentFilter));
-    navigate(`/shop/collections`);
-  }
-
+  console.log(screenWidth, "screenWidth")
   function handleGetProductDetails(getCurrentProductId) {
     dispatch(fetchProductDetails(getCurrentProductId));
   }
@@ -160,7 +168,17 @@ function ShoppingHome() {
       <div className="relative w-full h-[600px]">
         <Carousel bannersList={bannersList} />
       </div>
-      <section className="py-12 -mt-10 md:mt-12">
+      <section
+        className={`py-12 ${screenWidth < 768
+            ? "-mt-10"
+            : screenWidth >= 768 && screenWidth <= 1024
+              ? "-mt-10"
+              : screenWidth > 1024 && screenWidth <= 1650
+                ? "mt-[3%]"
+                : "mt-[35%]"
+          }`}
+      >
+
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Shop by category</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -194,7 +212,7 @@ function ShoppingHome() {
                 .filter((productItem) => productItem?.isFeatured)
                 .map((productItem) => (
                   <ShoppingProductTile
-                    key={productItem.id}
+                    key={productItem._id}
                     handleGetProductDetails={handleGetProductDetails}
                     product={productItem}
                     handleAddtoCart={handleAddtoCart}
@@ -243,7 +261,7 @@ function ShoppingHome() {
                         "first:pointer-events-auto last:pointer-events-auto",
                         "md:[&_img]:opacity-100"
                       )}
-                      key={productItem.name}
+                      key={productItem._id}
                     >
                       <FastMovingCard item={productItem} index={index} activeItem={activeItem} />
                     </motion.li>
@@ -273,14 +291,15 @@ function ShoppingHome() {
           <h2 className="text-3xl font-bold text-center mb-8">
             What Our Customers Say
           </h2>
+
           <Testimonials />
         </div>
       </section>
-      <ProductDetailsDialog
+      {/* <ProductDetailsDialog
         open={openDetailsDialog}
         setOpen={setOpenDetailsDialog}
         productDetails={productDetails}
-      />
+      /> */}
     </div>
   );
 }

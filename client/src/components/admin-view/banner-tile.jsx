@@ -1,7 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "../ui/button";
+import { Trash, Edit } from "lucide-react";
+import DeleteConfirmationModal from "@/components/common/delete-confirmation-modal";
 
 function AdminBannerTile({ image, description, handleEdit, handleDelete }) {
+  const [isModalOpen, setModalOpen] = useState(false);
+
+  const confirmDelete = () => {
+    handleDelete();
+    setModalOpen(false);
+  };
+
   return (
     <div className="relative w-full h-[350px] rounded-t-lg">
       {/* Background Image */}
@@ -21,19 +30,31 @@ function AdminBannerTile({ image, description, handleEdit, handleDelete }) {
         {/* Action Buttons */}
         <div className="flex gap-4">
           <Button
+            variant="ghost"
             onClick={handleEdit}
-            className="bg-primary text-white hover:bg-accent"
+            className="text-white border border-white rounded hover:bg-accent hover:border-none"
           >
+            <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
           <Button
-            onClick={handleDelete}
-            className="bg-red-600 text-white hover:bg-red-700"
+            variant="ghost"
+            onClick={() => setModalOpen(true)}
+            className="text-white border border-white rounded hover:bg-red-700 hover:border-none"
           >
+            <Trash className="w-4 h-4 mr-2" />
             Delete
           </Button>
         </div>
       </div>
+
+      {/* Delete confirmation modal */}
+      <DeleteConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={confirmDelete}
+        message="Are you sure you want to delete this banner?"
+      />
     </div>
   );
 }

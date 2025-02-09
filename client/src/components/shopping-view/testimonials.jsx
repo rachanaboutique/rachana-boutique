@@ -1,6 +1,7 @@
 import React from 'react';
 import Slider from 'react-slick';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import FeedbackCard from './feedback-card';
 
 const testimonials = [
   {
@@ -64,8 +65,12 @@ const Testimonials = () => {
 
   // Main return function
   return (
-    <div className='pt-10'>
-      <div className='w-full md:w-3/4 m-auto'>
+    <div className='relative pt-10'>
+      <div className='absolute -top-3 right-1/2 md:right-1/4'>
+      <FeedbackCard />
+
+      </div>
+      <div className='mt-0 md:mt-4 w-full md:w-3/4 m-auto'>
         <Slider {...settings}>
           {testimonials.map((testimonial, index) => {
             return renderSlide(testimonial, index);

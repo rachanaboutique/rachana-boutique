@@ -7,7 +7,7 @@ const CategoryCard = ({ categoryItem }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/shop/collections?category=${categoryItem.label}`);
+    navigate(`/shop/collections?category=${categoryItem._id}`);
   };
 
   return (

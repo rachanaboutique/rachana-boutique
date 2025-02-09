@@ -13,13 +13,20 @@ export const addReview = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/review/add`;
     try {
       const response = await axios.post(url, formdata);
+      console.log("Review added successfully:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error adding review from URL:", url, error);
-      return rejectWithValue(error.response?.data || error.message);
+      // Log the error for debugging
+      console.error("Error adding review:", error.response?.data || error.message);
+
+      // Return the error message from the backend
+      return rejectWithValue(error.response?.data || {
+        message: "An unexpected error occurred.",
+      });
     }
   }
 );
+
 
 // Get Reviews
 export const getReviews = createAsyncThunk(
@@ -28,6 +35,7 @@ export const getReviews = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/review/${id}`;
     try {
       const response = await axios.get(url);
+      console.log("Reviews fetched successfully:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error fetching reviews from URL:", url, error);

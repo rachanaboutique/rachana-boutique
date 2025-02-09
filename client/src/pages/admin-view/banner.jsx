@@ -113,7 +113,7 @@ function AdminBanners() {
           Add New Banner
         </Button>
       </div>
-      <div className="">
+      <div className="flex flex-col gap-5">
         {bannerList && bannerList.length > 0
           ? bannerList.map((bannerItem) => (
               <BannerTile

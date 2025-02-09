@@ -8,12 +8,15 @@ const adminProductsRouter = require("./routes/admin/products-routes");
 const adminCategoryRouter = require("./routes/admin/category-routes");
 const adminBannerRouter = require("./routes/admin/banner-routes");
 const adminInstaFeedRouter = require("./routes/admin/instafeed-routes");
+const adminFeedbackRouter = require("./routes/admin/feedback-routes");
 const adminOrderRouter = require("./routes/admin/order-routes");
-
+const adminDashboardRouter = require("./routes/admin/dashboard-routes");
+ 
 const shopProductsRouter = require("./routes/shop/products-routes");
 const shopCategoriesRouter = require("./routes/shop/categories-routes");
 const shopBannersRouter = require("./routes/shop/banner-routes");
 const shopInstafeedRouter = require("./routes/shop/instafeed-routes");
+const shopFeedbackRouter = require("./routes/shop/feedback-routes");
 const shopCartRouter = require("./routes/shop/cart-routes");
 const shopAddressRouter = require("./routes/shop/address-routes");
 const shopOrderRouter = require("./routes/shop/order-routes");
@@ -51,12 +54,15 @@ app.use("/api/admin/products", adminProductsRouter);
 app.use("/api/admin/banners", adminBannerRouter);
 app.use("/api/admin/categories", adminCategoryRouter);
 app.use("/api/admin/instafeed", adminInstaFeedRouter);
+app.use("/api/admin/feedback", adminFeedbackRouter);
 app.use("/api/admin/orders", adminOrderRouter);
+app.use("/api/admin/dashboard", adminDashboardRouter);
 
 app.use("/api/shop/products", shopProductsRouter);
 app.use("/api/shop/categories", shopCategoriesRouter);
 app.use("/api/shop/banners", shopBannersRouter);
 app.use("/api/shop/instafeed", shopInstafeedRouter);
+app.use("/api/shop/feedback", shopFeedbackRouter);
 app.use("/api/shop/cart", shopCartRouter);
 app.use("/api/shop/address", shopAddressRouter);
 app.use("/api/shop/order", shopOrderRouter);

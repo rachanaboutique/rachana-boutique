@@ -1,11 +1,10 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useToast } from "../../components/ui/use-toast";
 import { fetchProductDetails, setProductDetails } from "@/store/shop/products-slice";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { addReview, getReviews } from "@/store/shop/review-slice";
-import { useNavigate } from "react-router-dom";
 import StarRatingComponent from "../../components/common/star-rating";
 import ZoomableImage from "../../components/ui/zoomable-dialog-box";
 import { Button } from "../../components/ui/button";
@@ -13,60 +12,75 @@ import { Separator } from "../../components/ui/separator";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import { ExternalLink } from "lucide-react";
-import { StarIcon } from "lucide-react";
+import { ExternalLink, StarIcon } from "lucide-react";
 
 function ProductDetailsPage({ open, setOpen }) {
   const [reviewMsg, setReviewMsg] = useState("");
   const [rating, setRating] = useState(0);
   const [selectedColor, setSelectedColor] = useState("");
-
   const [zoomData, setZoomData] = useState({
     isHovering: false,
     zoomPosition: { x: 0, y: 0 },
     imageSrc: "",
   });
+  const { isAuthenticated } = useSelector((state) => state.auth); // Get authentication status
+  
+  // For image handling (if applicable)
+  const [selectedImage, setSelectedImage] = useState("");
+  const [openZoomDialog, setOpenZoomDialog] = useState(false);
 
+  // Handles zoom data updates
   const handleZoomData = (data) => setZoomData(data);
-  const getCurrentProductId  = useParams().id;
- console.log(getCurrentProductId);
+
+  const { id: getCurrentProductId } = useParams();
+  console.log(getCurrentProductId);
+  
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
-  const { productDetails } = useSelector((state) => state.shopProducts);
+  const { productDetails, relatedProducts } = useSelector((state) => state.shopProducts);
   const { reviews } = useSelector((state) => state.shopReview);
-  const { relatedProducts } = useSelector((state) => state.shopProducts);
- 
+  console.log(reviews, "reviews");
 
   const navigate = useNavigate();
   const { toast } = useToast();
 
-
+  // Handle rating change for the review
   const handleRatingChange = (getRating) => {
     setRating(getRating);
   };
 
-  const handleAddToCart = (getCurrentProductId, getTotalStock) => {
-    let getCartItems = cartItems.items || [];
-    if (getCartItems.length) {
-      const indexOfCurrentItem = getCartItems.findIndex(
-        (item) => item.productId === getCurrentProductId
+  // Handle adding product to cart 
+  const handleAddToCart = (currentProductId, totalStock) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in to add items to the cart!",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    let currentCartItems = cartItems.items || [];
+    if (currentCartItems.length) {
+      const itemIndex = currentCartItems.findIndex(
+        (item) => item.productId === currentProductId
       );
-      if (indexOfCurrentItem > -1) {
-        const getQuantity = getCartItems[indexOfCurrentItem].quantity;
-        if (getQuantity + 1 > getTotalStock) {
+      if (itemIndex > -1) {
+        const currentQuantity = currentCartItems[itemIndex].quantity;
+        if (currentQuantity + 1 > totalStock) {
           toast({
-            title: `Only ${getQuantity} quantity can be added for this item`,
+            title: `Only ${currentQuantity} quantity can be added for this item`,
             variant: "destructive",
           });
           return;
         }
       }
     }
+  
     dispatch(
       addToCart({
         userId: user?.id,
-        productId: getCurrentProductId,
+        productId: currentProductId,
         quantity: 1,
       })
     ).then((data) => {
@@ -78,15 +92,10 @@ function ProductDetailsPage({ open, setOpen }) {
       }
     });
   };
+  
 
-  const handleDialogClose = () => {
-    setOpen(false);
-    dispatch(setProductDetails());
-    setRating(0);
-    setReviewMsg("");
-    setSelectedColor("");
-  };
 
+  // Handle adding a review for the product
   const handleAddReview = () => {
     dispatch(
       addReview({
@@ -97,27 +106,43 @@ function ProductDetailsPage({ open, setOpen }) {
         reviewValue: rating,
       })
     ).then((data) => {
-      if (data.payload.success) {
+      if (!isAuthenticated) {
+        toast({
+          title: "Please log in to add a review!",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data.payload?.success) {
         setRating(0);
         setReviewMsg("");
         dispatch(getReviews(productDetails?._id));
         toast({
           title: "Review added successfully!",
         });
+      } else {
+        const errorMessage =
+          data.payload?.message || "Failed to add review. Please try again.";
+        toast({
+          title: errorMessage,
+        });
       }
     });
   };
 
+  // Calculate average review value
   const averageReview =
     reviews && reviews.length > 0
-      ? reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) /
-        reviews.length
+      ? reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) / reviews.length
       : 0;
 
+  // Handle color selection
   const handleColorSelect = (color) => {
     setSelectedColor(color);
   };
 
+  // Handle image hover for zoom functionality
   const handleImageHover = (image) => {
     setSelectedImage(image);
     setOpenZoomDialog(true);
@@ -129,6 +154,14 @@ function ProductDetailsPage({ open, setOpen }) {
       dispatch(fetchProductDetails(getCurrentProductId));
     }
   }, [getCurrentProductId, dispatch]);
+
+  // New useEffect to fetch reviews when product details (id) are available
+  useEffect(() => {
+    if (productDetails?._id) {
+      dispatch(getReviews(productDetails._id));
+    }
+  }, [productDetails?._id, dispatch]);
+
 
   return (
     <div className="p-4 px-4 md:p-8 md:px-32">
@@ -170,7 +203,7 @@ function ProductDetailsPage({ open, setOpen }) {
              {/* Zoom Card */}
              {zoomData.isHovering && (
             <div
-              className="hidden md:block absolute top-[12%] left-[42%] z-10 w-1/2 h-3/4 overflow-hidden border shadow-lg bg-white"
+              className="hidden md:block absolute top-[14%] left-[42%] z-10 w-1/2 h-3/4 overflow-hidden border shadow-lg bg-white"
               style={{
                 backgroundImage: `url(${zoomData.imageSrc})`,
                 backgroundPosition: `${zoomData.zoomPosition.x}% ${zoomData.zoomPosition.y}%`,

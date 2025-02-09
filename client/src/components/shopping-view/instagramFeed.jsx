@@ -6,7 +6,7 @@ const InstagramFeed = ({ posts }) => {
     const [selectedPost, setSelectedPost] = useState(null);
 
     return (
-        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-2 md:p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Instagram Post Thumbnails */}
             {posts.map((post, index) => (
                 <div

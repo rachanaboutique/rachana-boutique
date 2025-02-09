@@ -1,4 +1,5 @@
 import React from "react";
+import { Trash } from "lucide-react";
 import { Button } from "../ui/button";
 
 function InstafeedTile({ postUrl, handleDelete }) {
@@ -10,12 +11,17 @@ function InstafeedTile({ postUrl, handleDelete }) {
       {/* Action Buttons */}
       <div className="flex gap-4 mt-4">
 
+ 
+        
         <Button
-          onClick={handleDelete}
-          className="bg-red-600 text-white hover:bg-red-700"
-        >
-          Delete
-        </Button>
+            variant="ghost"
+            onClick={handleDelete}
+            className="text-red-600 border border-red-600 rounded hover:bg-red-700"
+
+          >
+            <Trash className="w-4 h-4 mr-2" />
+            Delete
+          </Button>
       </div>
     </div>
   );
