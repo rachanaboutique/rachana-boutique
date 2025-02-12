@@ -19,6 +19,8 @@ import UserCartWrapper from "./cart-wrapper";
 import { useEffect, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
+import { useToast } from "../ui/use-toast";
+
 
 
 
@@ -28,6 +30,8 @@ function ShoppingHeader() {
   const { isAuthenticated } = useSelector((state) => state.auth);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const { toast } = useToast();
+
 
   const messages = [
 
@@ -99,9 +103,24 @@ function ShoppingHeader() {
     const dispatch = useDispatch();
 
     function handleLogout() {
-      dispatch(logoutUser());
+      dispatch(logoutUser())
+        .unwrap()
+        .then((result) => {
+          if (result.success) {
+            toast({
+              title: "Logged out successfully",
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Logout failed:", error);
+          toast({
+            title: "Logout failed",
+            description: "Please try again.",
+            variant: "destructive", 
+          });
+        });
     }
-
     useEffect(() => {
       dispatch(fetchCartItems(user?.id));
     }, [dispatch]);
@@ -130,45 +149,45 @@ function ShoppingHeader() {
           />
         </Sheet>
 
-        {user ? ( 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="bg-black hover:cursor-pointer">
-                  <AvatarFallback className="bg-black text-white font-extrabold">
-                    {user && user?.userName && user?.userName[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" className="mt-24 bg-background w-56">
-                <DropdownMenuLabel>Logged in as {user.userName}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="hover:cursor-pointer"
-                  onClick={() => {
-                    navigate("/shop/account");
-                    setIsSheetOpen(false);
-                  }}
-                >
-                  <UserCog className="mr-2 h-4 w-4" />
-                  Account
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="hover:cursor-pointer" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => navigate("/auth/login")}>
-                Login
-              </Button>
-              <Button onClick={() => navigate("/auth/register")}>
-                Sign Up
-              </Button>
-            </div>
-          )}
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="bg-black hover:cursor-pointer">
+                <AvatarFallback className="bg-black text-white font-extrabold">
+                  {user && user?.userName && user?.userName[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="right" className="mt-24 bg-background w-56">
+              <DropdownMenuLabel>Logged in as {user.userName}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="hover:cursor-pointer"
+                onClick={() => {
+                  navigate("/shop/account");
+                  setIsSheetOpen(false);
+                }}
+              >
+                <UserCog className="mr-2 h-4 w-4" />
+                Account
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="hover:cursor-pointer" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => navigate("/auth/login")}>
+              Login
+            </Button>
+            <Button onClick={() => navigate("/auth/register")}>
+              Sign Up
+            </Button>
+          </div>
+        )}
       </div>
     );
   }

@@ -1,4 +1,5 @@
 const Product = require("../../models/Product");
+const ProductReview = require("../../models/Review");
 
 const getFilteredProducts = async (req, res) => {
   try {
@@ -64,15 +65,29 @@ const getProductDetails = async (req, res) => {
         message: "Product not found!",
       });
 
+    // Retrieve all reviews for the product
+    const reviews = await ProductReview.find({ productId: id });
+    // Calculate average review value; if no reviews, default to 0
+    const averageReview =
+      reviews.length > 0
+        ? reviews.reduce((sum, review) => sum + review.reviewValue, 0) / reviews.length
+        : 0;
+
+    // Attach average review value to the product data
+    const productData = {
+      ...product.toObject(),
+      averageReview,
+    };
+
     res.status(200).json({
       success: true,
-      data: product,
+      data: productData,
     });
-  } catch (e) {
-    console.log(error);
-    res.status(500).json({ 
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
       success: false,
-      message: "Some error occured",
+      message: "Some error occurred",
     });
   }
 };

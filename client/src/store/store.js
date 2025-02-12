@@ -7,6 +7,10 @@ import adminInstaFeedSlice from "./admin/instafeed-slice";
 import adminFeedbackSlice from "./admin/feedback-slice";
 import adminOrderSlice from "./admin/order-slice";
 import adminDashboardSlice from "./admin/dashboard-slice";
+import adminUsersSlice from "./admin/users-slice";
+import adminProductReviewSlice from "./admin/reviews-slice";
+
+
 import shopProductsSlice from "./shop/products-slice";
 import shoppingCategoriesSlice from "./shop/categories-slice";
 import shoppingBannersSlice from "./shop/banners-slice";
@@ -30,6 +34,8 @@ const store = configureStore({
     adminFeedback: adminFeedbackSlice,
     adminOrder: adminOrderSlice,
     adminDashboard: adminDashboardSlice,
+    adminUsers: adminUsersSlice,
+    adminProductReview: adminProductReviewSlice,
 
     shopProducts: shopProductsSlice,
     shopCategories: shoppingCategoriesSlice,

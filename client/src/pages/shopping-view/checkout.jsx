@@ -7,6 +7,7 @@ import { useState } from "react";
 import { createNewOrder, capturePayment } from "@/store/shop/order-slice";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { Loader } from "../../components/ui/loader";
 
 function ShoppingCheckout() {
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -14,6 +15,7 @@ function ShoppingCheckout() {
   const { approvalURL } = useSelector((state) => state.shopOrder);
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymemntStart] = useState(false);
+  const {isPaymentLoading} = useSelector((state) => state.shopOrder);
   const dispatch = useDispatch();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -54,6 +56,7 @@ function ShoppingCheckout() {
 
     const orderData = {
       userId: user?.id,
+      email: user?.email,
       cartId: cartItems?._id,
       cartItems: cartItems.items.map((item) => ({
         productId: item?.productId,
@@ -145,6 +148,9 @@ function ShoppingCheckout() {
     });
   }
 
+  if (isPaymentLoading) return <Loader />;
+
+
 
 
   if (approvalURL) {
@@ -176,7 +182,7 @@ function ShoppingCheckout() {
           <div className="mt-4 w-full">
             <Button onClick={handleInitiateRazorpayPayment} className="w-full">
               {isPaymentStart
-                ? "Processing Paypal Payment..."
+                ? "Processing Payment..."
                 : "Checkout"}
             </Button>
           </div>

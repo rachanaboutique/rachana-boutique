@@ -2,8 +2,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import accImg from "../../assets/account.jpg";
 import Address from "@/components/shopping-view/address";
 import ShoppingOrders from "@/components/shopping-view/orders";
+import { useSelector } from "react-redux";
+import { useToast } from "@/components/ui/use-toast";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function ShoppingAccount() {
+  const { isAuthenticated } = useSelector((state) => state.auth); // Get authentication state
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Please login to view your orders.",
+        variant: "destructive",
+      });
+      navigate("/auth/login");
+    }
+  }, [isAuthenticated, navigate, toast]);
+
+  if (!isAuthenticated) {
+    return null; // Avoid rendering the component if the user is not authenticated
+  }
+
   return (
     <div className="flex flex-col">
       <div className="relative h-[300px] w-full overflow-hidden">

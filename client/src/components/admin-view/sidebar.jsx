@@ -6,6 +6,8 @@ import {
   LayoutDashboard,
   ShoppingBasket,
   MessageSquareDot,
+  Users,
+  Star
 } from "lucide-react";
 import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
@@ -50,10 +52,22 @@ const adminSidebarMenuItems = [
     icon: <Film />,
   },
   {
+    id: "reviews",
+    label: "Reviews",
+    path: "/admin/reviews",
+    icon: <Star />,
+  },
+  {
     id: "feedback",
     label: "Feedback",
     path: "/admin/feedback",
     icon: <MessageSquareDot />,
+  },
+  {
+    id: "users",
+    label: "Users",
+    path: "/admin/users",
+    icon: <Users />,
   },
 ];
 

@@ -1,26 +1,40 @@
 const { imageUploadUtil } = require("../../helpers/cloudinary");
 const Product = require("../../models/Product");
+const ProductReview = require("../../models/Review");
 
+
+// Handles image upload for both single and multiple files
 const handleImageUpload = async (req, res) => {
   try {
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    const url = "data:" + req.file.mimetype + ";base64," + b64;
-    const result = await imageUploadUtil(url);
-
-    res.json({
+    let results = [];
+    // Check if multiple files were uploaded
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const b64 = Buffer.from(file.buffer).toString("base64");
+        const url = "data:" + file.mimetype + ";base64," + b64;
+        const result = await imageUploadUtil(url);
+        results.push(result);
+      }
+    } else if (req.file) { // Single file upload fallback
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+      const url = "data:" + req.file.mimetype + ";base64," + b64;
+      const result = await imageUploadUtil(url);
+      results.push(result);
+    }
+    return res.json({
       success: true,
-      result,
+      result: results,
     });
   } catch (error) {
-    console.log(error);
-    res.json({
+    console.error(error);
+    return res.json({
       success: false,
-      message: "Error occured",
+      message: "Error occurred",
     });
   }
 };
 
-//add a new product
+// Add a new product
 const addProduct = async (req, res) => {
   try {
     const {
@@ -29,7 +43,7 @@ const addProduct = async (req, res) => {
       description,
       category,
       isNewArrival,
-      isFeatured, 
+      isFeatured,
       isFastMoving,
       price,
       salePrice,
@@ -37,10 +51,11 @@ const addProduct = async (req, res) => {
       averageReview,
     } = req.body;
 
-    console.log(averageReview, "averageReview");
+    // Ensure that image is an array; if not, convert it to one.
+    const images = Array.isArray(image) ? image : [image];
 
     const newlyCreatedProduct = new Product({
-      image,
+      image: images,
       title,
       description,
       category,
@@ -54,38 +69,56 @@ const addProduct = async (req, res) => {
     });
 
     await newlyCreatedProduct.save();
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: newlyCreatedProduct,
     });
   } catch (e) {
-    console.log(e);
-    res.status(500).json({
+    console.error(e);
+    return res.status(500).json({
       success: false,
-      message: "Error occured",
+      message: "Error occurred",
     });
   }
 };
 
-//fetch all products
-
+// Fetch all products
 const fetchAllProducts = async (req, res) => {
   try {
+    // Retrieve all products from the database
     const listOfProducts = await Product.find({});
-    res.status(200).json({
+
+    // For each product, calculate the average review using parallel processing
+    const productsWithAverage = await Promise.all(
+      listOfProducts.map(async (product) => {
+        // Find all reviews for the product using its _id
+        const reviews = await ProductReview.find({ productId: product._id });
+
+        // Compute the average reviewValue; if no reviews, default to 0
+        const averageReview = reviews.length
+          ? reviews.reduce((acc, review) => acc + review.reviewValue, 0) / reviews.length
+          : 0;
+
+        // Return a plain object representation with the additional averageReview field
+        return { ...product.toObject(), averageReview };
+      })
+    );
+
+    // Send response with the enriched product list including the average reviews
+    return res.status(200).json({
       success: true,
-      data: listOfProducts,
+      data: productsWithAverage,
     });
   } catch (e) {
-    console.log(e);
-    res.status(500).json({
+    console.error(e);
+    return res.status(500).json({
       success: false,
-      message: "Error occured",
+      message: "Error occurred",
     });
   }
 };
 
-//edit a product
+// Edit a product
 const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -111,41 +144,38 @@ const editProduct = async (req, res) => {
       });
     }
 
-    // Update only if the property exists in the request body.
-    if (typeof title !== 'undefined') {
+    if (typeof title !== "undefined") {
       findProduct.title = title;
     }
-    if (typeof description !== 'undefined') {
+    if (typeof description !== "undefined") {
       findProduct.description = description;
     }
-    if (typeof category !== 'undefined') {
+    if (typeof category !== "undefined") {
       findProduct.category = category;
     }
-    if (req.body.hasOwnProperty('isNewArrival')) {
+    if (req.body.hasOwnProperty("isNewArrival")) {
       findProduct.isNewArrival = isNewArrival;
     }
-
-    if(req.body.hasOwnProperty('isFeatured')) {
+    if (req.body.hasOwnProperty("isFeatured")) {
       findProduct.isFeatured = isFeatured;
     }
-
-    if(req.body.hasOwnProperty('isFastMoving')) {
+    if (req.body.hasOwnProperty("isFastMoving")) {
       findProduct.isFastMoving = isFastMoving;
     }
-    // For price and salePrice, check for empty string explicitly.
-    if (typeof price !== 'undefined') {
+    if (typeof price !== "undefined") {
       findProduct.price = price === "" ? 0 : price;
     }
-    if (typeof salePrice !== 'undefined') {
+    if (typeof salePrice !== "undefined") {
       findProduct.salePrice = salePrice === "" ? 0 : salePrice;
     }
-    if (typeof totalStock !== 'undefined') {
+    if (typeof totalStock !== "undefined") {
       findProduct.totalStock = totalStock;
     }
-    if (typeof image !== 'undefined') {
-      findProduct.image = image;
+    if (typeof image !== "undefined") {
+      // Force image to be an array if it's not already
+      findProduct.image = Array.isArray(image) ? image : [image];
     }
-    if (typeof averageReview !== 'undefined') {
+    if (typeof averageReview !== "undefined") {
       findProduct.averageReview = averageReview;
     }
 
@@ -163,27 +193,28 @@ const editProduct = async (req, res) => {
   }
 };
 
-//delete a product
+// Delete a product
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const product = await Product.findByIdAndDelete(id);
 
-    if (!product)
+    if (!product) {
       return res.status(404).json({
         success: false,
         message: "Product not found",
       });
+    }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Product delete successfully",
+      message: "Product deleted successfully",
     });
   } catch (e) {
-    console.log(e);
-    res.status(500).json({
+    console.error(e);
+    return res.status(500).json({
       success: false,
-      message: "Error occured",
+      message: "Error occurred",
     });
   }
 };

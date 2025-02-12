@@ -34,7 +34,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
         <div className="relative group overflow-hidden">
           {/* Product Image */}
           <img
-            src={product?.image}
+            src={product?.image[0]}
             alt={product?.title}
             className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-110"
           />

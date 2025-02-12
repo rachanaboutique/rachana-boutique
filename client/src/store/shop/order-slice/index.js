@@ -4,6 +4,7 @@ import axios from "axios";
 const initialState = {
   approvalURL: null,
   isLoading: false,
+  isPaymentLoading: false,
   orderId: null,
   orderList: [],
   orderDetails: null,
@@ -82,19 +83,30 @@ const shoppingOrderSlice = createSlice({
     builder
       // Create New Order
       .addCase(createNewOrder.pending, (state) => {
-        state.isLoading = true;
+        state.isLoading = true; // Start loading
       })
       .addCase(createNewOrder.fulfilled, (state, action) => {
-        state.isLoading = false;
         state.approvalURL = action.payload.approvalURL;
         state.orderId = action.payload.orderId;
         sessionStorage.setItem("currentOrderId", JSON.stringify(action.payload.orderId));
       })
       .addCase(createNewOrder.rejected, (state) => {
-        state.isLoading = false;
+        state.isLoading = false; // Stop loading on failure
         state.approvalURL = null;
         state.orderId = null;
       })
+
+      // Capture Payment
+      .addCase(capturePayment.pending, (state) => {
+        state.isPaymentLoading = true; // Keep loading during payment capture
+      })
+      .addCase(capturePayment.fulfilled, (state) => {
+        state.isPaymentLoading = false; // Stop loading when payment is successful
+      })
+      .addCase(capturePayment.rejected, (state) => {
+        state.isPaymentLoading = false; // Stop loading on failure
+      })
+
       // Get All Orders By User Id
       .addCase(getAllOrdersByUserId.pending, (state) => {
         state.isLoading = true;
@@ -107,6 +119,7 @@ const shoppingOrderSlice = createSlice({
         state.isLoading = false;
         state.orderList = [];
       })
+
       // Get Order Details
       .addCase(getOrderDetails.pending, (state) => {
         state.isLoading = true;

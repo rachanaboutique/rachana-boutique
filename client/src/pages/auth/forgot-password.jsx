@@ -1,28 +1,26 @@
 import CommonForm from "@/components/common/form";
 import { useToast } from "@/components/ui/use-toast";
-import { loginFormControls } from "@/config";
-import { loginUser } from "@/store/auth-slice";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import { forgotPassword } from "@/store/auth-slice";
 
 const initialState = {
   email: "",
-  password: "",
 };
 
-function AuthLogin() {
+function AuthForgotPassword() {
   const [formData, setFormData] = useState(initialState);
-  const dispatch = useDispatch();
   const { toast } = useToast();
+  const dispatch = useDispatch();
 
   function onSubmit(event) {
     event.preventDefault();
 
-    dispatch(loginUser(formData)).then((data) => {
+    dispatch(forgotPassword(formData)).then((data) => {
       if (data?.payload?.success) {
         toast({
           title: data?.payload?.message,
+          description: "Please check your email for reset instructions.",
         });
       } else {
         toast({
@@ -37,32 +35,29 @@ function AuthLogin() {
     <div className="mx-auto w-full max-w-md space-y-6">
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Sign in to your account
+          Forgot Password?
         </h1>
         <p className="mt-2">
-          Don't have an account?
-          <Link
-            className="font-medium ml-2 text-primary hover:underline"
-            to="/auth/register"
-          >
-            Register
-          </Link>
+          Enter your email address, and we'll send you password reset instructions.
         </p>
       </div>
       <CommonForm
-        formControls={loginFormControls}
-        buttonText={"Sign In"}
+        formControls={[
+          {
+            name: "email",
+            type: "email",
+            label: "Email Address",
+            placeholder: "Enter your email",
+            required: true,
+          },
+        ]}
+        buttonText={"Send Reset Link"}
         formData={formData}
         setFormData={setFormData}
         onSubmit={onSubmit}
       />
-      <div className="text-center">
-        <Link className="text-sm text-primary hover:underline" to="/auth/forgot-password">
-          Forgot Password?
-        </Link>
-      </div>
     </div>
   );
 }
 
-export default AuthLogin;
+export default AuthForgotPassword;

@@ -45,7 +45,7 @@ export const fetchAllCategories = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/categories/get`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchAllCategories:", result.data);
+      console.log("Response from fetchAllCategories admin:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching all categories from URL:", url, error);

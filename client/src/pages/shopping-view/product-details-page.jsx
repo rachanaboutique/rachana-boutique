@@ -24,9 +24,10 @@ function ProductDetailsPage({ open, setOpen }) {
     imageSrc: "",
   });
   const { isAuthenticated } = useSelector((state) => state.auth); // Get authentication status
-  
+
   // For image handling (if applicable)
-  const [selectedImage, setSelectedImage] = useState("");
+
+
   const [openZoomDialog, setOpenZoomDialog] = useState(false);
 
   // Handles zoom data updates
@@ -34,13 +35,13 @@ function ProductDetailsPage({ open, setOpen }) {
 
   const { id: getCurrentProductId } = useParams();
   console.log(getCurrentProductId);
-  
+
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
   const { productDetails, relatedProducts } = useSelector((state) => state.shopProducts);
   const { reviews } = useSelector((state) => state.shopReview);
-  console.log(reviews, "reviews");
+  const [selectedImage, setSelectedImage] = useState(productDetails?.image[0]);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -59,7 +60,7 @@ function ProductDetailsPage({ open, setOpen }) {
       });
       return;
     }
-  
+
     let currentCartItems = cartItems.items || [];
     if (currentCartItems.length) {
       const itemIndex = currentCartItems.findIndex(
@@ -76,7 +77,7 @@ function ProductDetailsPage({ open, setOpen }) {
         }
       }
     }
-  
+
     dispatch(
       addToCart({
         userId: user?.id,
@@ -92,7 +93,7 @@ function ProductDetailsPage({ open, setOpen }) {
       }
     });
   };
-  
+
 
 
   // Handle adding a review for the product
@@ -168,19 +169,20 @@ function ProductDetailsPage({ open, setOpen }) {
       <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-8">
         <div className="relative overflow-hidden rounded-lg">
 
-        <ZoomableImage
-            imageSrc={productDetails?.image}
+          <ZoomableImage
+            imageSrc={selectedImage}
             imageAlt={productDetails?.title}
             onZoomData={handleZoomData}
           />
-         
+
           <div className="mt-4 flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300">
-            {productDetails?.additionalImages?.map((image, index) => (
+            {productDetails?.image?.map((image, index) => (
               <img
                 key={index}
                 src={image}
                 alt={`Additional Image ${index}`}
-                className="w-16 h-16 cursor-pointer rounded-lg"
+                className={`w-16 h-16 cursor-pointer rounded-lg ${selectedImage === image ? "border-4 border-foreground" : ""
+                  }`}
                 onClick={() => setSelectedImage(image)}
               />
             ))}
@@ -190,7 +192,7 @@ function ProductDetailsPage({ open, setOpen }) {
           <div>
             <h1 className="text-3xl font-extrabold flex items-center">
               {productDetails?.title}
-             
+
             </h1>
             <p className="text-muted-foreground text-xl mt-4">
               {productDetails?.description}
@@ -200,8 +202,8 @@ function ProductDetailsPage({ open, setOpen }) {
               <span className="text-muted-foreground">({averageReview.toFixed(2)})</span>
             </div>
           </div>
-             {/* Zoom Card */}
-             {zoomData.isHovering && (
+          {/* Zoom Card */}
+          {zoomData.isHovering && (
             <div
               className="hidden md:block absolute top-[14%] left-[42%] z-10 w-1/2 h-3/4 overflow-hidden border shadow-lg bg-white"
               style={{
@@ -252,9 +254,8 @@ function ProductDetailsPage({ open, setOpen }) {
                   <div
                     key={index}
                     onClick={() => handleColorSelect(color)}
-                    className={`w-8 h-8 rounded-full cursor-pointer ${
-                      color === selectedColor ? "border-4 border-blue-500" : ""
-                    }`}
+                    className={`w-8 h-8 rounded-full cursor-pointer ${color === selectedColor ? "border-4 border-blue-500" : ""
+                      }`}
                     style={{ backgroundColor: color }}
                   />
                 ))}
@@ -321,7 +322,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     />
                     <h3 className="text-lg font-semibold mt-2">{product.title}</h3>
                     <p className="text-sm text-muted-foreground">{product.description}</p>
-                   
+
                   </div>
                 ))}
               </div>

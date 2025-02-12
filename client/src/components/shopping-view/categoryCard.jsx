@@ -12,7 +12,7 @@ const CategoryCard = ({ categoryItem }) => {
 
   return (
     <Card
-      className="w-full max-w-lg rounded-3xl shadow-lg border border-gray-300 transition-all duration-300 overflow-hidden hover:cursor-pointer"
+      className="w-full max-w-lg  shadow-lg border border-gray-300 transition-all duration-300 overflow-hidden hover:cursor-pointer"
       onClick={handleClick}
     >
       <div className="relative group">

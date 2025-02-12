@@ -7,20 +7,18 @@ import CommonForm from "@/components/common/form";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { fetchCategories } from "@/store/shop/categories-slice";
 import { useToast } from "../../components/ui/use-toast";
-import {addProductFormElements} from "@/config";
-import { addNewProduct, deleteProduct, editProduct } from "@/store/admin/products-slice";
-import { fetchAllProducts } from "@/store/admin/products-slice";
+import { addProductFormElements } from "@/config";
+import { addNewProduct, deleteProduct, editProduct, fetchAllProducts } from "@/store/admin/products-slice";
 
-
-
+// Updated initial form data with "image" as an array.
 const initialFormData = {
-  image: null,
+  image: [],
   title: "",
   description: "",
   category: "",
-  isNewArrival: "",
-  isFeatured: "",
-  isFastMoving: "",
+  isNewArrival: false,
+  isFeatured: false,
+  isFastMoving: false,
   price: "",
   salePrice: "",
   totalStock: "",
@@ -28,26 +26,38 @@ const initialFormData = {
 };
 
 function AdminProducts() {
-  const [openCreateProductsDialog, setOpenCreateProductsDialog] =
-    useState(false);
+  const [openCreateProductsDialog, setOpenCreateProductsDialog] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
-  const [imageFile, setImageFile] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  // Changed from "imageFile" to "imageFiles" to support multiple files.
+  const [imageFiles, setImageFiles] = useState([]);
+  // Changed "uploadedImageUrl" to "uploadedImageUrls" as an array.
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
   const [imageLoadingState, setImageLoadingState] = useState(false);
+  const [imageLoadingStates, setImageLoadingStates] = useState([]); 
+
   const [currentEditedId, setCurrentEditedId] = useState(null);
 
   const { productList } = useSelector((state) => state.adminProducts);
-  console.log(productList);
-  const { categoriesList } = useSelector((state) => state.shopCategories); // Get categories from Redux
+  const { categoriesList } = useSelector((state) => state.shopCategories);
   const dispatch = useDispatch();
   const { toast } = useToast();
 
+
+
   useEffect(() => {
-    dispatch(fetchCategories()); // Fetch categories (if not already loaded)
+    dispatch(fetchCategories());
     dispatch(fetchAllProducts());
   }, [dispatch]);
 
-  // Updated form elements with dynamic categories
+  useEffect(() => {
+    // Sync the loading states array size with the image files
+    setImageLoadingStates((prevStates) =>
+      imageFiles.map((_, index) => prevStates[index] || false)
+    );
+  }, [imageFiles]);
+  
+
+  // Update the dynamic form controls with fetched categories.
   const dynamicAddProductFormElements = addProductFormElements.map((element) =>
     element.name === "category"
       ? {
@@ -55,51 +65,48 @@ function AdminProducts() {
           options: categoriesList.map((category) => ({
             id: category._id,
             label: category.name,
-          })), // Map categories to options
+          })),
         }
       : element
   );
 
   function onSubmit(event) {
     event.preventDefault();
+    // Ensure the formData image field is updated with the array of uploaded image URLs.
+    const updatedFormData = {
+      ...formData,
+      image: uploadedImageUrls.length > 0 ? uploadedImageUrls : formData.image,
+    };
 
-    currentEditedId !== null
-      ? dispatch(
-          editProduct({
-            id: currentEditedId,
-            formData: {
-              ...formData,
-              image: uploadedImageUrl || formData.image, 
-            },
-          })
-        ).then((data) => {
-          if (data?.payload?.success) {
-            dispatch(fetchAllProducts());
-            setFormData(initialFormData);
-            setOpenCreateProductsDialog(false);
-            setCurrentEditedId(null);
-          }
-        })
-      : dispatch(
-          addNewProduct({
-            ...formData,
-            image: uploadedImageUrl,
-          })
-        ).then((data) => {
-          if (data?.payload?.success) {
-            dispatch(fetchAllProducts());
-            setOpenCreateProductsDialog(false);
-            setImageFile(null);
-            setFormData(initialFormData);
-            toast({
-              title: "Product added successfully",
-            });
-          }
-        });
+    if (currentEditedId !== null) {
+      dispatch(editProduct({ id: currentEditedId, formData: updatedFormData })).then((data) => {
+        if (data?.payload?.success) {
+          dispatch(fetchAllProducts());
+          setFormData(initialFormData);
+          setUploadedImageUrls([]);
+          setImageFiles([]);
+          setOpenCreateProductsDialog(false);
+          setCurrentEditedId(null);
+        }
+      });
+    } else {
+      dispatch(addNewProduct(updatedFormData)).then((data) => {
+        if (data?.payload?.success) {
+          dispatch(fetchAllProducts());
+          setOpenCreateProductsDialog(false);
+          setImageFiles([]);
+          setUploadedImageUrls([]);
+          setFormData(initialFormData);
+          toast({
+            title: "Product added successfully",
+          });
+        }
+      });
+    }
   }
 
-  function handleDelete(getCurrentProductId) {
-    dispatch(deleteProduct(getCurrentProductId)).then((data) => {
+  function handleDelete(productId) {
+    dispatch(deleteProduct(productId)).then((data) => {
       if (data?.payload?.success) {
         dispatch(fetchAllProducts());
       }
@@ -109,7 +116,7 @@ function AdminProducts() {
   function handleEdit(product) {
     setCurrentEditedId(product.id);
     setFormData({
-      image: product.image,
+      image: product.image, // Product.image is now expected to be an array.
       title: product.title,
       description: product.description,
       category: product.category,
@@ -121,16 +128,19 @@ function AdminProducts() {
       totalStock: product.totalStock,
       averageReview: product.averageReview || 0,
     });
-    setUploadedImageUrl(product.image || ""); // Set existing image URL
+    // Set the uploaded image URLs to the product's image array.
+    setUploadedImageUrls(product.image || []);
     setOpenCreateProductsDialog(true);
   }
 
   function isFormValid() {
+    const optionalFields = ["isNewArrival", "isFeatured", "isFastMoving"];
     return Object.keys(formData)
-      .filter((currentKey) => currentKey !== "averageReview")
+      .filter((key) => !["averageReview", ...optionalFields].includes(key))
       .map((key) => formData[key] !== "")
       .every((item) => item);
   }
+  
 
   return (
     <Fragment>
@@ -139,7 +149,8 @@ function AdminProducts() {
           className="bg-primary hover:bg-accent"
           onClick={() => {
             setFormData(initialFormData);
-            setUploadedImageUrl("");
+            setUploadedImageUrls([]);
+            setImageFiles([]);
             setOpenCreateProductsDialog(true);
           }}
         >
@@ -167,6 +178,8 @@ function AdminProducts() {
           setOpenCreateProductsDialog(false);
           setCurrentEditedId(null);
           setFormData(initialFormData);
+          setUploadedImageUrls([]);
+          setImageFiles([]);
         }}
       >
         <SheetContent side="right" className="overflow-auto">
@@ -176,12 +189,13 @@ function AdminProducts() {
             </SheetTitle>
           </SheetHeader>
           <ProductImageUpload
-            imageFile={imageFile}
-            setImageFile={setImageFile}
-            uploadedImageUrl={uploadedImageUrl}
-            setUploadedImageUrl={setUploadedImageUrl}
-            setImageLoadingState={setImageLoadingState}
+            imageFiles={imageFiles}
+            setImageFiles={setImageFiles}
+            uploadedImageUrls={uploadedImageUrls}
+            setUploadedImageUrls={setUploadedImageUrls}
             imageLoadingState={imageLoadingState}
+            setImageLoadingStates={setImageLoadingStates}
+            setImageLoadingState={setImageLoadingState}
           />
           <div className="py-6">
             <CommonForm
@@ -189,7 +203,7 @@ function AdminProducts() {
               formData={formData}
               setFormData={setFormData}
               buttonText={currentEditedId !== null ? "Edit" : "Add"}
-              formControls={dynamicAddProductFormElements} // Use updated form controls
+              formControls={dynamicAddProductFormElements}
               isBtnDisabled={!isFormValid()}
             />
           </div>

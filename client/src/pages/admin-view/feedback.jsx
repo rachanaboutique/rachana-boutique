@@ -60,7 +60,7 @@ const AdminFeedback = () => {
                 <TableHead>Feedback</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                Actions
                 </TableHead>
               </TableRow>
             </TableHeader>

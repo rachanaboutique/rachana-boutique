@@ -51,19 +51,7 @@ function ZoomableImage({ imageSrc, imageAlt, onZoomData }) {
           ></div>
         )}
       </div>
-      <div className="flex gap-2">
-        {/* Replace these with dynamic additional images */}
-        <img
-          src={imageSrc}
-          alt="Thumbnail"
-          className="w-16 h-16 object-cover rounded-lg cursor-pointer"
-        />
-        <img
-          src={imageSrc}
-          alt="Thumbnail"
-          className="w-16 h-16 object-cover rounded-lg cursor-pointer"
-        />
-      </div>
+    
     </div>
   );
 }

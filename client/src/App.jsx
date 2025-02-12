@@ -18,7 +18,6 @@ import UnauthPage from "./pages/unauth-page";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth, refreshToken } from "./store/auth-slice";
-import { Skeleton } from "@/components/ui/skeleton";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import ProductDetailsPage from "./pages/shopping-view/product-details-page";
@@ -31,6 +30,11 @@ import AdminCategories from "./pages/admin-view/categories";
 import AdminBanners from "./pages/admin-view/banner";
 import AdminInstafeed from "./pages/admin-view/instafeed";
 import AdminFeedback from "./pages/admin-view/feedback";
+import AuthForgotPassword from "./pages/auth/forgot-password";
+import AuthResetPassword from "./pages/auth/reset-password";
+import { Loader } from "./components/ui/loader";
+import AdminUsers from "./pages/admin-view/users";
+import AdminProductReview from "./pages/admin-view/review";
 
 
 
@@ -61,13 +65,22 @@ function App() {
     validateToken();
   }, [dispatch]);
 
-  if (isLoading) return <Skeleton className="w-[800px] bg-black h-[600px]" />;
+  if (isLoading) return <Loader />;
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
       <Routes>
-        {/* Default Route: Redirect to /shop/home */}
-        <Route path="/" element={<Navigate to="/shop/home" />} />
+        {/* Base Route */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated
+              ? user?.role === "admin"
+                ? <Navigate to="/admin/dashboard" />
+                : <Navigate to="/shop/home" />
+              : <Navigate to="/shop/home" />
+          }
+        />
 
         {/* Auth Routes */}
         <Route
@@ -80,6 +93,10 @@ function App() {
         >
           <Route path="login" element={<AuthLogin />} />
           <Route path="register" element={<AuthRegister />} />
+          <Route path="forgot-password" element={<AuthForgotPassword />} />
+          <Route path="reset-password" element={<AuthResetPassword />} />
+
+
         </Route>
 
         {/* Admin Routes */}
@@ -99,10 +116,18 @@ function App() {
           <Route path="instafeed" element={<AdminInstafeed />} />
           <Route path="feedback" element={<AdminFeedback />} />
           <Route path="features" element={<AdminFeatures />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="reviews" element={<AdminProductReview />} />
+
         </Route>
 
         {/* Shop Routes */}
-        <Route path="/shop" element={<ShoppingLayout />}>
+        <Route
+          path="/shop"
+          element={
+            <ShoppingLayout />
+          }
+        >
           <Route path="home" element={<ShoppingHome />} />
           <Route path="details/:id" element={<ProductDetailsPage />} />
           <Route path="collections" element={<ShoppingListing />} />
@@ -122,6 +147,7 @@ function App() {
     </div>
   );
 }
+
 
 
 export default App;

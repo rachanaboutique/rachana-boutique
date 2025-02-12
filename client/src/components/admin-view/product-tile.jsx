@@ -23,7 +23,7 @@ function AdminProductTile({
       <div>
         <div className="relative">
           <img
-            src={product?.image}
+            src={product?.image[0]}
             alt={product?.title}
             className="w-full h-[300px] object-cover rounded-t-lg"
           />

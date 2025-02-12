@@ -11,6 +11,8 @@ const adminInstaFeedRouter = require("./routes/admin/instafeed-routes");
 const adminFeedbackRouter = require("./routes/admin/feedback-routes");
 const adminOrderRouter = require("./routes/admin/order-routes");
 const adminDashboardRouter = require("./routes/admin/dashboard-routes");
+const adminUserRouter = require("./routes/admin/user-routes");
+const adminProductReviewRouter = require("./routes/admin/product-review-routes");
  
 const shopProductsRouter = require("./routes/shop/products-routes");
 const shopCategoriesRouter = require("./routes/shop/categories-routes");
@@ -57,6 +59,8 @@ app.use("/api/admin/instafeed", adminInstaFeedRouter);
 app.use("/api/admin/feedback", adminFeedbackRouter);
 app.use("/api/admin/orders", adminOrderRouter);
 app.use("/api/admin/dashboard", adminDashboardRouter);
+app.use("/api/admin/users", adminUserRouter);
+app.use("/api/admin/product-reviews", adminProductReviewRouter);
 
 app.use("/api/shop/products", shopProductsRouter);
 app.use("/api/shop/categories", shopCategoriesRouter);
