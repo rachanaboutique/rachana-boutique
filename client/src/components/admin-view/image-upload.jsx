@@ -14,6 +14,7 @@ function ProductImageUpload({
   setUploadedImageUrls,
   setImageLoadingStates,
   isCustomStyling = false,
+  isSingleImage = false, // Controls single vs. multiple uploads
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef(null);
@@ -21,11 +22,16 @@ function ProductImageUpload({
   function handleImageFileChange(event) {
     const selectedFiles = Array.from(event.target.files);
     if (selectedFiles.length > 0) {
-      setImageFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
-      setImageLoadingStates((prevStates) => [
-        ...prevStates,
-        ...selectedFiles.map(() => false),
-      ]);
+      if (isSingleImage) {
+        setImageFiles([selectedFiles[0]]);
+        setImageLoadingStates([false]);
+      } else {
+        setImageFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+        setImageLoadingStates((prevStates) => [
+          ...prevStates,
+          ...selectedFiles.map(() => false),
+        ]);
+      }
     }
   }
 
@@ -33,11 +39,16 @@ function ProductImageUpload({
     event.preventDefault();
     const droppedFiles = Array.from(event.dataTransfer.files);
     if (droppedFiles.length > 0) {
-      setImageFiles((prevFiles) => [...prevFiles, ...droppedFiles]);
-      setImageLoadingStates((prevStates) => [
-        ...prevStates,
-        ...droppedFiles.map(() => false),
-      ]);
+      if (isSingleImage) {
+        setImageFiles([droppedFiles[0]]);
+        setImageLoadingStates([false]);
+      } else {
+        setImageFiles((prevFiles) => [...prevFiles, ...droppedFiles]);
+        setImageLoadingStates((prevStates) => [
+          ...prevStates,
+          ...droppedFiles.map(() => false),
+        ]);
+      }
     }
   }
 
@@ -46,17 +57,33 @@ function ProductImageUpload({
   }
 
   function handleRemoveImage(index) {
-    const updatedFiles = [...imageFiles];
-    const updatedUrls = [...uploadedImageUrls];
-    const updatedLoadingStates = [...(imageLoadingStates || [])]; // Ensure it's an array
+    console.log("Before Removing:", {
+      imageFiles,
+      uploadedImageUrls,
+      imageLoadingStates,
+    });
 
-    updatedFiles.splice(index, 1);
-    updatedUrls.splice(index, 1);
-    updatedLoadingStates.splice(index, 1);
+    if (!Array.isArray(imageLoadingStates)) {
+      console.error("imageLoadingStates is not an array! Resetting...");
+      setImageLoadingStates([]);
+      return;
+    }
 
-    setImageFiles(updatedFiles);
-    setUploadedImageUrls(updatedUrls);
-    setImageLoadingStates(updatedLoadingStates);
+    if (isSingleImage) {
+      setImageFiles([]);
+      setUploadedImageUrls([]);
+      setImageLoadingStates([]);
+    } else {
+      setImageFiles((prev) => prev.filter((_, i) => i !== index));
+      setUploadedImageUrls((prev) => prev.filter((_, i) => i !== index));
+      setImageLoadingStates((prev) => prev.filter((_, i) => i !== index));
+    }
+
+    console.log("After Removing:", {
+      imageFiles,
+      uploadedImageUrls,
+      imageLoadingStates,
+    });
   }
 
   async function uploadImageToCloudinary(file, index) {
@@ -75,13 +102,15 @@ function ProductImageUpload({
         `${import.meta.env.VITE_BACKEND_URL}/admin/products/upload-image`,
         data
       );
-      console.log("Cloudinary Response:", response.data);
       if (response?.data?.success) {
         setUploadedImageUrls((prevUrls) => {
-          const updatedUrls = [...prevUrls];
-          updatedUrls[index] = response.data.result[0].url;
-          console.log("Updated URLs:", updatedUrls); // Debug log
-          return updatedUrls;
+          if (isSingleImage) {
+            return [response.data.result[0].url];
+          } else {
+            const updatedUrls = [...prevUrls];
+            updatedUrls[index] = response.data.result[0].url;
+            return updatedUrls;
+          }
         });
       }
     } finally {
@@ -95,59 +124,74 @@ function ProductImageUpload({
   }
 
   useEffect(() => {
-    imageFiles.forEach((file, index) => {
+    imageFiles?.forEach((file, index) => {
       if (!uploadedImageUrls[index] && file) {
         uploadImageToCloudinary(file, index);
       }
     });
+    // We intentionally leave out dependencies such as uploadedImageUrls to avoid re-triggering uploads unnecessarily.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageFiles]);
 
   return (
     <div className={`w-full mt-4 ${isCustomStyling ? "" : "max-w-md mx-auto"}`}>
-      <Label className="text-lg font-semibold mb-2 block">Upload Images</Label>
+      <Label className="text-lg font-semibold mb-2 block">
+        Upload Image{isSingleImage ? "" : "s"}
+      </Label>
       <div
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         className="border-2 border-dashed rounded-lg p-4"
       >
-        {/* Display the uploading text */}
-        {isUploading && <div className="text-center text-muted-foreground mb-4">Uploading... Please wait...</div>}
-
-        {/* Display the uploaded images */}
-        {uploadedImageUrls.map((url, index) => (
-          <div key={index} className="relative mb-4">
-            <img
-              src={url}
-              alt={`Uploaded ${index + 1}`}
-              className="w-full h-32 object-cover rounded-lg mb-2"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
-              onClick={() => handleRemoveImage(index)}
-            >
-              <XIcon className="w-4 h-4" />
-              <span className="sr-only">Remove Image</span>
-            </Button>
+        {isUploading && (
+          <div className="text-center text-muted-foreground mb-4">
+            Uploading... Please wait...
           </div>
-        ))}
+        )}
 
-        {/* Show the upload area */}
+        {/* Display existing uploaded images */}
+        {uploadedImageUrls && uploadedImageUrls.length > 0 && (
+          <div className="flex flex-wrap gap-4 mb-4">
+            {uploadedImageUrls.map((url, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={url}
+                  alt={`Uploaded ${index + 1}`}
+                  className="w-32 h-32 object-cover rounded-lg"
+                />
+                <button
+                  variant="ghost"
+                  size="icon"
+                  className="p-2 rounded-md bg-gray-100 absolute top-0 right-0 text-muted-foreground hover:bg-foreground hover:text-background"
+                  onClick={() => handleRemoveImage(index)}
+                >
+                  <XIcon className="w-4 h-4" />
+                  <span className="sr-only">Remove Image</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Always display the upload option so that users can add/replace images */}
         <Label
           htmlFor="image-upload"
-          className="flex flex-col items-center justify-center h-32 cursor-pointer"
+          className="flex flex-col items-center justify-center h-32 cursor-pointer border border-dashed rounded-lg p-4"
         >
           <UploadCloudIcon className="w-10 h-10 text-muted-foreground mb-2" />
-          <span>Drag & drop or click to upload images</span>
+          <span>
+            Drag & drop or click to upload {isSingleImage ? "an image" : "images"}
+          </span>
         </Label>
+
+        {/* File input; remains hidden */}
         <Input
           id="image-upload"
           type="file"
           className="hidden"
           ref={inputRef}
           onChange={handleImageFileChange}
-          multiple
+          multiple={!isSingleImage}
         />
       </div>
     </div>

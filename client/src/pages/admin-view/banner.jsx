@@ -27,8 +27,12 @@ const initialFormData = {
 function AdminBanners() {
   const [openCreateBannersDialog, setOpenCreateBannersDialog] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
-  const [imageFile, setImageFile] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const [imageFiles, setImageFiles] = useState([]);
+
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+
+  const [imageLoadingStates, setImageLoadingStates] = useState([]); 
+  
   const [imageLoadingState, setImageLoadingState] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState(null);
 
@@ -41,7 +45,7 @@ function AdminBanners() {
     setFormData({
       description: banner.description,
     });
-    setUploadedImageUrl(banner.image);
+    setUploadedImageUrls([banner.image]);
     setCurrentEditedId(banner._id);
     setOpenCreateBannersDialog(true);
   }
@@ -55,7 +59,7 @@ function AdminBanners() {
           id: currentEditedId,
           formData: {
             ...formData,
-            image: uploadedImageUrl,
+            image: uploadedImageUrls[0],
           },
         })
       ).then((data) => {
@@ -68,7 +72,7 @@ function AdminBanners() {
       dispatch(
         addNewBanner({
           ...formData,
-          image: uploadedImageUrl,
+          image: uploadedImageUrls[0],
         })
       ).then((data) => {
         if (data?.payload?.success) {
@@ -84,8 +88,8 @@ function AdminBanners() {
 
   function resetForm() {
     setFormData(initialFormData);
-    setUploadedImageUrl("");
-    setImageFile(null);
+    setUploadedImageUrls("");
+    setImageFiles(null);
     setCurrentEditedId(null);
     setOpenCreateBannersDialog(false);
   }
@@ -99,12 +103,21 @@ function AdminBanners() {
   }
 
   function isFormValid() {
+    //check if the image is still uploading
+    if (imageLoadingStates?.includes(true)) return false;
     return formData.description !== "";
   }
 
   useEffect(() => {
     dispatch(fetchAllBanners());
   }, [dispatch]);
+
+  useEffect(() => {
+    // Sync the loading states array size with the image files
+    setImageLoadingStates((prevStates) =>
+      imageFiles?.map((_, index) => prevStates[index] || false)
+    );
+  }, [imageFiles]);
 
   return (
     <Fragment>
@@ -140,12 +153,14 @@ function AdminBanners() {
             </SheetTitle>
           </SheetHeader>
           <ProductImageUpload
-            imageFile={imageFile}
-            setImageFile={setImageFile}
-            uploadedImageUrl={uploadedImageUrl}
-            setUploadedImageUrl={setUploadedImageUrl}
+            imageFiles={imageFiles}
+            setImageFiles={setImageFiles}
+            uploadedImageUrls={uploadedImageUrls}
+            setUploadedImageUrls={setUploadedImageUrls}
             setImageLoadingState={setImageLoadingState}
+            setImageLoadingStates={setImageLoadingStates}
             imageLoadingState={imageLoadingState}
+            isSingleImage = {true}
             isEditMode={currentEditedId !== null || currentEditedId === null}
           />
           <div className="py-6">

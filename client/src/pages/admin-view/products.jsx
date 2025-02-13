@@ -42,21 +42,19 @@ function AdminProducts() {
   const dispatch = useDispatch();
   const { toast } = useToast();
 
-
-
   useEffect(() => {
     dispatch(fetchCategories());
     dispatch(fetchAllProducts());
   }, [dispatch]);
 
   useEffect(() => {
-    // Sync the loading states array size with the image files
     setImageLoadingStates((prevStates) =>
-      imageFiles.map((_, index) => prevStates[index] || false)
+      Array.isArray(prevStates)
+        ? imageFiles.map((_, index) => prevStates[index] || false)
+        : imageFiles.map(() => false)
     );
   }, [imageFiles]);
   
-
   // Update the dynamic form controls with fetched categories.
   const dynamicAddProductFormElements = addProductFormElements.map((element) =>
     element.name === "category"
@@ -114,9 +112,9 @@ function AdminProducts() {
   }
 
   function handleEdit(product) {
-    setCurrentEditedId(product.id);
+    setCurrentEditedId(product._id);
     setFormData({
-      image: product.image, // Product.image is now expected to be an array.
+      image: product.image, 
       title: product.title,
       description: product.description,
       category: product.category,
@@ -128,13 +126,14 @@ function AdminProducts() {
       totalStock: product.totalStock,
       averageReview: product.averageReview || 0,
     });
-    // Set the uploaded image URLs to the product's image array.
     setUploadedImageUrls(product.image || []);
     setOpenCreateProductsDialog(true);
   }
 
   function isFormValid() {
     const optionalFields = ["isNewArrival", "isFeatured", "isFastMoving"];
+    if (imageLoadingStates?.includes(true)) return false;
+    
     return Object.keys(formData)
       .filter((key) => !["averageReview", ...optionalFields].includes(key))
       .map((key) => formData[key] !== "")
@@ -162,11 +161,10 @@ function AdminProducts() {
           ? productList.map((productItem) => (
               <AdminProductTile
                 key={productItem.id}
-                setFormData={setFormData}
                 setOpenCreateProductsDialog={setOpenCreateProductsDialog}
                 setCurrentEditedId={setCurrentEditedId}
                 product={productItem}
-                handleEdit={() => handleEdit(productItem)}
+                setFormData={() => handleEdit(productItem)}
                 handleDelete={handleDelete}
               />
             ))
@@ -194,6 +192,7 @@ function AdminProducts() {
             uploadedImageUrls={uploadedImageUrls}
             setUploadedImageUrls={setUploadedImageUrls}
             imageLoadingState={imageLoadingState}
+            imageLoadingStates={imageLoadingStates} 
             setImageLoadingStates={setImageLoadingStates}
             setImageLoadingState={setImageLoadingState}
           />

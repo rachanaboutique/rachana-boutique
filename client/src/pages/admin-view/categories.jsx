@@ -28,8 +28,9 @@ const initialFormData = {
 function AdminCategories() {
   const [openCreateCategoriesDialog, setOpenCreateCategoriesDialog] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
-  const [imageFile, setImageFile] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+   const [imageFiles, setImageFiles] = useState([]);
+   const [imageLoadingStates, setImageLoadingStates] = useState([]); 
+   const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
   const [imageLoadingState, setImageLoadingState] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState(null);
   console.log(currentEditedId, "currentEditedId");
@@ -40,12 +41,13 @@ function AdminCategories() {
 
   // Set formData and uploadedImageUrl when editing
   function handleEditCategory(category) {
+    setCurrentEditedId(category._id);
     setFormData({
       name: category.name,
       description: category.description,
     });
-    setUploadedImageUrl(category.image); // Set the existing image URL
-    setCurrentEditedId(category._id);
+    setUploadedImageUrls([category.image]); 
+
     setOpenCreateCategoriesDialog(true);
   }
 
@@ -59,7 +61,7 @@ function AdminCategories() {
           id: currentEditedId,
           formData: {
             ...formData,
-            image: uploadedImageUrl, // Ensure the updated image URL is included
+            image: uploadedImageUrls[0],
           },
         })
       ).then((data) => {
@@ -73,7 +75,7 @@ function AdminCategories() {
       dispatch(
         addNewCategory({
           ...formData,
-          image: uploadedImageUrl,
+          image: uploadedImageUrls[0],
         })
       ).then((data) => {
         if (data?.payload?.success) {
@@ -89,8 +91,8 @@ function AdminCategories() {
 
   function resetForm() {
     setFormData(initialFormData);
-    setUploadedImageUrl("");
-    setImageFile(null);
+    setUploadedImageUrls("");
+    setImageFiles(null);
     setCurrentEditedId(null);
     setOpenCreateCategoriesDialog(false);
   }
@@ -104,12 +106,20 @@ function AdminCategories() {
   }
 
   function isFormValid() {
+    if (imageLoadingStates?.includes(true)) return false;
     return formData.name !== "" && formData.description !== "";
   }
 
   useEffect(() => {
     dispatch(fetchAllCategories());
   }, [dispatch]);
+
+    useEffect(() => {
+      // Sync the loading states array size with the image files
+      setImageLoadingStates((prevStates) =>
+        imageFiles?.map((_, index) => prevStates[index] || false)
+      );
+    }, [imageFiles]);
 
   return (
     <Fragment>
@@ -122,9 +132,9 @@ function AdminCategories() {
         {categoryList && categoryList.length > 0
           ? categoryList.map((categoryItem) => (
               <AdminCategoryTile
-                key={categoryItem.id}
+                key={categoryItem._id}
                 category={categoryItem}
-                setFormData={(formData) => handleEditCategory(categoryItem)} // Update logic for edit
+                setFormData={() => handleEditCategory(categoryItem)} // Update logic for edit
                 setOpenCreateCategoriesDialog={setOpenCreateCategoriesDialog}
                 setCurrentEditedId={setCurrentEditedId}
                 handleDelete={handleDelete}
@@ -146,12 +156,14 @@ function AdminCategories() {
             </SheetTitle>
           </SheetHeader>
           <ProductImageUpload
-            imageFile={imageFile}
-            setImageFile={setImageFile}
-            uploadedImageUrl={uploadedImageUrl}
-            setUploadedImageUrl={setUploadedImageUrl}
-            setImageLoadingState={setImageLoadingState}
+            imageFiles={imageFiles}
+            setImageFiles={setImageFiles}
+            uploadedImageUrls={uploadedImageUrls}
+            setUploadedImageUrls={setUploadedImageUrls}
+            setImageLoadingStates={setImageLoadingStates}
             imageLoadingState={imageLoadingState}
+            imageLoadingStates={imageLoadingStates} 
+            isSingleImage = {true}
             isEditMode={currentEditedId !== null || currentEditedId === null}
           />
           <div className="py-6">
