@@ -7,7 +7,8 @@ import {
   ShoppingBasket,
   MessageSquareDot,
   Users,
-  Star
+  Star,
+  Contact
 } from "lucide-react";
 import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
@@ -62,6 +63,12 @@ const adminSidebarMenuItems = [
     label: "Feedback",
     path: "/admin/feedback",
     icon: <MessageSquareDot />,
+  },
+  {
+    id: "contact",
+    label: "Contact",
+    path: "/admin/contacts",
+    icon: <Contact />,
   },
   {
     id: "users",

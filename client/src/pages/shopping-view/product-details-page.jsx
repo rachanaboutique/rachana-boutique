@@ -18,10 +18,11 @@ function ProductDetailsPage({ open, setOpen }) {
   const [reviewMsg, setReviewMsg] = useState("");
   const [rating, setRating] = useState(0);
   const [selectedColor, setSelectedColor] = useState("");
+  const { productDetails, relatedProducts } = useSelector((state) => state.shopProducts);
   const [zoomData, setZoomData] = useState({
     isHovering: false,
     zoomPosition: { x: 0, y: 0 },
-    imageSrc: "",
+    imageSrc: productDetails?.image[0] ,
   });
   const { isAuthenticated } = useSelector((state) => state.auth); // Get authentication status
 
@@ -39,9 +40,9 @@ function ProductDetailsPage({ open, setOpen }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
-  const { productDetails, relatedProducts } = useSelector((state) => state.shopProducts);
+
   const { reviews } = useSelector((state) => state.shopReview);
-  const [selectedImage, setSelectedImage] = useState(productDetails?.image[0]);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -161,6 +162,7 @@ function ProductDetailsPage({ open, setOpen }) {
     if (productDetails?._id) {
       dispatch(getReviews(productDetails._id));
     }
+    setSelectedImage(productDetails?.image[0]);
   }, [productDetails?._id, dispatch]);
 
 

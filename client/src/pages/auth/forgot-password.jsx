@@ -48,6 +48,7 @@ function AuthForgotPassword() {
             type: "email",
             label: "Email Address",
             placeholder: "Enter your email",
+            componentType: "input",
             required: true,
           },
         ]}

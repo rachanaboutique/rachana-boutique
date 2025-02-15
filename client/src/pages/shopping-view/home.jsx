@@ -226,7 +226,7 @@ function ShoppingHome() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">
-            Fast Moving Products
+            Watch And Buy
           </h2>
         </div>
         <div className="flex h-full w-full items-center justify-center px-2">
@@ -237,7 +237,7 @@ function ShoppingHome() {
             >
               {productList && productList.length > 0
                 ? productList
-                  .filter((productItem) => productItem?.isFeatured)
+                  .filter((productItem) => productItem?.isWatchAndBuy)
                   .map((productItem, index) => (
                     <motion.li
                       ref={ref}
@@ -263,7 +263,7 @@ function ShoppingHome() {
                       )}
                       key={productItem._id}
                     >
-                      <FastMovingCard item={productItem} index={index} activeItem={activeItem} />
+                      <FastMovingCard item={productItem} index={index} activeItem={activeItem} handleAddtoCart={handleAddtoCart} />
                     </motion.li>
                   ))
                 : null}

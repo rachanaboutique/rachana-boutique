@@ -60,7 +60,7 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
   };
 
   return (
-    <div className="bg-background rounded-lg shadow-sm">
+    <div className="bg-gray-100 rounded-lg shadow-sm">
       {/* Filter Title & Dropdown Toggle on Mobile */}
       <div
         className="p-4 border-b flex justify-between items-center"

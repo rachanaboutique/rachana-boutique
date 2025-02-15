@@ -76,11 +76,6 @@ export const addProductFormElements = [
     componentType: "toggle",
   },
   {
-    label: "Is Fast Moving",
-    name: "isFastMoving",
-    componentType: "toggle",
-  },
-  {
     label: "Price",
     name: "price",
     componentType: "input",

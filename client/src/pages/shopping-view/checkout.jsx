@@ -95,7 +95,7 @@ function ShoppingCheckout() {
           key: import.meta.env.VITE_RAZORPAY_KEY_ID,
           amount,
           currency,
-          name: "Your Store Name",
+          name: "Rachana Boutique",
           description: "Order Payment",
           order_id: razorpayOrderId,
           handler: function (response) {

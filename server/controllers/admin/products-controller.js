@@ -1,4 +1,4 @@
-const { imageUploadUtil } = require("../../helpers/cloudinary");
+const { imageUploadUtil, videoUploadUtil } = require("../../helpers/cloudinary");
 const Product = require("../../models/Product");
 const ProductReview = require("../../models/Review");
 
@@ -34,6 +34,36 @@ const handleImageUpload = async (req, res) => {
   }
 };
 
+const handleVideoUpload = async (req, res) => {
+  try {
+    // Check if a video file was uploaded
+    if (req.file) {
+      // Convert the video file buffer to a base64 string
+      const b64 = Buffer.from(req.file.buffer).toString("base64");
+      const url = "data:" + req.file.mimetype + ";base64," + b64;
+      
+      // Upload the video using the videoUploadUtil (internal organization util)
+      const result = await videoUploadUtil(url);
+      
+      return res.json({
+        success: true,
+        result: result
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "No file uploaded"
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.json({
+      success: false,
+      message: "Error occurred"
+    });
+  }
+};
+
 // Add a new product
 const addProduct = async (req, res) => {
   try {
@@ -44,15 +74,19 @@ const addProduct = async (req, res) => {
       category,
       isNewArrival,
       isFeatured,
-      isFastMoving,
       price,
       salePrice,
       totalStock,
       averageReview,
+      colors,      
+      isWatchAndBuy, 
+      video      
     } = req.body;
 
     // Ensure that image is an array; if not, convert it to one.
     const images = Array.isArray(image) ? image : [image];
+    // Ensure that colors is an array if provided; otherwise, default to an empty array.
+    const colorsArray = colors ? (Array.isArray(colors) ? colors : [colors]) : [];
 
     const newlyCreatedProduct = new Product({
       image: images,
@@ -61,23 +95,25 @@ const addProduct = async (req, res) => {
       category,
       isNewArrival,
       isFeatured,
-      isFastMoving,
       price,
       salePrice,
       totalStock,
       averageReview,
+      colors: colorsArray,
+      isWatchAndBuy,
+      video
     });
 
     await newlyCreatedProduct.save();
     return res.status(201).json({
       success: true,
-      data: newlyCreatedProduct,
+      data: newlyCreatedProduct
     });
   } catch (e) {
     console.error(e);
     return res.status(500).json({
       success: false,
-      message: "Error occurred",
+      message: "Error occurred"
     });
   }
 };
@@ -129,66 +165,56 @@ const editProduct = async (req, res) => {
       category,
       isNewArrival,
       isFeatured,
-      isFastMoving,
       price,
       salePrice,
       totalStock,
       averageReview,
+      colors,        // new field: colors array
+      isWatchAndBuy, // new field: boolean
+      video         // new field: string
     } = req.body;
 
-    const findProduct = await Product.findById(id);
-    if (!findProduct) {
+    // Ensure that image is an array; if not, convert it to one.
+    const images = Array.isArray(image) ? image : [image];
+    // Ensure that colors is an array if provided; otherwise, default to an empty array.
+    const colorsArray = colors ? (Array.isArray(colors) ? colors : [colors]) : [];
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        image: images,
+        title,
+        description,
+        category,
+        isNewArrival,
+        isFeatured,
+        price,
+        salePrice,
+        totalStock,
+        averageReview,
+        colors: colorsArray,
+        isWatchAndBuy,
+        video
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct) {
       return res.status(404).json({
         success: false,
-        message: "Product not found",
+        message: "Product not found"
       });
     }
 
-    if (typeof title !== "undefined") {
-      findProduct.title = title;
-    }
-    if (typeof description !== "undefined") {
-      findProduct.description = description;
-    }
-    if (typeof category !== "undefined") {
-      findProduct.category = category;
-    }
-    if (req.body.hasOwnProperty("isNewArrival")) {
-      findProduct.isNewArrival = isNewArrival;
-    }
-    if (req.body.hasOwnProperty("isFeatured")) {
-      findProduct.isFeatured = isFeatured;
-    }
-    if (req.body.hasOwnProperty("isFastMoving")) {
-      findProduct.isFastMoving = isFastMoving;
-    }
-    if (typeof price !== "undefined") {
-      findProduct.price = price === "" ? 0 : price;
-    }
-    if (typeof salePrice !== "undefined") {
-      findProduct.salePrice = salePrice === "" ? 0 : salePrice;
-    }
-    if (typeof totalStock !== "undefined") {
-      findProduct.totalStock = totalStock;
-    }
-    if (typeof image !== "undefined") {
-      // Force image to be an array if it's not already
-      findProduct.image = Array.isArray(image) ? image : [image];
-    }
-    if (typeof averageReview !== "undefined") {
-      findProduct.averageReview = averageReview;
-    }
-
-    await findProduct.save();
     return res.status(200).json({
       success: true,
-      data: findProduct,
+      data: updatedProduct
     });
   } catch (e) {
     console.error(e);
     return res.status(500).json({
       success: false,
-      message: "Error occurred",
+      message: "Error occurred"
     });
   }
 };
@@ -221,6 +247,7 @@ const deleteProduct = async (req, res) => {
 
 module.exports = {
   handleImageUpload,
+  handleVideoUpload,
   addProduct,
   fetchAllProducts,
   editProduct,

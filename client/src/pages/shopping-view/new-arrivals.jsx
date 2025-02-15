@@ -127,7 +127,7 @@ import ProductFilter from "@/components/shopping-view/filter";
   
     return (
       <div className="p-4 md:p-6">
-        <div className="bg-background w-full rounded-lg shadow-sm">
+        <div className="bg-playground w-full rounded-lg shadow-sm">
           <div className="p-4 border-b flex items-center justify-between">
             <h2 className="text-lg font-extrabold">New Arrivals</h2>
             <div className="flex items-center gap-3">

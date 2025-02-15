@@ -7,12 +7,13 @@
 }
 
 body {
-  font-family: 'Playfair Display', serif
+  font-family: 'Lato', serif;
 }
 @layer base {
   :root {
     --background: #fed1d6;
     --foreground: #2c3315;
+    --playground: #ffffff;
     --card: #ffffff;
     --card-foreground: #333333;
     --primary: #2c3315;
@@ -39,6 +40,7 @@ body {
   .dark {
     --background: #222222;
     --foreground: #f0f0f0;
+    --playground: #fed1d6;
     --card: #333333;
     --card-foreground: #f0f0f0;
     --primary: #333333;

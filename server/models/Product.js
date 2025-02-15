@@ -8,11 +8,18 @@ const ProductSchema = new mongoose.Schema(
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     isNewArrival: Boolean,
     isFeatured: Boolean,
-    isFastMoving: Boolean,
     price: Number,
     salePrice: Number,
     totalStock: Number,
     averageReview: Number,
+    colors: [
+      {
+        title: String,
+        image: String,
+      }
+    ],
+    isWatchAndBuy: Boolean,
+    video: String
   },
   { timestamps: true }
 );
