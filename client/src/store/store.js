@@ -10,6 +10,7 @@ import adminDashboardSlice from "./admin/dashboard-slice";
 import adminUsersSlice from "./admin/users-slice";
 import adminProductReviewSlice from "./admin/reviews-slice";
 import adminContactSlice from "./admin/contact-slice";
+import adminNewsLetter from "./admin/newsletter-slice";
 
 
 import shopProductsSlice from "./shop/products-slice";
@@ -23,6 +24,7 @@ import shopOrderSlice from "./shop/order-slice";
 import shopSearchSlice from "./shop/search-slice";
 import shopReviewSlice from "./shop/review-slice";
 import shopContactSlice from "./shop/contact-slice";
+import shopNewsLetterSlice from "./shop/newsletter-slice";
 
 
 const store = configureStore({
@@ -39,6 +41,7 @@ const store = configureStore({
     adminUsers: adminUsersSlice,
     adminProductReview: adminProductReviewSlice,
     adminContact: adminContactSlice,
+    adminNewsLetter: adminNewsLetter,
 
     shopProducts: shopProductsSlice,
     shopCategories: shoppingCategoriesSlice,
@@ -50,7 +53,8 @@ const store = configureStore({
     shopOrder: shopOrderSlice,
     shopSearch: shopSearchSlice,
     shopReview: shopReviewSlice,
-    shopContact: shopContactSlice 
+    shopContact: shopContactSlice ,
+    shopNewsLetter: shopNewsLetterSlice
   },
 });
 

@@ -16,7 +16,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { Trash2, Edit } from "lucide-react";
 import DeleteConfirmationModal from "@/components/common/delete-confirmation-modal";
 
-
 const AdminUsers = () => {
   const dispatch = useDispatch();
   const { toast } = useToast();
@@ -31,6 +30,9 @@ const AdminUsers = () => {
 
   // State for delete confirmation modal
   const [isModalOpen, setModalOpen] = useState(false);
+
+  // State for searching by email
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     dispatch(getAllUsers());
@@ -73,30 +75,50 @@ const AdminUsers = () => {
     }
   };
 
+  // Handler for search input change filtering by email
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter usersList based on search query using email
+  const filteredUsers = searchQuery
+    ? usersList.filter((user) =>
+        user?.email.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : usersList;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>All Users</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Search bar to filter users by email */}
+        <div className="mb-4 w-1/3">
+          <input
+            type="text"
+            placeholder="Search by email..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full border rounded-md p-2"
+          />
+        </div>
         {isLoading ? (
           <p>Loading users...</p>
         ) : error ? (
           <p className="text-red-500">Error: {error}</p>
-        ) : usersList && usersList.length > 0 ? (
+        ) : filteredUsers && filteredUsers.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>
-              Actions
-                </TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {usersList.map((user) => (
+              {filteredUsers.map((user) => (
                 <TableRow key={user._id}>
                   <TableCell>{user?.userName || "N/A"}</TableCell>
                   <TableCell>{user?.email || "N/A"}</TableCell>

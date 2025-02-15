@@ -91,7 +91,9 @@ function AdminInstafeed() {
 
   return (
     <Fragment>
-      <div className="mb-5 w-full flex justify-end">
+      
+      <div className="mb-5 w-full flex justify-between">
+      <h1 className="mb-4 text-2xl font-semibold leading-none tracking-tight">All Posts</h1>
         <Button
           className="bg-primary hover:bg-accent"
           onClick={() => setOpenCreatePostDialog(true)}

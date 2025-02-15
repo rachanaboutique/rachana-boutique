@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "../ui/button";
-import { Trash, Edit } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 import DeleteConfirmationModal from "@/components/common/delete-confirmation-modal";
 
 function AdminBannerTile({ image, description, handleEdit, handleDelete }) {
@@ -42,7 +42,7 @@ function AdminBannerTile({ image, description, handleEdit, handleDelete }) {
             onClick={() => setModalOpen(true)}
             className="text-white border border-white rounded hover:bg-red-700 hover:border-none"
           >
-            <Trash className="w-4 h-4 mr-2" />
+            <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </Button>
         </div>

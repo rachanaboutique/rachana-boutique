@@ -1,5 +1,5 @@
 import React from "react";
-import { Trash } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 
 function InstafeedTile({ postUrl, handleDelete }) {
@@ -19,7 +19,7 @@ function InstafeedTile({ postUrl, handleDelete }) {
             className="text-red-600 border border-red-600 rounded hover:bg-red-700"
 
           >
-            <Trash className="w-4 h-4 mr-2" />
+            <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </Button>
       </div>

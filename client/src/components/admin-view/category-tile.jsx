@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter } from "../ui/card";
-import { Trash, Edit } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 import DeleteConfirmationModal from "@/components/common/delete-confirmation-modal";
 
 function AdminCategoryTile({
@@ -54,7 +54,7 @@ function AdminCategoryTile({
             onClick={() => setModalOpen(true)}
             className="text-red-600 border border-red-600 rounded hover:bg-red-700"
           >
-            <Trash className="w-4 h-4 mr-2" />
+            <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </Button>
         </CardFooter>

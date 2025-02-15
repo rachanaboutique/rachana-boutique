@@ -37,6 +37,8 @@ function AdminProducts() {
   const [currentEditedId, setCurrentEditedId] = useState(null);
   const { productList } = useSelector((state) => state.adminProducts);
   const { categoriesList } = useSelector((state) => state.shopCategories);
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const dispatch = useDispatch();
   const { toast } = useToast();
 
@@ -98,9 +100,7 @@ function AdminProducts() {
     // Ensure the formData image field is updated with the array of uploaded image URLs.
     const updatedFormData = {
       ...formData,
-      image:
-        uploadedImageUrls.length > 0 ? uploadedImageUrls : formData.image,
-      
+      image: uploadedImageUrls.length > 0 ? uploadedImageUrls : formData.image,
     };
 
     if (currentEditedId !== null) {
@@ -159,6 +159,10 @@ function AdminProducts() {
     setOpenCreateProductsDialog(true);
   }
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   function isFormValid() {
     const optionalFields = ["isNewArrival", "isFeatured", "isWatchAndBuy"];
     if (imageLoadingStates?.includes(true)) return false;
@@ -169,9 +173,28 @@ function AdminProducts() {
       .every((item) => item);
   }
 
+  // Filter the productList based on the search query (by product title).
+  const filteredProductList = searchQuery
+    ? productList.filter((productItem) =>
+        productItem.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : productList;
+
   return (
     <Fragment>
-      <div className="mb-5 w-full flex justify-end">
+       <h1 className="mb-4 text-2xl font-semibold leading-none tracking-tight">All Products</h1>
+   
+        
+      <div className="mb-4 flex items-center justify-between w-full">
+      <div className="">
+          <input
+            type="text"
+            placeholder="Search by product name..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full border rounded-md p-2"
+          />
+        </div>
         <Button
           className="bg-primary hover:bg-accent"
           onClick={() => {
@@ -183,12 +206,13 @@ function AdminProducts() {
         >
           Add New Product
         </Button>
-      </div>
+        </div>
+
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {productList && productList.length > 0
-          ? productList.map((productItem) => (
+        {filteredProductList && filteredProductList.length > 0
+          ? filteredProductList.map((productItem) => (
               <AdminProductTile
-                key={productItem.id}
+                key={productItem._id}
                 setOpenCreateProductsDialog={setOpenCreateProductsDialog}
                 setCurrentEditedId={setCurrentEditedId}
                 product={productItem}
@@ -196,7 +220,7 @@ function AdminProducts() {
                 handleDelete={handleDelete}
               />
             ))
-          : null}
+          : <p className="text-center col-span-full">No products found.</p>}
       </div>
       <Sheet
         open={openCreateProductsDialog}

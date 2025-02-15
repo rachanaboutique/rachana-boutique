@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import { Dialog } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
 import DeleteConfirmationModal from "@/components/common/delete-confirmation-modal";
 
@@ -24,6 +23,9 @@ const AdminFeedback = () => {
   // State for delete confirmation modal
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedFeedbackId, setSelectedFeedbackId] = useState(null);
+
+  // State for searching feedback by email
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     dispatch(getAllFeedback());
@@ -41,17 +43,39 @@ const AdminFeedback = () => {
     setModalOpen(false);
   };
 
+  // Handler for search input change filtering by email
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter feedback based on search query (by email)
+  const filteredFeedbackList = searchQuery
+    ? feedbackList.filter((feedback) =>
+        feedback?.email.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : feedbackList;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>All Feedback</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Search bar to filter feedback by email */}
+        <div className="mb-4 w-1/3">
+          <input
+            type="text"
+            placeholder="Search by email..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full border rounded-md p-2"
+          />
+        </div>
         {isLoading ? (
           <p>Loading feedback...</p>
         ) : error ? (
           <p className="text-red-500">Error: {error}</p>
-        ) : feedbackList && feedbackList.length > 0 ? (
+        ) : filteredFeedbackList && filteredFeedbackList.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -59,13 +83,11 @@ const AdminFeedback = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Feedback</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>
-                Actions
-                </TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {feedbackList.map((feedback) => (
+              {filteredFeedbackList.map((feedback) => (
                 <TableRow key={feedback._id}>
                   <TableCell>{feedback?.user || "N/A"}</TableCell>
                   <TableCell>{feedback?.email || "N/A"}</TableCell>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import {Trash2} from "lucide-react";
 import { getAllContacts, deleteContact } from "../../store/admin/contact-slice";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
@@ -23,6 +24,9 @@ const AdminContact = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState(null);
 
+  // Local state for search query
+  const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     dispatch(getAllContacts());
   }, [dispatch]);
@@ -39,17 +43,39 @@ const AdminContact = () => {
     setModalOpen(false);
   };
 
+  // Handler for search input change filtering by email
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter contacts based on search query (by email)
+  const filteredContacts = searchQuery
+    ? contactList.filter((contact) =>
+        contact.email.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : contactList;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>All Contacts</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Search bar to filter contacts by email */}
+        <div className="mb-4 w-1/3">
+          <input
+            type="text"
+            placeholder="Search by email..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full border rounded-md p-2"
+          />
+        </div>
         {isLoading ? (
           <p>Loading contacts...</p>
         ) : error ? (
           <p className="text-red-500">Error: {error}</p>
-        ) : contactList && contactList.length > 0 ? (
+        ) : filteredContacts && filteredContacts.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -61,7 +87,7 @@ const AdminContact = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contactList.map((contact) => (
+              {filteredContacts.map((contact) => (
                 <TableRow key={contact._id}>
                   <TableCell>{contact.name}</TableCell>
                   <TableCell>{contact.email}</TableCell>
@@ -74,7 +100,7 @@ const AdminContact = () => {
                       variant="destructive"
                       onClick={() => handleDeleteClick(contact._id)}
                     >
-                      Delete
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
                 </TableRow>

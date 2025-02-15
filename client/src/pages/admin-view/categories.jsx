@@ -28,16 +28,39 @@ const initialFormData = {
 function AdminCategories() {
   const [openCreateCategoriesDialog, setOpenCreateCategoriesDialog] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
-   const [imageFiles, setImageFiles] = useState([]);
-   const [imageLoadingStates, setImageLoadingStates] = useState([]); 
-   const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imageLoadingStates, setImageLoadingStates] = useState([]);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
   const [imageLoadingState, setImageLoadingState] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState(null);
-  console.log(currentEditedId, "currentEditedId");
-
+  const [searchQuery, setSearchQuery] = useState("");
   const { categoryList } = useSelector((state) => state.adminCategories);
   const dispatch = useDispatch();
   const { toast } = useToast();
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    dispatch(fetchAllCategories());
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Sync the loading states array size with the image files
+    setImageLoadingStates((prevStates) =>
+      imageFiles?.map((_, index) => prevStates[index] || false)
+    );
+  }, [imageFiles]);
+
+  // Handler for searching categories by name
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter categories based on search query
+  const filteredCategoryList = searchQuery
+    ? categoryList.filter((categoryItem) =>
+        categoryItem.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : categoryList;
 
   // Set formData and uploadedImageUrl when editing
   function handleEditCategory(category) {
@@ -46,8 +69,7 @@ function AdminCategories() {
       name: category.name,
       description: category.description,
     });
-    setUploadedImageUrls([category.image]); 
-
+    setUploadedImageUrls([category.image]);
     setOpenCreateCategoriesDialog(true);
   }
 
@@ -110,37 +132,45 @@ function AdminCategories() {
     return formData.name !== "" && formData.description !== "";
   }
 
-  useEffect(() => {
-    dispatch(fetchAllCategories());
-  }, [dispatch]);
-
-    useEffect(() => {
-      // Sync the loading states array size with the image files
-      setImageLoadingStates((prevStates) =>
-        imageFiles?.map((_, index) => prevStates[index] || false)
-      );
-    }, [imageFiles]);
-
   return (
     <Fragment>
-      <div className="mb-5 w-full flex justify-end">
-        <Button className="bg-primary hover:bg-accent" onClick={() => setOpenCreateCategoriesDialog(true)}>
-          Add New Category
-        </Button>
+       <h1 className="mb-4 text-2xl font-semibold leading-none tracking-tight">All Categories</h1>
+      <div className="mb-4 w-full flex flex-col gap-4 md:flex-row md:justify-between">
+    
+     
+        
+        
+        <div className="">
+          <input
+            type="text"
+            placeholder="Search by category name..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="w-full border rounded-md p-2"
+          />
+        </div>
+        <div className="w-full md:w-auto flex justify-end">
+          <Button
+            className="bg-primary hover:bg-accent"
+            onClick={() => setOpenCreateCategoriesDialog(true)}
+          >
+            Add New Category
+          </Button>
+        </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {categoryList && categoryList.length > 0
-          ? categoryList.map((categoryItem) => (
+        {filteredCategoryList && filteredCategoryList.length > 0
+          ? filteredCategoryList.map((categoryItem) => (
               <AdminCategoryTile
                 key={categoryItem._id}
                 category={categoryItem}
-                setFormData={() => handleEditCategory(categoryItem)} // Update logic for edit
+                setFormData={() => handleEditCategory(categoryItem)}
                 setOpenCreateCategoriesDialog={setOpenCreateCategoriesDialog}
                 setCurrentEditedId={setCurrentEditedId}
                 handleDelete={handleDelete}
               />
             ))
-          : null}
+          : <p className="text-center col-span-full">No categories found.</p>}
       </div>
       <Sheet
         open={openCreateCategoriesDialog}
@@ -162,8 +192,8 @@ function AdminCategories() {
             setUploadedImageUrls={setUploadedImageUrls}
             setImageLoadingStates={setImageLoadingStates}
             imageLoadingState={imageLoadingState}
-            imageLoadingStates={imageLoadingStates} 
-            isSingleImage = {true}
+            imageLoadingStates={imageLoadingStates}
+            isSingleImage={true}
             isEditMode={currentEditedId !== null || currentEditedId === null}
           />
           <div className="py-6">
@@ -181,6 +211,5 @@ function AdminCategories() {
     </Fragment>
   );
 }
-
 
 export default AdminCategories;

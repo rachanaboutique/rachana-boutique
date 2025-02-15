@@ -14,6 +14,7 @@ const adminDashboardRouter = require("./routes/admin/dashboard-routes");
 const adminUserRouter = require("./routes/admin/user-routes");
 const adminProductReviewRouter = require("./routes/admin/product-review-routes");
 const adminContactRouter = require("./routes/admin/contact-routes");
+const adminNewsLetter = require("./routes/admin/newsletter-routes");
  
 const shopProductsRouter = require("./routes/shop/products-routes");
 const shopCategoriesRouter = require("./routes/shop/categories-routes");
@@ -26,6 +27,7 @@ const shopOrderRouter = require("./routes/shop/order-routes");
 const shopSearchRouter = require("./routes/shop/search-routes");
 const shopReviewRouter = require("./routes/shop/review-routes");
 const shopContactRouter = require("./routes/shop/contact-routes");
+const shopNewsLetter = require("./routes/shop/newsletter-routes");
 
 
 mongoose
@@ -64,6 +66,7 @@ app.use("/api/admin/dashboard", adminDashboardRouter);
 app.use("/api/admin/users", adminUserRouter);
 app.use("/api/admin/product-reviews", adminProductReviewRouter);
 app.use("/api/admin/contacts", adminContactRouter);
+app.use("/api/admin/newsletter", adminNewsLetter);
 
 app.use("/api/shop/products", shopProductsRouter);
 app.use("/api/shop/categories", shopCategoriesRouter);
@@ -76,6 +79,7 @@ app.use("/api/shop/order", shopOrderRouter);
 app.use("/api/shop/search", shopSearchRouter);
 app.use("/api/shop/review", shopReviewRouter);
 app.use("/api/shop/contacts", shopContactRouter);
+app.use("/api/shop/newsletter", shopNewsLetter);
 
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));

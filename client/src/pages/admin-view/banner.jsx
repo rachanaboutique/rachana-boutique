@@ -31,8 +31,8 @@ function AdminBanners() {
 
   const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
 
-  const [imageLoadingStates, setImageLoadingStates] = useState([]); 
-  
+  const [imageLoadingStates, setImageLoadingStates] = useState([]);
+
   const [imageLoadingState, setImageLoadingState] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState(null);
 
@@ -121,22 +121,25 @@ function AdminBanners() {
 
   return (
     <Fragment>
-      <div className="mb-5 w-full flex justify-end">
+
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold leading-none tracking-tight">All Banners</h1>
         <Button className="bg-primary hover:bg-accent" onClick={() => setOpenCreateBannersDialog(true)}>
           Add New Banner
         </Button>
       </div>
+
       <div className="flex flex-col gap-5">
         {bannerList && bannerList.length > 0
           ? bannerList.map((bannerItem) => (
-              <BannerTile
-                key={bannerItem._id}
-                image={bannerItem.image}
-                description={bannerItem.description}
-                handleEdit={() => handleEditBanner(bannerItem)}
-                handleDelete={() => handleDelete(bannerItem._id)}
-              />
-            ))
+            <BannerTile
+              key={bannerItem._id}
+              image={bannerItem.image}
+              description={bannerItem.description}
+              handleEdit={() => handleEditBanner(bannerItem)}
+              handleDelete={() => handleDelete(bannerItem._id)}
+            />
+          ))
           : null}
       </div>
       <Sheet
@@ -160,7 +163,7 @@ function AdminBanners() {
             setImageLoadingState={setImageLoadingState}
             setImageLoadingStates={setImageLoadingStates}
             imageLoadingState={imageLoadingState}
-            isSingleImage = {true}
+            isSingleImage={true}
             isEditMode={currentEditedId !== null || currentEditedId === null}
           />
           <div className="py-6">

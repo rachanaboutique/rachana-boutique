@@ -36,6 +36,7 @@ import { Loader } from "./components/ui/loader";
 import AdminUsers from "./pages/admin-view/users";
 import AdminProductReview from "./pages/admin-view/review";
 import AdminContact from "./pages/admin-view/contact";
+import AdminNewsLetter from "./pages/admin-view/newsletter";
 
 
 
@@ -120,6 +121,8 @@ function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="reviews" element={<AdminProductReview />} />
           <Route path="contacts" element={<AdminContact />} />
+          <Route path="newsletters" element={<AdminNewsLetter />} />
+
 
 
         </Route>

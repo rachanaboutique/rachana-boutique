@@ -20,7 +20,7 @@ function AdminDashboard() {
     <div>
      
   
-      <div className="flex flex-col gap-4 mt-5">
+      <div className="flex flex-col gap-4">
        <MainData />
       </div>
     </div>

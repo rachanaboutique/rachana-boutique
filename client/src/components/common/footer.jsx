@@ -1,6 +1,40 @@
-import React from "react";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { createSubscription } from "@/store/shop/newsletter-slice";
+import { useToast } from "@/components/ui/use-toast";
 
 const Footer = () => {
+  const dispatch = useDispatch();
+  const { toast } = useToast();
+
+  const [email, setEmail] = useState("");
+
+  // Access loading, success, and error states from Redux
+  const { isLoading, error } = useSelector((state) => state.shopNewsLetter);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+
+    if (!email) {
+      toast({ title: "Please enter a valid email address.", variant: "destructive" });
+      return;
+    }
+
+    // Dispatch the subscription action
+    dispatch(createSubscription({ email }))
+      .then((res) => {
+        if (res.payload?.success) {
+          toast({ title: res.payload.message, variant: "success" });
+          setEmail(""); // Clear input field
+        } else if (res.payload?.message === "This email is already subscribed to the newsletter.") {
+          toast({ title: "You are already subscribed!", variant: "warning" });
+        }
+      })
+      .catch(() => {
+        toast({ title: "Subscription failed. Try again!", variant: "destructive" });
+      });
+  };
+
   return (
     <footer className="bg-background text-gray-700">
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -45,17 +79,22 @@ const Footer = () => {
             <p className="text-sm mb-4">
               Stay updated with our latest collections and offers.
             </p>
-            <form>
+            <form onSubmit={handleSubscribe}>
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-4 py-2 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               />
               <button
                 type="submit"
-                className="w-full bg-foreground text-white py-2 rounded-lg hover:bg-rose-600 transition duration-300"
+                disabled={isLoading}
+                className={`w-full bg-foreground text-white py-2 rounded-lg transition duration-300 ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-rose-600"
+                }`}
               >
-                Subscribe
+                {isLoading ? "Subscribing..." : "Subscribe"}
               </button>
             </form>
           </div>
