@@ -12,6 +12,7 @@ body {
 @layer base {
   :root {
     --background: #fed1d6;
+    /* --background: #f5ced2; */
     --foreground: #2c3315;
     --playground: #ffffff;
     --card: #ffffff;
@@ -20,9 +21,10 @@ body {
     --primary-foreground: #f0f0f0;
     --secondary: #2b2b2b;
     --secondary-foreground: #e0e0e0;
-    --muted: #e0e0e0;
+    /* --muted: #e9768a; */
+    --muted:#ec003f;
     --muted-foreground:#2c3315;
-    --accent: #424c1f;
+    --accent:#272d12;
     --accent-foreground: #f0f0f0;
     --destructive: #e53935;
     --destructive-foreground: #ffffff;

@@ -13,7 +13,6 @@ export const getAllContacts = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/contacts/get`;
     try {
       const result = await axios.get(url);
-      console.log("Response from getAllContacts:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching contacts from URL:", url, error);
@@ -29,7 +28,6 @@ export const deleteContact = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/contacts/delete/${id}`;
     try {
       const result = await axios.delete(url);
-      console.log("Response from deleteContact:", result.data);
       return { id, data: result.data };
     } catch (error) {
       console.error("Error deleting contact from URL:", url, error);

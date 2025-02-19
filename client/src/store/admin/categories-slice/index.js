@@ -11,11 +11,6 @@ export const addNewCategory = createAsyncThunk(
   "/categories/addNewCategory",
   async (formData, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/categories/add`;
-
-    // Log the URL and FormData being sent
-    console.log("URL for Add Category API:", url);
-    console.log("FormData sent to Add Category API:", formData);
-
     try {
       const result = await axios.post(url, formData, {
         headers: {
@@ -23,8 +18,6 @@ export const addNewCategory = createAsyncThunk(
         },
       });
 
-      // Log the API response
-      console.log("Response from Add Category API:", result.data);
       return result.data;
     } catch (error) {
       // Log the error details for debugging
@@ -45,7 +38,6 @@ export const fetchAllCategories = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/categories/get`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchAllCategories admin:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching all categories from URL:", url, error);
@@ -59,14 +51,12 @@ export const editCategory = createAsyncThunk(
   "/categories/editCategory",
   async ({ id, formData }, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/categories/edit/${id}`;
-    console.log("formData for editCategory:", formData);
     try {
       const result = await axios.put(url, formData, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      console.log("Response from editCategory:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error editing category from URL:", url, error);

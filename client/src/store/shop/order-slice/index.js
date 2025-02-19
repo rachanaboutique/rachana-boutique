@@ -14,7 +14,6 @@ const initialState = {
 export const createNewOrder = createAsyncThunk(
   "/order/createNewOrder",
   async (orderData, { rejectWithValue }) => {
-    console.log("Creating new order from URL:", orderData);
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/order/create`;
     try {
       const response = await axios.post(url, orderData);

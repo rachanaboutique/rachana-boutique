@@ -12,8 +12,7 @@ export const getAllSubscribers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/newsletter/subscribers`;
     try {
-      const result = await axios.get(url);
-      console.log("Response from getAllSubscribers:", result.data);
+      const result = await axios.get(url);;
       return result.data;
     } catch (error) {
       console.error("Error fetching subscribers from URL:", url, error);
@@ -29,7 +28,6 @@ export const sendNewsletter = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/newsletter/send`;
     try {
       const result = await axios.post(url, { emails, flyer, message });
-      console.log("Response from sendNewsletter:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error sending newsletter from URL:", url, error);
@@ -45,7 +43,6 @@ export const deleteSubscriber = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/newsletter/unsubscribe/${email}`;
     try {
       const result = await axios.delete(url);
-      console.log("Response from deleteSubscriber:", result.data);
       return { email, data: result.data };
     } catch (error) {
       console.error("Error deleting subscriber from URL:", url, error);

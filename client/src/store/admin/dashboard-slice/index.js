@@ -18,7 +18,6 @@ export const fetchDashboardSummary = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/dashboard/summary`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchDashboardSummary:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching dashboard summary:", error);
@@ -34,7 +33,6 @@ export const fetchSalesChart = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/dashboard/sales-chart`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchSalesChart:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching sales chart data:", error);
@@ -50,7 +48,6 @@ export const fetchOrderStatus = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/dashboard/order-status`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchOrderStatus:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching order status data:", error);
@@ -66,7 +63,6 @@ export const fetchStockStatus = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/dashboard/stock-status`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchStockStatus:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching stock status data:", error);
@@ -82,7 +78,6 @@ export const fetchCategoryProducts = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/dashboard/category-products`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchCategoryProducts:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching category products data:", error);

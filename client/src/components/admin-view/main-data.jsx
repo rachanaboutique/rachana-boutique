@@ -46,12 +46,6 @@ const MainData = () => {
         isLoading
     } = useSelector((state) => state.adminDashboard);
 
-    // Log for debugging
-    console.log("Summary:", summary);
-    console.log("Stock Status:", stockStatus);
-    console.log("Sales Chart:", salesChart);
-    console.log("Order Status:", orderStatus);
-    console.log("Category Products:", categoryProducts);
 
     // Chart data states with default fallbacks
     const lineState = {

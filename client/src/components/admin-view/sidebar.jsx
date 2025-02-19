@@ -14,6 +14,7 @@ import {
 import { Fragment } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
+import logo from "../../assets/logo.png";
 
 const adminSidebarMenuItems = [
   {
@@ -136,14 +137,11 @@ function AdminSideBar({ open, setOpen }) {
       <aside className="hidden w-64 flex-col border-r bg-background p-6 lg:flex">
         <div
           onClick={() => navigate("/admin/dashboard")}
-          className={`flex cursor-pointer items-center gap-2 ${
-            location.pathname === "/admin/dashboard"
-              ? "bg-muted text-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          }`}
+          className="flex cursor-pointer items-center gap-2"
         >
           <ChartNoAxesCombined size={30} />
-          <h1 className="text-2xl font-extrabold">Admin Panel</h1>
+      <img src={logo} alt="Logo" className="w-full h-11" />
+          
         </div>
         <MenuItems />
       </aside>

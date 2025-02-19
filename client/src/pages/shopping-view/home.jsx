@@ -54,12 +54,10 @@ function ShoppingHome() {
   const { productList, productDetails } = useSelector(
     (state) => state.shopProducts
   );
-  console.log(productList, "productList");
   const { bannersList } = useSelector((state) => state.shopBanners);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false)
   const { user } = useSelector((state) => state.auth);
   const { categoriesList } = useSelector((state) => state.shopCategories);
-  console.log(categoriesList, "categoriesList");
   const { instaFeedPosts } = useSelector((state) => state.shopInstaFeed);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -113,8 +111,7 @@ function ShoppingHome() {
       }
     };
   }, [activeItem]);
-
-  console.log(screenWidth, "screenWidth")
+  
   function handleGetProductDetails(getCurrentProductId) {
     dispatch(fetchProductDetails(getCurrentProductId));
   }
@@ -125,6 +122,8 @@ function ShoppingHome() {
         userId: user?.id,
         productId: getCurrentProductId,
         quantity: 1,
+        colorId : productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
+
       })
     ).then((data) => {
       if (data?.payload?.success) {

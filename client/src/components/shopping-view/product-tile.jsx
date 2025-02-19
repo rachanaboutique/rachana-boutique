@@ -94,7 +94,8 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
                 e.stopPropagation();
                 handleAddToCartClick(product?._id, product?.totalStock);
               }}
-              className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-md shadow"
+        
+              className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white shadow-lg  hover:scale-105  px-4 py-2 rounded-md"
             >
               Add to Cart
             </Button>

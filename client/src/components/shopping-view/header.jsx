@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { shoppingViewHeaderMenuItems } from "@/config";
+import logo from "@/assets/logo.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,13 +41,13 @@ function ShoppingHeader() {
     "💳 Secure payment options available!",
   ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
-    }, 8000); // Change message every 4 seconds
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
+  //   }, 8000); // Change message every 4 seconds
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   function MenuItems({ onCloseSheet }) {
     const navigate = useNavigate();
@@ -81,7 +82,7 @@ function ShoppingHeader() {
         {shoppingViewHeaderMenuItems.map((menuItem) => (
           <Label
             onClick={() => handleNavigate(menuItem)}
-            className="text-md font-medium cursor-pointer relative group pb-1" // Added padding bottom
+            className="text-lg font-medium cursor-pointer relative group pb-1" // Added padding bottom
             key={menuItem.id}
           >
             {menuItem.label}
@@ -138,14 +139,14 @@ function ShoppingHeader() {
           >
             <ShoppingCart className="w-6 h-6" />
             <span className="absolute top-[-15px] right-[-5px] font-bold text-sm">
-              {cartItems?.items?.length || 0}
+              {cartItems?.length || 0}
             </span>
             <span className="sr-only">User cart</span>
           </button>
           <UserCartWrapper
             setOpenCartSheet={setOpenCartSheet}
             onMenuClose={() => setIsSheetOpen(false)}
-            cartItems={cartItems?.items || []}
+            cartItems={cartItems || []}
           />
         </Sheet>
 
@@ -158,9 +159,9 @@ function ShoppingHeader() {
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" className="mt-24 bg-background w-56">
+            <DropdownMenuContent side="right" className="-mr-12 mt-24 bg-background w-56">
               <DropdownMenuLabel>Logged in as {user.userName}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-black"/>
               <DropdownMenuItem
                 className="hover:cursor-pointer"
                 onClick={() => {
@@ -171,7 +172,8 @@ function ShoppingHeader() {
                 <UserCog className="mr-2 h-4 w-4" />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-black"/>
+
               <DropdownMenuItem className="hover:cursor-pointer" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
@@ -209,8 +211,8 @@ function ShoppingHeader() {
           </div>
         </div>
         <div className="flex h-14 items-center justify-between px-4 md:px-6">
-          <Link to="/shop/home" className="flex items-center gap-2">
-            <span className="font-bold text-sm md:text-lg">Rachana Boutique</span>
+          <Link to="/shop/home" className=" flex items-center gap-2">
+            <img src={logo} alt="Logo" className="w-[180px] md:w-full  h-11" />
           </Link>
 
           <div className="flex items-center gap-4">

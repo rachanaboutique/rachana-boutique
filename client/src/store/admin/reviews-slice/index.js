@@ -14,7 +14,7 @@ export const fetchAllReviews = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/product-reviews`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchAllReviews:", result.data);
+
       return result.data;
     } catch (error) {
       console.error("Error fetching reviews from URL:", url, error);
@@ -30,7 +30,6 @@ export const deleteReview = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/product-reviews/${id}`;
     try {
       const result = await axios.delete(url);
-      console.log("Response from deleteReview:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error deleting review from URL:", url, error);

@@ -12,11 +12,9 @@ export const fetchCategories = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     // Construct the URL using Vite's environment variable
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/categories/get`;
-    console.log("Fetching categories from URL:", url);
 
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchCategories:", result);
       return result.data;
     } catch (error) {
       console.error("Error fetching categories from URL:", url, error);

@@ -13,12 +13,9 @@ export const createFeedback = createAsyncThunk(
   async (feedbackData, { rejectWithValue }) => {
     // Construct the URL using Vite's environment variable
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/feedback/add`;
-    console.log("Creating feedback via URL:", url);
-    console.log("Feedback data:", feedbackData);
 
     try {
       const result = await axios.post(url, feedbackData);
-      console.log("Response from createFeedback:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error creating feedback via URL:", url, error);
@@ -33,11 +30,9 @@ export const fetchFeedback = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     // Construct the URL using Vite's environment variable
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/feedback/get`;
-    console.log("Fetching feedback via URL:", url);
 
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchFeedback:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching feedback via URL:", url, error);

@@ -14,7 +14,6 @@ export const getAllUsers = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/users/get`;
     try {
       const result = await axios.get(url);
-      console.log("Response from getAllUsers:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching users from URL:", url, error);
@@ -30,7 +29,6 @@ export const updateUser = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/users/update/${id}`;
     try {
       const result = await axios.put(url, { role });
-      console.log("Response from updateUser:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error updating user role from URL:", url, error);
@@ -46,7 +44,6 @@ export const deleteUser = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/users/delete/${id}`;
     try {
       const result = await axios.delete(url);
-      console.log("Response from deleteUser:", result.data);
       return { id, data: result.data };
     } catch (error) {
       console.error("Error deleting user from URL:", url, error);

@@ -11,10 +11,8 @@ export const getSearchResults = createAsyncThunk(
   "/order/getSearchResults",
   async (keyword, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/search/${keyword}`;
-    console.log("Fetching search results from URL:", url);
     try {
       const response = await axios.get(url);
-      console.log("Search results response:", response);
       return response.data;
     } catch (error) {
       console.error("Error fetching search results from URL:", url, error);

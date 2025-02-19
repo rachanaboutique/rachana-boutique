@@ -11,18 +11,12 @@ export const addNewInstaFeedPost = createAsyncThunk(
   "/instafeed/addNewPost",
   async (formData, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/instafeed/add`;
-
-    console.log("URL for Add InstaFeed Post API:", url);
-    console.log("FormData sent to Add InstaFeed Post API:", formData);
-
     try {
       const result = await axios.post(url, formData, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-
-      console.log("Response from Add InstaFeed Post API:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error adding new InstaFeed post:", {
@@ -43,7 +37,6 @@ export const fetchAllInstaFeedPosts = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/instafeed/get`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchAllInstaFeedPosts:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching all InstaFeed posts from URL:", url, error);
@@ -57,14 +50,12 @@ export const editInstaFeedPost = createAsyncThunk(
   "/instafeed/editPost",
   async ({ id, formData }, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/instafeed/edit/${id}`;
-    console.log("formData for editInstaFeedPost:", formData);
     try {
       const result = await axios.put(url, formData, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      console.log("Response from editInstaFeedPost:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error editing InstaFeed post from URL:", url, error);

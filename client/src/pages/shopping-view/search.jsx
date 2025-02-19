@@ -31,15 +31,15 @@ function SearchProducts() {
   const suggestions =
     keyword.trim().length > 0
       ? productList.filter((product) =>
-          product.title.toLowerCase().includes(keyword.toLowerCase())
-        )
+        product.title.toLowerCase().includes(keyword.toLowerCase())
+      )
       : [];
 
   // Detect clicks outside the input and suggestions to hide the suggestion dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (
-        inputRef.current && 
+        inputRef.current &&
         suggestionsRef.current &&
         !inputRef.current.contains(event.target) &&
         !suggestionsRef.current.contains(event.target)
@@ -53,34 +53,21 @@ function SearchProducts() {
     };
   }, []);
 
-  function handleAddtoCart(getCurrentProductId, getTotalStock) {
-    const getCartItems = cartItems.items || [];
-    if (getCartItems.length) {
-      const indexOfCurrentItem = getCartItems.findIndex(
-        (item) => item.productId === getCurrentProductId
-      );
-      if (indexOfCurrentItem > -1) {
-        const getQuantity = getCartItems[indexOfCurrentItem].quantity;
-        if (getQuantity + 1 > getTotalStock) {
-          toast({
-            title: `Only ${getQuantity} quantity can be added for this item`,
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-    }
-
+  function handleAddtoCart(getCurrentProductId) {
     dispatch(
       addToCart({
         userId: user?.id,
         productId: getCurrentProductId,
         quantity: 1,
+        colorId : productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
+
       })
     ).then((data) => {
       if (data?.payload?.success) {
         dispatch(fetchCartItems(user?.id));
-        toast({ title: "Product is added to cart" });
+        toast({
+          title: "Product is added to cart",
+        });
       }
     });
   }
@@ -127,20 +114,19 @@ function SearchProducts() {
 
         {/* Suggestions Dropdown */}
         {openSuggestions && keyword.trim().length > 0 && suggestions.length > 0 && (
-          <div 
+          <div
             ref={suggestionsRef}
             className="absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto"
           >
             {suggestions.map((product, index) => (
               <div
                 key={product._id}
-                className={`flex items-center p-4 hover:bg-gray-100 cursor-pointer ${
-                  index === highlightedIndex ? "bg-gray-200" : ""
-                }`}
+                className={`flex items-center p-4 hover:bg-gray-100 cursor-pointer ${index === highlightedIndex ? "bg-gray-200" : ""
+                  }`}
                 onMouseDown={() => handleViewDetails(product._id)}
               >
                 <img
-                  src={product.image}
+                  src={product.image[0]}
                   alt={product.title}
                   className="w-12 h-12 object-cover rounded mr-4"
                 />
@@ -151,11 +137,14 @@ function SearchProducts() {
                   </p>
                 </div>
                 <Button
-                  size="sm"
-                  className="ml-auto bg-primary hover:bg-accent text-white"
-                  onMouseDown={() => handleAddtoCart(product._id, product.stock)}
+                  onClick={(e) => {
+                    // Prevent click propagation to the container so that the overlay buttons work independently
+                    e.stopPropagation();
+                    handleViewDetails(product?._id);
+                  }}
+                  className="bg-foreground hover:bg-accent text-white px-4 py-2 rounded-md shadow"
                 >
-                  Add to Cart
+                  View Details
                 </Button>
               </div>
             ))}

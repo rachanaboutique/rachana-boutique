@@ -12,10 +12,6 @@ export const addNewBanner = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/banners/add`;
 
-    // Log the URL and FormData being sent
-    console.log("URL for Add Banner API:", url);
-    console.log("FormData sent to Add Banner API:", formData);
-
     try {
       const result = await axios.post(url, formData, {
         headers: {
@@ -23,8 +19,6 @@ export const addNewBanner = createAsyncThunk(
         },
       });
 
-      // Log the API response
-      console.log("Response from Add Banner API:", result.data);
       return result.data;
     } catch (error) {
       // Log the error details for debugging
@@ -45,7 +39,6 @@ export const fetchAllBanners = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/banners/get`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchAllBanners:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching all banners from URL:", url, error);
@@ -59,14 +52,12 @@ export const editBanner = createAsyncThunk(
   "/banners/editBanner",
   async ({ id, formData }, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/banners/edit/${id}`;
-    console.log("formData for editBanner:", formData);
     try {
       const result = await axios.put(url, formData, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      console.log("Response from editBanner:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error editing banner from URL:", url, error);
@@ -82,7 +73,6 @@ export const deleteBanner = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/banners/delete/${id}`;
     try {
       const result = await axios.delete(url);
-      console.log("Response from deleteBanner:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error deleting banner from URL:", url, error);

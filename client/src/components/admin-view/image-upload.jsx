@@ -57,12 +57,6 @@ function ProductImageUpload({
   }
 
   function handleRemoveImage(index) {
-    console.log("Before Removing:", {
-      imageFiles,
-      uploadedImageUrls,
-      imageLoadingStates,
-    });
-
     if (!Array.isArray(imageLoadingStates)) {
       console.error("imageLoadingStates is not an array! Resetting...");
       setImageLoadingStates([]);
@@ -78,12 +72,6 @@ function ProductImageUpload({
       setUploadedImageUrls((prev) => prev.filter((_, i) => i !== index));
       setImageLoadingStates((prev) => prev.filter((_, i) => i !== index));
     }
-
-    console.log("After Removing:", {
-      imageFiles,
-      uploadedImageUrls,
-      imageLoadingStates,
-    });
   }
 
   async function uploadImageToCloudinary(file, index) {

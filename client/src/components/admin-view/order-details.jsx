@@ -22,8 +22,6 @@ function AdminOrderDetailsView({ orderDetails }) {
   const dispatch = useDispatch();
   const { toast } = useToast();
 
-  console.log(orderDetails, "orderDetailsorderDetails");
-
   function handleUpdateStatus(event) {
     event.preventDefault();
     const { status } = formData;
@@ -97,6 +95,7 @@ function AdminOrderDetailsView({ orderDetails }) {
                 ? orderDetails?.cartItems.map((item) => (
                   <li className="flex items-center justify-between">
                     <span>Title: {item.title}</span>
+                    <span>Color: {item.colors?.title}</span>
                     <span>Quantity: {item.quantity}</span>
                     <span>Price: ₹{item.price}</span>
                   </li>

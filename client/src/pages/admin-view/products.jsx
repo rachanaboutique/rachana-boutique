@@ -97,7 +97,6 @@ function AdminProducts() {
 
   function onSubmit(event) {
     event.preventDefault();
-    // Ensure the formData image field is updated with the array of uploaded image URLs.
     const updatedFormData = {
       ...formData,
       image: uploadedImageUrls.length > 0 ? uploadedImageUrls : formData.image,
@@ -186,7 +185,8 @@ function AdminProducts() {
    
         
       <div className="mb-4 flex items-center justify-between w-full">
-      <div className="">
+      <div className="w-1/3">
+
           <input
             type="text"
             placeholder="Search by product name..."
@@ -255,7 +255,7 @@ function AdminProducts() {
               setFormData={setFormData}
               buttonText={currentEditedId !== null ? "Edit" : "Add"}
               formControls={dynamicAddProductFormElements}
-              isBtnDisabled={isFormValid()}
+              isBtnDisabled={!isFormValid()}
             />
           </div>
         </SheetContent>

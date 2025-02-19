@@ -11,23 +11,21 @@ function UserCartWrapper({ cartItems, setOpenCartSheet, onMenuClose }) {
       ? cartItems.reduce(
           (sum, currentItem) =>
             sum +
-            (currentItem?.salePrice > 0
-              ? currentItem?.salePrice
-              : currentItem?.price) *
+            (currentItem?.salePrice > 0 ? currentItem?.salePrice : currentItem?.price) *
               currentItem?.quantity,
           0
         )
       : 0;
 
   return (
-    <SheetContent className="bg-playground sm:max-w-md overflow-y-auto">
+    <SheetContent className="w-full bg-playground sm:max-w-md overflow-y-auto">
       <SheetHeader>
         <SheetTitle>Your Cart</SheetTitle>
       </SheetHeader>
       <div className="mt-8 space-y-4">
         {cartItems && cartItems.length > 0
           ? cartItems.map((item, index) => <UserCartItemsContent key={index} cartItem={item} />)
-          : null}
+          : <p className="text-center">Your cart is empty</p>}
       </div>
       <div className="mt-8 space-y-4">
         <div className="flex justify-between">

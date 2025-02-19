@@ -32,7 +32,6 @@ export const fetchAllProducts = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/products/get`;
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchAllProducts:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching all products from URL:", url, error);
@@ -46,7 +45,6 @@ export const editProduct = createAsyncThunk(
   "/products/editProduct",
   async ({ id, formData }, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/admin/products/edit/${id}`;
-    console.log("formData", formData);
     try {
       const result = await axios.put(url, formData, {
         headers: {

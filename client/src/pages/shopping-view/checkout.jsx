@@ -20,11 +20,10 @@ function ShoppingCheckout() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  console.log(currentSelectedAddress, "cartItems");
 
   const totalCartAmount =
-    cartItems && cartItems.items && cartItems.items.length > 0
-      ? cartItems.items.reduce(
+    cartItems && cartItems && cartItems.length > 0
+      ? cartItems.reduce(
         (sum, currentItem) =>
           sum +
           (currentItem?.salePrice > 0
@@ -58,11 +57,12 @@ function ShoppingCheckout() {
       userId: user?.id,
       email: user?.email,
       cartId: cartItems?._id,
-      cartItems: cartItems.items.map((item) => ({
+      cartItems: cartItems.map((item) => ({
         productId: item?.productId,
         title: item?.title,
         price: item?.salePrice > 0 ? item?.salePrice : item?.price,
         quantity: item?.quantity,
+        colors: item?.colors,
       })),
       addressInfo: {
         addressId: currentSelectedAddress?._id,
@@ -168,8 +168,8 @@ function ShoppingCheckout() {
           setCurrentSelectedAddress={setCurrentSelectedAddress}
         />
         <div className="flex flex-col gap-4">
-          {cartItems && cartItems.items && cartItems.items.length > 0
-            ? cartItems.items.map((item) => (
+          {cartItems &&  cartItems.length > 0
+            ? cartItems.map((item) => (
               <UserCartItemsContent cartItem={item} />
             ))
             : null}

@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils"; // Utility for conditional classNames
 
 export function Switch({ checked = false, onCheckedChange, className, ...props }) {
 
-    console.log("Switch", checked);
   return (
 
     <label

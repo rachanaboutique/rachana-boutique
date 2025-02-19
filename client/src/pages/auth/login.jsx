@@ -5,6 +5,7 @@ import { loginUser } from "@/store/auth-slice";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
+import logo from "@/assets/logo3.png";
 
 const initialState = {
   email: "",
@@ -34,7 +35,10 @@ function AuthLogin() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-6">
+    <div className="-mt-20 mx-auto w-full max-w-md space-y-6">
+          <div className=" w-44 h-44 flex items-center justify-center mx-auto">
+        <img src={logo} alt="Logo" className="w-full h-full" />
+      </div>
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Sign in to your account
@@ -49,6 +53,8 @@ function AuthLogin() {
           </Link>
         </p>
       </div>
+  
+
       <CommonForm
         formControls={loginFormControls}
         buttonText={"Sign In"}

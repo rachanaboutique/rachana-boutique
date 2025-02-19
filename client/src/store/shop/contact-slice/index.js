@@ -12,12 +12,8 @@ export const createContact = createAsyncThunk(
   "contact/createContact",
   async (contactData, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/contacts/add`;
-    console.log("Creating contact via URL:", url);
-    console.log("Contact data:", contactData);
-
     try {
       const result = await axios.post(url, contactData);
-      console.log("Response from createContact:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error creating contact via URL:", url, error);

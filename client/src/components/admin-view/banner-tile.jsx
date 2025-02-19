@@ -21,7 +21,7 @@ function AdminBannerTile({ image, description, handleEdit, handleDelete }) {
       />
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-t-lg"></div>
+      <div className="absolute inset-0 bg-black bg-opacity-35 rounded-t-lg"></div>
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white px-4">
@@ -29,10 +29,11 @@ function AdminBannerTile({ image, description, handleEdit, handleDelete }) {
 
         {/* Action Buttons */}
         <div className="flex gap-4">
+
           <Button
             variant="ghost"
             onClick={handleEdit}
-            className="text-white border border-white rounded hover:bg-accent hover:border-none"
+            className="text-white rounded bg-foreground hover:bg-accent"
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit
@@ -40,7 +41,7 @@ function AdminBannerTile({ image, description, handleEdit, handleDelete }) {
           <Button
             variant="ghost"
             onClick={() => setModalOpen(true)}
-            className="text-white border border-white rounded hover:bg-red-700 hover:border-none"
+            className="text-white bg-red-600 rounded hover:bg-red-700"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete

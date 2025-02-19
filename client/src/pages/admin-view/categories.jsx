@@ -140,7 +140,7 @@ function AdminCategories() {
      
         
         
-        <div className="">
+        <div className="w-1/3">
           <input
             type="text"
             placeholder="Search by category name..."

@@ -13,12 +13,9 @@ export const createSubscription = createAsyncThunk(
   async (subscriptionData, { rejectWithValue }) => {
     // Construct the URL using Vite's environment variable
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/newsletter/subscribe`;
-    console.log("Creating newsletter subscription via URL:", url);
-    console.log("Subscription data:", subscriptionData);
 
     try {
       const result = await axios.post(url, subscriptionData);
-      console.log("Response from createSubscription:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error creating subscription via URL:", url, error);

@@ -128,8 +128,6 @@ const AdminNewsLetter = () => {
   const confirmSendNewsletter = () => {
     if (selectedEmails.length > 0) {
       const newsletterMessage = message.trim() || "Check out our latest update!";
-      console.log("Preparing to send newsletter with message:", newsletterMessage);
-
       setIsSending(true);
       dispatch(
         sendNewsletter({

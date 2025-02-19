@@ -14,7 +14,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
       const url = `${import.meta.env.VITE_BACKEND_URL}/admin/feedback/get`;
       try {
         const result = await axios.get(url);
-        console.log("Response from getAllFeedback:", result.data);
         return result.data;
       } catch (error) {
         console.error("Error fetching all feedback entries from URL:", url, error);
@@ -30,7 +29,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
       const url = `${import.meta.env.VITE_BACKEND_URL}/admin/feedback/${id}`;
       try {
         const result = await axios.get(url);
-        console.log("Response from getFeedback:", result.data);
         return result.data;
       } catch (error) {
         console.error("Error fetching feedback from URL:", url, error);
@@ -46,7 +44,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
       const url = `${import.meta.env.VITE_BACKEND_URL}/admin/feedback/delete/${id}`;
       try {
         const result = await axios.delete(url);
-        console.log("Response from deleteFeedback:", result.data);
         return { id, data: result.data };
       } catch (error) {
         console.error("Error deleting feedback from URL:", url, error);

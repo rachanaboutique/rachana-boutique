@@ -13,7 +13,6 @@ export const addReview = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/review/add`;
     try {
       const response = await axios.post(url, formdata);
-      console.log("Review added successfully:", response.data);
       return response.data;
     } catch (error) {
       // Log the error for debugging
@@ -35,7 +34,6 @@ export const getReviews = createAsyncThunk(
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/review/${id}`;
     try {
       const response = await axios.get(url);
-      console.log("Reviews fetched successfully:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error fetching reviews from URL:", url, error);

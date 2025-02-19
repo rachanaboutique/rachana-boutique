@@ -30,8 +30,6 @@ import ProductFilter from "@/components/shopping-view/filter";
         queryParams.push(`${key}=${encodeURIComponent(paramValue)}`);
       }
     }
-  
-    console.log(queryParams, "queryParams");
     return queryParams.join("&");
   }
   
@@ -55,12 +53,10 @@ import ProductFilter from "@/components/shopping-view/filter";
     }
   
     function handleGetProductDetails(getCurrentProductId) {
-      console.log(getCurrentProductId);
       dispatch(fetchProductDetails(getCurrentProductId));
     }
   
     function handleAddtoCart(getCurrentProductId, getTotalStock) {
-      console.log(cartItems);
       let getCartItems = cartItems.items || [];
   
       if (getCartItems.length) {
@@ -84,6 +80,7 @@ import ProductFilter from "@/components/shopping-view/filter";
           userId: user?.id,
           productId: getCurrentProductId,
           quantity: 1,
+          colorId : productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
         })
       ).then((data) => {
         if (data?.payload?.success) {
@@ -123,7 +120,7 @@ import ProductFilter from "@/components/shopping-view/filter";
       ? productList.filter((product) => product.isNewArrival === true)
       : [];
   
-    console.log(productList, "productList");
+
   
     return (
       <div className="p-4 md:p-6">
@@ -139,13 +136,13 @@ import ProductFilter from "@/components/shopping-view/filter";
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 hover:bg-muted"
                   >
                     <ArrowUpDownIcon className="h-4 w-4" />
                     <span>Sort by</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-background p-2 rounded-md shadow-[200px]">
+                <DropdownMenuContent align="end" className="mt-2 bg-gray-100 p-2 rounded-md shadow-[200px]">
                   <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
                     {sortOptions.map((sortItem) => (
                       <DropdownMenuRadioItem

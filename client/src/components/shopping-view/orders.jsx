@@ -37,7 +37,11 @@ function ShoppingOrders() {
     if (orderDetails !== null) setOpenDetailsDialog(true);
   }, [orderDetails]);
 
-
+  const sortedOrderList = orderList
+    ? [...orderList].sort(
+        (a, b) => new Date(b.orderDate) - new Date(a.orderDate)
+      )
+    : [];
 
   return (
     <Card>
@@ -58,11 +62,17 @@ function ShoppingOrders() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orderList && orderList.length > 0
-              ? orderList.map((orderItem) => (
+            {sortedOrderList && sortedOrderList.length > 0
+              ? sortedOrderList.map((orderItem) => (
                   <TableRow key={orderItem?._id}>
                     <TableCell>{orderItem?._id}</TableCell>
-                    <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
+                    <TableCell>
+                      {new Date(orderItem?.orderDate).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         className={`py-1 px-3 ${

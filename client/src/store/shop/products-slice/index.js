@@ -11,9 +11,7 @@ const initialState = {
 export const fetchAllFilteredProducts = createAsyncThunk(
   "/products/fetchAllProducts",
   async ({ filterParams, sortParams }, { rejectWithValue }) => {
-    // Log the thunk function for debugging purposes
-    console.log("fetchAllFilteredProducts thunk invoked");
-    
+
     const query = new URLSearchParams({
       ...filterParams,
       sortBy: sortParams,
@@ -21,11 +19,9 @@ export const fetchAllFilteredProducts = createAsyncThunk(
 
     // Construct the URL using Vite's environment variable
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/products/get?${query}`;
-    console.log("Fetching all filtered products from URL:", url);
     
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchAllFilteredProducts:", result);
       return result.data;
     } catch (error) {
       console.error("Error fetching all filtered products from URL:", url, error);
@@ -40,11 +36,9 @@ export const fetchProductDetails = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     // Construct the URL using Vite's environment variable
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/products/get/${id}`;
-    console.log("Fetching product details from URL:", url);
     
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchProductDetails:", result);
       return result.data;
     } catch (error) {
       console.error("Error fetching product details from URL:", url, error);

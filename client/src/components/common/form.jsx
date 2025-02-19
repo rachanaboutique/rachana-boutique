@@ -56,7 +56,7 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
         `${import.meta.env.VITE_BACKEND_URL}/admin/products/upload-video`,
         data
       );
-      console.log("Response from uploadVideo:", response.data.result.url);
+
       if (response?.data?.success) {
         setFormData({
           ...formData,

@@ -29,7 +29,6 @@ const sendNewsletter = async (req, res) => {
       const uploadedFlyer = await imageUploadUtil(flyer);
       flyerUrl = uploadedFlyer.secure_url;
     }
-    console.log("Flyer URL:", message);
 
     // Ensure `message` is formatted correctly
     const emailContent = `

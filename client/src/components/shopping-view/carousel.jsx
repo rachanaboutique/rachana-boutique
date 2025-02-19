@@ -36,7 +36,7 @@ const Carousel = ({ bannersList }) => {
             <h2 className="text-4xl md:text-6xl font-bold leading-snug tracking-wide drop-shadow-md animate-fade-slide-up ">
               {item?.description}
             </h2>
-            <button className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white text-lg rounded-lg shadow-lg transform transition-all hover:scale-105 animate-fade-slide-up delay-500" onClick={() => navigate("/shop/collections")}>
+            <button className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white text-lg rounded-lg shadow-lg transform transition-all hover:scale-105 animate-fade-slide-up delay-500" onClick={() => navigate("/shop/collections")}>
               Shop Now
             </button>
           </div>

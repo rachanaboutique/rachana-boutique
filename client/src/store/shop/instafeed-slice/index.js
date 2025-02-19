@@ -15,7 +15,6 @@ export const fetchInstaFeed = createAsyncThunk(
 
     try {
       const result = await axios.get(url);
-      console.log("Response from fetchInstaFeed:", result);
       return result.data;
     } catch (error) {
       console.error("Error fetching Instagram feed posts from URL:", url, error);
