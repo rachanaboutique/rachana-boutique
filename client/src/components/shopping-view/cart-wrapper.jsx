@@ -18,7 +18,7 @@ function UserCartWrapper({ cartItems, setOpenCartSheet, onMenuClose }) {
       : 0;
 
   return (
-    <SheetContent className="w-full bg-playground sm:max-w-md overflow-y-auto">
+    <SheetContent className="w-full p-2 md:p-4 bg-playground sm:max-w-md overflow-y-auto">
       <SheetHeader>
         <SheetTitle>Your Cart</SheetTitle>
       </SheetHeader>

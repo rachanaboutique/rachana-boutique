@@ -13,7 +13,7 @@ const Carousel = ({ bannersList }) => {
   }, [bannersList.length]);
 
   return (
-    <div className="relative w-full h-[85vh] overflow-hidden bg-gray-900">
+    <div className="relative w-full h-full bg-gray-900">
       {bannersList.map((item, index) => (
         <div
           key={index}
@@ -31,9 +31,9 @@ const Carousel = ({ bannersList }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80"></div>
 
           {/* Text Content */}
-          <div className="absolute bottom-16 md:bottom-24 left-8 md:left-16 text-white max-w-2xl">
+          <div className="absolute bottom-16 md:bottom-24 left-4 md:left-16 text-white max-w-2xl">
 
-            <h2 className="text-4xl md:text-6xl font-bold leading-snug tracking-wide drop-shadow-md animate-fade-slide-up ">
+            <h2 className="text-3xl md:text-6xl font-bold leading-snug tracking-wide drop-shadow-md animate-fade-slide-up ">
               {item?.description}
             </h2>
             <button className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white text-lg rounded-lg shadow-lg transform transition-all hover:scale-105 animate-fade-slide-up delay-500" onClick={() => navigate("/shop/collections")}>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,18 +18,38 @@ const Contact = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  // State to track if form is valid
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  // Check for validations whenever the input values change
+  useEffect(() => {
+    // Simple validation: required fields must not be empty.
+    if (name.trim() && email.trim() && message.trim()) {
+      setIsFormValid(true);
+    } else {
+      setIsFormValid(false);
+    }
+  }, [name, email, message]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Check again if all fields are filled before dispatching.
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill out all fields before submitting.",
+      });
+      return;
+    }
+
     // Dispatch the createContact thunk
     const resultAction = await dispatch(createContact({ name, email, message }));
     if (createContact.fulfilled.match(resultAction)) {
-      // Clear the form fields
+      // Clear the form fields after successful submission
       setName("");
       setEmail("");
       setMessage("");
-      // Use toast notification after a successful submission
       toast({
         title: "Success",
         description: "Your message has been sent successfully!",
@@ -38,14 +58,14 @@ const Contact = () => {
   };
 
   return (
-    <section className="bg-playground text-foreground px-6 py-12 md:py-24">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+    <section className="bg-playground text-foreground px-6 py-12">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
         {/* Left Side: Image */}
-        <div className="relative rounded-2xl overflow-hidden shadow-lg">
+        <div className="relative rounded-2xl overflow-hidden shadow-lg w-full md:w-[35%]">
           <img
             src={banner}
             alt="Elegant Saree Collection"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
           <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center space-y-4">
             <h2 className="text-4xl md:text-5xl font-bold text-white text-center">
@@ -64,7 +84,7 @@ const Contact = () => {
                 <Facebook size={30} />
               </a>
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/rachanas_boutique?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-pink-500 transition"
@@ -80,7 +100,7 @@ const Contact = () => {
                 <Twitter size={30} />
               </a>
               <a
-                href="mailto:support@sarees.com"
+                href="mailto:rachanaboutique@gmail.com"
                 className="text-white hover:text-red-500 transition"
               >
                 <Mail size={30} />
@@ -90,7 +110,7 @@ const Contact = () => {
         </div>
 
         {/* Right Side: Contact Form */}
-        <div className="bg-background bg-opacity-90 rounded-2xl shadow-md p-6 md:p-10 relative">
+        <div className="w-full md:w-[65%] bg-background bg-opacity-90 rounded-2xl shadow-md p-6 md:p-10 relative">
           <h3 className="text-3xl font-bold mb-6 text-center">Contact Us</h3>
           <p className="text-sm text-muted-foreground text-center mb-8">
             Have a question? Let us know, and we&apos;ll get back to you as soon as possible.
@@ -141,7 +161,7 @@ const Contact = () => {
             <div className="text-center">
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !isFormValid}
                 className="px-6 py-2 rounded-lg text-white text-lg font-medium shadow hover:shadow-lg transition"
               >
                 {isLoading ? "Sending..." : "Send Message"}

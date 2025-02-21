@@ -1,5 +1,4 @@
 import { HousePlug, LogOut, Menu, ShoppingCart, UserCog, Search, Phone } from "lucide-react";
-import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
@@ -41,13 +40,7 @@ function ShoppingHeader() {
     "💳 Secure payment options available!",
   ];
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
-  //   }, 8000); // Change message every 4 seconds
 
-  //   return () => clearInterval(interval);
-  // }, []);
 
   function MenuItems({ onCloseSheet }) {
     const navigate = useNavigate();
@@ -118,7 +111,7 @@ function ShoppingHeader() {
           toast({
             title: "Logout failed",
             description: "Please try again.",
-            variant: "destructive", 
+            variant: "destructive",
           });
         });
     }
@@ -153,15 +146,15 @@ function ShoppingHeader() {
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Avatar className="bg-black hover:cursor-pointer">
+              <Avatar className="mt-2 md:mt-0 bg-black hover:cursor-pointer">
                 <AvatarFallback className="bg-black text-white font-extrabold">
                   {user && user?.userName && user?.userName[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" className="-mr-12 mt-24 bg-background w-56">
+            <DropdownMenuContent side="right" className="-mr-12 mt-24 bg-white  w-56">
               <DropdownMenuLabel>Logged in as {user.userName}</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-black"/>
+              <DropdownMenuSeparator className="bg-foreground" />
               <DropdownMenuItem
                 className="hover:cursor-pointer"
                 onClick={() => {
@@ -172,7 +165,7 @@ function ShoppingHeader() {
                 <UserCog className="mr-2 h-4 w-4" />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-black"/>
+              <DropdownMenuSeparator className="bg-foreground" />
 
               <DropdownMenuItem className="hover:cursor-pointer" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
@@ -181,18 +174,44 @@ function ShoppingHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={() => navigate("/auth/login")}>
-              Login
-            </Button>
-            <Button onClick={() => navigate("/auth/register")}>
-              Sign Up
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="default" className="px-4 py-1 text-sm shadow-md">
+                Join Us
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="mt-3 w-full md:w-40 bg-white border border-gray-200 shadow-lg rounded-lg p-1"
+            >
+              <DropdownMenuItem
+                className="px-3 py-2 rounded-md text-gray-700 hover:bg-rose-100 hover:text-rose-600 transition cursor-pointer"
+                onClick={() => navigate("/auth/login")}
+              >
+                Login
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-black" />
+
+              <DropdownMenuItem
+                className="px-3 py-2 rounded-md text-gray-700 hover:bg-rose-100 hover:text-rose-600 transition cursor-pointer"
+                onClick={() => navigate("/auth/register")}
+              >
+                Sign Up
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
         )}
       </div>
     );
   }
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
+    }, 11000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -201,8 +220,12 @@ function ShoppingHeader() {
       <header className="fixed top-0 z-40 w-full border-b bg-background">
         <div className="announcement-bar">
           <p className="w-64 text-sm text-center flex items-center justify-center">
+
+
             <Phone className="h-4 w-4 mr-2" />
-            Contact: +91 98765 43210
+            <a href="tel:+919944783389">
+              Contact: +91 9944783389
+            </a>
           </p>
           <div className="message-container">
             <span key={currentMessageIndex} className="animate-scroll">

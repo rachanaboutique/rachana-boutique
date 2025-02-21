@@ -1,29 +1,23 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
-import ProductFilter from "@/components/shopping-view/filter";
-import { fetchProductDetails, fetchAllFilteredProducts } from "@/store/shop/products-slice";
-import ProductDetailsDialog from "@/components/shopping-view/product-details";
-import ShoppingProductTile from "@/components/shopping-view/product-tile";
-import { Button } from "@/components/ui/button";
-import { sortOptions } from "@/config";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
+import ProductFilter from "@/components/shopping-view/filter";
+import ShoppingProductTile from "@/components/shopping-view/product-tile";
+import { fetchProductDetails, fetchAllFilteredProducts } from "@/store/shop/products-slice";
+import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { ArrowUpDownIcon } from "lucide-react";
+import {Loader} from "@/components/ui/loader";
+import { sortOptions } from "@/config";
 
 function ShoppingListing() {
   const dispatch = useDispatch();
-  const { productList, productDetails } = useSelector((state) => state.shopProducts);
-  const {user} = useSelector((state) => state.auth);
+  const { productList, productDetails, isLoading } = useSelector((state) => state.shopProducts);
+  const { user } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState(null);
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -49,7 +43,6 @@ function ShoppingListing() {
             values.some((range) => {
               const [minStr, maxStr] = range.split("-");
               const min = Number(minStr);
-              // If maxStr is empty, treat it as Infinity so that it matches 6000 and above.
               const max = maxStr ? Number(maxStr) : Infinity;
               return product.salePrice >= min && product.salePrice <= max;
             })
@@ -72,8 +65,9 @@ function ShoppingListing() {
 
     return updatedProducts;
   }, [productList, filters, sort, categorySearchParam]);
+
   const handleFilter = (filterKey, filterValue) => {
-    let updatedFilters = { ...filters };
+    const updatedFilters = { ...filters };
 
     // Add or remove filter value
     if (!updatedFilters[filterKey]) {
@@ -104,7 +98,7 @@ function ShoppingListing() {
   }
 
   function handleAddtoCart(getCurrentProductId, getTotalStock) {
-    let getCartItems = cartItems.items || [];
+    const getCartItems = cartItems.items || [];
 
     if (getCartItems.length) {
       const indexOfCurrentItem = getCartItems.findIndex(
@@ -127,7 +121,7 @@ function ShoppingListing() {
         userId: user?.id,
         productId: getCurrentProductId,
         quantity: 1,
-        colorId : productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
+        colorId: productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id,
       })
     ).then((data) => {
       if (data?.payload?.success) {
@@ -139,21 +133,17 @@ function ShoppingListing() {
     });
   }
 
-  // Update fetch to use the actual filters from both URL and the filters state.
+  // Optimize fetching by using a single useEffect for filter/sort changes
   useEffect(() => {
     const filterParams = {};
-    // Use category from URL if available
     if (categorySearchParam) {
       filterParams.category = categorySearchParam;
     }
-
-    // Add other filters if available
     if (Object.keys(filters).length > 0) {
       Object.entries(filters).forEach(([key, values]) => {
         filterParams[key] = values;
       });
     }
-
     dispatch(
       fetchAllFilteredProducts({
         filterParams: Object.keys(filterParams).length > 0 ? filterParams : null,
@@ -161,9 +151,9 @@ function ShoppingListing() {
       })
     );
   }, [dispatch, categorySearchParam, filters, sort]);
-  useEffect(() => {
-    if (productDetails !== null) setOpenDetailsDialog(true);
-  }, [productDetails]);
+
+  // Show loader only when productList is initially loading (i.e. empty) 
+  if (isLoading && productList.length === 0) return <Loader />;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
@@ -221,11 +211,13 @@ function ShoppingListing() {
       </div>
 
       {/* Product Details Dialog */}
-      {/* <ProductDetailsDialog
+      {/*
+      <ProductDetailsDialog
         open={openDetailsDialog}
         setOpen={setOpenDetailsDialog}
         productDetails={productDetails}
-      /> */}
+      />
+      */}
     </div>
   );
 }

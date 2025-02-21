@@ -6,6 +6,21 @@
   display: none;
 }
 
+.table-scroll::-webkit-scrollbar {
+  display: block;
+  height: 6px; /* Adjust scrollbar thickness */
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #888; /* Scrollbar color */
+  border-radius: 3px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Darker color on hover */
+}
+
+
 body {
   font-family: 'Lato', serif;
 }
@@ -303,7 +318,7 @@ body {
 
 .animate-scroll {
   position: absolute;
-  animation: scroll 8s linear infinite;
+  animation: scroll 11s linear infinite;
   white-space: nowrap;
 }
 

@@ -36,7 +36,7 @@ function Loader({ className }) {
 
       {/* Rotating Floral Spinner */}
       <motion.div
-        className="relative h-24 w-24 rounded-full border-[6px] border-t-gold-500 border-b-pink-500 shadow-xl"
+        className="relative h-16 w-16 md:h-24 md:w-24 rounded-full border-[6px] border-t-gold-500 border-b-pink-500 shadow-xl"
         animate={{
           rotate: 360,
         }}
@@ -48,7 +48,7 @@ function Loader({ className }) {
       >
         {/* Inner Floral Glow */}
         <motion.div
-          className="absolute inset-0 m-auto h-20 w-20 rounded-full bg-gradient-to-br from-pastel-gold via-white to-pink-100 shadow-lg"
+          className="absolute inset-0 m-auto h-12 w-12 md:h-20 md:w-20 rounded-full bg-gradient-to-br from-pastel-gold via-white to-pink-100 shadow-lg"
           animate={{
             scale: [0.9, 1, 0.9],
             opacity: [0.8, 1, 0.8],

@@ -48,7 +48,7 @@ function ShoppingOrders() {
       <CardHeader>
         <CardTitle>Order History</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 md:p-6">
         <Table>
           <TableHeader>
             <TableRow>

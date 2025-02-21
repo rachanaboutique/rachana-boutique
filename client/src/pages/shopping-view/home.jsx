@@ -1,100 +1,52 @@
-import { Button } from "@/components/ui/button";
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import classNames from "classnames";
-import { motion } from "framer-motion"
-import bannerOne from "../../assets/banner-1.webp";
-import bannerTwo from "../../assets/banner-2.webp";
-import bannerThree from "../../assets/saree.png";
+import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 
-import {
-  Airplay,
-  BabyIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CloudLightning,
-  Heater,
-  Images,
-  Shirt,
-  ShirtIcon,
-  ShoppingBasket,
-  UmbrellaIcon,
-  WashingMachine,
-  WatchIcon,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllFilteredProducts,
   fetchProductDetails,
 } from "@/store/shop/products-slice";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
-import { useNavigate } from "react-router-dom";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
-import ProductDetailsDialog from "@/components/shopping-view/product-details";
-import { fetchCategories } from "@/store/shop/categories-slice"
+import { fetchCategories } from "@/store/shop/categories-slice";
 import { fetchBanners } from "@/store/shop/banners-slice";
-import { fetchInstaFeed } from "@/store/shop/instafeed-slice"
+import { fetchInstaFeed } from "@/store/shop/instafeed-slice";
 import CategoryCard from "@/components/shopping-view/categoryCard";
-import img1 from "../../assets/kora.png";
-import img2 from "../../assets/jamandi.png";
 import Carousel from "@/components/shopping-view/carousel";
 import FastMovingCard from "@/components/shopping-view/fast-moving-card";
 import InstagramFeed from "@/components/shopping-view/instagramFeed";
 import Testimonials from "@/components/shopping-view/testimonials";
 import Banner from "@/components/shopping-view/banner";
-import FeedbackCard from "@/components/shopping-view/feedback-card";
-
-
+import bannerThree from "../../assets/saree.png";
+import { Loader } from "../../components/ui/loader";
 
 function ShoppingHome() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const { productList, productDetails } = useSelector(
-    (state) => state.shopProducts
-  );
-  const { bannersList } = useSelector((state) => state.shopBanners);
-  const [openDetailsDialog, setOpenDetailsDialog] = useState(false)
-  const { user } = useSelector((state) => state.auth);
-  const { categoriesList } = useSelector((state) => state.shopCategories);
-  const { instaFeedPosts } = useSelector((state) => state.shopInstaFeed);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const [activeItem, setActiveItem] = useState(0);
+  let screenWidth = window.innerWidth;
+  const { productList, isLoading: productsLoading } = useSelector((state) => state.shopProducts);
+  const { bannersList, isLoading: bannersLoading } = useSelector((state) => state.shopBanners);
+  const { categoriesList, isLoading: categoriesLoading } = useSelector((state) => state.shopCategories);
+  const { instaFeedPosts, isLoading: instaFeedLoading } = useSelector((state) => state.shopInstaFeed);
+  const { user } = useSelector((state) => state.auth);
+
+  const dispatch = useDispatch();
+  const { toast } = useToast();
+
   const wrapperRef = useRef(null);
   const timeoutRef = useRef(null);
+
   const { ref, inView } = useInView({
-    rootMargin: window.innerWidth <= 768 ? "2100px" : "100px",
+    rootMargin: screenWidth <= 768 ? "3100px" : "0px",
     threshold: 0.2,
   });
 
-  const { fastMovingRef, fastMovingInView } = useInView({
-    rootMargin: window.innerWidth <= 768 ? "1750px" : "200px",
-    threshold: 0.2,
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
-
-    // Listen to the resize event
-    window.addEventListener("resize", handleResize);
-
-    // Clean up the event listener on component unmount
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   useEffect(() => {
     if (!wrapperRef.current) return;
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
     wrapperRef.current.style.setProperty(
       "--transition",
@@ -105,82 +57,61 @@ function ShoppingHome() {
       wrapperRef.current?.style.removeProperty("--transition");
     }, 900);
 
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    return () => timeoutRef.current && clearTimeout(timeoutRef.current);
   }, [activeItem]);
-  
-  function handleGetProductDetails(getCurrentProductId) {
-    dispatch(fetchProductDetails(getCurrentProductId));
-  }
 
-  function handleAddtoCart(getCurrentProductId) {
-    dispatch(
-      addToCart({
-        userId: user?.id,
-        productId: getCurrentProductId,
-        quantity: 1,
-        colorId : productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
-
-      })
-    ).then((data) => {
-      if (data?.payload?.success) {
-        dispatch(fetchCartItems(user?.id));
-        toast({
-          title: "Product is added to cart",
-        });
-      }
-    });
-  }
-
+  // Fetch all required data once
   useEffect(() => {
-    if (productDetails !== null) setOpenDetailsDialog(true);
-  }, [productDetails]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prevSlide) => (prevSlide + 1) % bannersList.length);
-    }, 15000);
-
-    return () => clearInterval(timer);
-  }, [bannersList]);
-
-  useEffect(() => {
-    dispatch(
-      fetchAllFilteredProducts({
-        filterParams: {},
-        sortParams: "price-lowtohigh",
-      })
-    );
-  }, [dispatch]);
-
-  useEffect(() => {
+    dispatch(fetchAllFilteredProducts({ filterParams: {}, sortParams: "price-lowtohigh" }));
     dispatch(fetchBanners());
     dispatch(fetchCategories());
     dispatch(fetchInstaFeed());
   }, [dispatch]);
 
+  function handleGetProductDetails(productId) {
+    dispatch(fetchProductDetails(productId));
+  }
+
+  function handleAddtoCart(productId) {
+    dispatch(
+      addToCart({
+        userId: user?.id,
+        productId: productId,
+        quantity: 1,
+        colorId: productList.find((product) => product._id === productId)?.colors[0]?._id,
+      })
+    ).then((data) => {
+      if (data?.payload?.success) {
+        dispatch(fetchCartItems(user?.id));
+        toast({
+          title: "Product added to cart",
+        });
+      }
+    });
+  }
+
+  const isAnyLoading = productsLoading || bannersLoading || categoriesLoading || instaFeedLoading;
+  if(isAnyLoading) return <Loader />;
+
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="relative w-full h-[600px]">
+      <div className="relative w-full h-[500px] md:h-[700px]">
         <Carousel bannersList={bannersList} />
       </div>
       <section
-        className={`py-12 ${screenWidth < 768
-            ? "-mt-10"
+        className={`pt-8 pb-6`}
+      >
+
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8">Shop by category</h2>
+          <div className={` ${screenWidth < 768
+            ? ""
             : screenWidth >= 768 && screenWidth <= 1024
               ? "-mt-10"
               : screenWidth > 1024 && screenWidth <= 1650
                 ? "mt-[3%]"
                 : "mt-[35%]"
-          }`}
-      >
-
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Shop by category</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          } grid grid-cols-1 md:grid-cols-3 gap-4`}>
             {categoriesList.map((categoryItem, index) => (
               <motion.div
                 key={categoryItem.id || index}
@@ -202,12 +133,11 @@ function ShoppingHome() {
       </section>
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            Feature Products
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Feature Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {productList && productList.length > 0
-              ? productList
+            {productList &&
+              productList.length > 0 &&
+              productList
                 .filter((productItem) => productItem?.isFeatured)
                 .map((productItem) => (
                   <ShoppingProductTile
@@ -216,17 +146,14 @@ function ShoppingHome() {
                     product={productItem}
                     handleAddtoCart={handleAddtoCart}
                   />
-                ))
-              : null}
-
+                ))}
           </div>
         </div>
       </section>
-      <section className="py-12">
+
+      <section className="py-6 md:py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            Watch And Buy
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Watch And Buy</h2>
         </div>
         <div className="flex h-full w-full items-center justify-center px-2">
           <div className="container mx-auto px-4">
@@ -234,11 +161,13 @@ function ShoppingHome() {
               ref={wrapperRef}
               className="group flex flex-col gap-3 md:h-[640px] md:flex-row md:gap-[1.5%]"
             >
-              {productList && productList.length > 0
-                ? productList
+              {productList &&
+                productList.length > 0 &&
+                productList
                   .filter((productItem) => productItem?.isWatchAndBuy)
                   .map((productItem, index) => (
                     <motion.li
+                      key={productItem._id}
                       ref={ref}
                       onClick={() => setActiveItem(index)}
                       aria-current={activeItem === index}
@@ -260,24 +189,27 @@ function ShoppingHome() {
                         "first:pointer-events-auto last:pointer-events-auto",
                         "md:[&_img]:opacity-100"
                       )}
-                      key={productItem._id}
                     >
-                      <FastMovingCard item={productItem} index={index} activeItem={activeItem} handleAddtoCart={handleAddtoCart} />
+                      <FastMovingCard
+                        item={productItem}
+                        index={index}
+                        activeItem={activeItem}
+                        handleAddtoCart={handleAddtoCart}
+                      />
                     </motion.li>
-                  ))
-                : null}
+                  ))}
             </ul>
           </div>
         </div>
       </section>
-      <section className="py-12 bg-gray-50">
+
+      <section className="py-6 md:py-12 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            Checkout our Instagram Feed
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Checkout our Instagram Feed</h2>
           <InstagramFeed posts={instaFeedPosts} />
         </div>
       </section>
+
       <section>
         <Banner
           imageUrl={bannerThree}
@@ -285,20 +217,13 @@ function ShoppingHome() {
           description="Exciting Offers & Discounts. Don't miss out! Shop now and save big. Best deals on your favorite products."
         />
       </section>
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            What Our Customers Say
-          </h2>
 
+      <section className="py-6 md:py-12 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">What Our Customers Say</h2>
           <Testimonials />
         </div>
       </section>
-      {/* <ProductDetailsDialog
-        open={openDetailsDialog}
-        setOpen={setOpenDetailsDialog}
-        productDetails={productDetails}
-      /> */}
     </div>
   );
 }

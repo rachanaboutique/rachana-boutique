@@ -258,7 +258,7 @@ import { Minus, Plus, Trash, ChevronDown } from "lucide-react";
 
         {/* Product Details */}
         <div className="flex-1 space-y-2">
-          <h3 className="text-lg font-semibold">{cartItem?.title || "Unknown Product"}</h3>
+          <h3 className="text-lg font-semibold">{cartItem?.title}</h3>
 
           {/* Color Selection */}
           {availableColors.length > 0 && selectedColor && (

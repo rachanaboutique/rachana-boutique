@@ -106,7 +106,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
       <DialogContent className="p-4 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-[90vw] lg:max-w-[70vw]">
         <div className="relative overflow-hidden rounded-lg">
           <img
-            src={productDetails?.image}
+            src={productDetails?.image[0]}
             alt={productDetails?.title}
             width={600}
             height={600}

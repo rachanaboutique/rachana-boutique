@@ -95,8 +95,8 @@ function MenuItems({ setOpen }) {
         // Determine if this menu item is active by comparing location.pathname and menuItem.path
         const isActive = location.pathname === menuItem.path;
         const baseClasses = "flex cursor-pointer text-xl items-center gap-2 rounded-md px-3 py-2";
-        const activeClasses = "bg-muted text-foreground";
-        const inactiveClasses = "text-muted-foreground hover:bg-muted hover:text-foreground";
+        const activeClasses = "bg-foreground text-white";
+        const inactiveClasses = "text-muted-foreground hover:bg-gray-500 hover:text-white";
         return (
           <div
             key={menuItem.id}

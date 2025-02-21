@@ -1,6 +1,6 @@
 import CommonForm from "@/components/common/form";
 import { useToast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { forgotPassword } from "@/store/auth-slice";
 
@@ -10,11 +10,31 @@ const initialState = {
 
 function AuthForgotPassword() {
   const [formData, setFormData] = useState(initialState);
+  const [isFormValid, setIsFormValid] = useState(false);
   const { toast } = useToast();
   const dispatch = useDispatch();
 
+  // Validate the form: email must not be empty
+  useEffect(() => {
+    if (formData.email.trim()) {
+      setIsFormValid(true);
+    } else {
+      setIsFormValid(false);
+    }
+  }, [formData.email]);
+
   function onSubmit(event) {
     event.preventDefault();
+    
+    // Double-check validation
+    if (!isFormValid) {
+      toast({
+        title: "Missing Field",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     dispatch(forgotPassword(formData)).then((data) => {
       if (data?.payload?.success) {
@@ -56,6 +76,7 @@ function AuthForgotPassword() {
         formData={formData}
         setFormData={setFormData}
         onSubmit={onSubmit}
+        disabled={!isFormValid}
       />
     </div>
   );

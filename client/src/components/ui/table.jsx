@@ -3,13 +3,15 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const Table = React.forwardRef(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
+  <div className="relative w-full overflow-x-auto table-scroll">
     <table
       ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
-      {...props} />
+      className={cn("w-full caption-bottom text-sm min-w-max", className)}
+      {...props}
+    />
   </div>
 ))
+
 Table.displayName = "Table"
 
 const TableHeader = React.forwardRef(({ className, ...props }, ref) => (
