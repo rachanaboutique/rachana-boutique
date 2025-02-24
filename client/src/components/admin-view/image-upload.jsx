@@ -23,9 +23,12 @@ function ProductImageUpload({
     const selectedFiles = Array.from(event.target.files);
     if (selectedFiles.length > 0) {
       if (isSingleImage) {
+        // For single image mode, replace the current arrays
         setImageFiles([selectedFiles[0]]);
         setImageLoadingStates([false]);
+        setUploadedImageUrls([]);
       } else {
+        // For multiple images, append to the existing files
         setImageFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
         setImageLoadingStates((prevStates) => [
           ...prevStates,
@@ -42,6 +45,7 @@ function ProductImageUpload({
       if (isSingleImage) {
         setImageFiles([droppedFiles[0]]);
         setImageLoadingStates([false]);
+        setUploadedImageUrls([]);
       } else {
         setImageFiles((prevFiles) => [...prevFiles, ...droppedFiles]);
         setImageLoadingStates((prevStates) => [
@@ -75,6 +79,7 @@ function ProductImageUpload({
   }
 
   async function uploadImageToCloudinary(file, index) {
+    // Mark file as being uploaded
     setImageLoadingStates((prevStates) => {
       const updatedStates = [...prevStates];
       updatedStates[index] = true;
@@ -91,17 +96,15 @@ function ProductImageUpload({
         data
       );
       if (response?.data?.success) {
-        setUploadedImageUrls((prevUrls) => {
-          if (isSingleImage) {
-            return [response.data.result[0].url];
-          } else {
-            const updatedUrls = [...prevUrls];
-            updatedUrls[index] = response.data.result[0].url;
-            return updatedUrls;
-          }
-        });
+        if (isSingleImage) {
+          setUploadedImageUrls([response.data.result[0].url]);
+        } else {
+          // Append new URL instead of replacing an existing image
+          setUploadedImageUrls((prevUrls) => [...prevUrls, response.data.result[0].url]);
+        }
       }
     } finally {
+      // Mark file upload as complete
       setImageLoadingStates((prevStates) => {
         const updatedStates = [...prevStates];
         updatedStates[index] = false;
@@ -112,12 +115,12 @@ function ProductImageUpload({
   }
 
   useEffect(() => {
+    // Only upload if the file is a new File object (and hasn't been uploaded)
     imageFiles?.forEach((file, index) => {
-      if (!uploadedImageUrls[index] && file) {
+      if (file instanceof File) {
         uploadImageToCloudinary(file, index);
       }
     });
-    // We intentionally leave out dependencies such as uploadedImageUrls to avoid re-triggering uploads unnecessarily.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageFiles]);
 

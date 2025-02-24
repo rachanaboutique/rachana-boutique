@@ -26,11 +26,7 @@ import React, { useState } from "react";
       setFormData(product);
     };
   
-    // Handle Delete action by opening the confirmation modal
-    const handleDeleteClick = (e) => {
-      e.stopPropagation();
-      setModalOpen(true);
-    };
+
   
     // Confirm deletion and close modal
     const confirmDelete = () => {

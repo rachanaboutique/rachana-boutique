@@ -163,6 +163,7 @@ function AdminBanners() {
             setImageLoadingState={setImageLoadingState}
             setImageLoadingStates={setImageLoadingStates}
             imageLoadingState={imageLoadingState}
+            imageLoadingStates={imageLoadingStates}
             isSingleImage={true}
             isEditMode={currentEditedId !== null || currentEditedId === null}
           />

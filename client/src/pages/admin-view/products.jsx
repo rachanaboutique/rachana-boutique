@@ -163,7 +163,7 @@ function AdminProducts() {
   };
 
   function isFormValid() {
-    const optionalFields = ["isNewArrival", "isFeatured", "isWatchAndBuy"];
+    const optionalFields = ["isNewArrival", "isFeatured", "isWatchAndBuy", "video", "image"];
     if (imageLoadingStates?.includes(true)) return false;
 
     return Object.keys(formData)

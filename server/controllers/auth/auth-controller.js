@@ -190,35 +190,39 @@ const forgotPassword = async (req, res) => {
 
 
     const message = `
-    <div style="font-family: 'Inter', Arial, sans-serif; color: #1f2937; background-color: #f9fafb; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-      <h1 style="text-align: center; color: #1d4ed8; font-size: 1.875rem; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px;">
-        Rachana Boutique
-      </h1>
-      <p style="font-size: 1rem; line-height: 1.5; margin-top: 20px; text-align: center; color: #4b5563;">
-        You requested a password reset.
-      </p>
-      <p style="font-size: 0.95rem; line-height: 1.5; text-align: center; color: #6b7280;">
-        Please click the button below to reset your password:
-      </p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${resetUrl}" style="display: inline-block; background-color: #1d4ed8; color: #ffffff; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-size: 1rem; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: background-color 0.3s;">
-          Reset Password
-        </a>
+    <div style="font-family: Arial, sans-serif; color: #2c3315; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #fed1d6; padding: 20px; text-align: center; color: #2c3315;">
+        <img src="https://res.cloudinary.com/dhkdsvdvr/image/upload/v1740216811/logo3_moey1d.png" alt="Logo" style="max-width: 150px; margin-bottom: 10px;">
+        <h2 style="margin-bottom: 5px;">Reset Your Password</h2>
+        <p style="font-size: 16px; margin-top: 0;">We received a request to reset your password.</p>
       </div>
-      <p style="font-size: 0.85rem; line-height: 1.4; text-align: center; color: #9ca3af;">
-        Please note: This link will expire in 1 hour.
-      </p>
-      <p style="font-size: 0.9rem; line-height: 1.4; text-align: center; color: #6b7280;">
-        If the button doesn't work, copy and paste the link below into your browser:
-      </p>
-      <p style="word-wrap: break-word; font-size: 0.9rem; text-align: center; color: #9ca3af; background-color: #f3f4f6; padding: 10px; border-radius: 5px; margin: 15px auto; display: inline-block;">
-        ${resetUrl}
-      </p>
-      <p style="font-size: 0.9rem; line-height: 1.4; text-align: center; color: #6b7280; margin-top: 20px;">
-        If you did not request this, please ignore this email or contact support for assistance.
-      </p>
+      
+      <div style="padding: 20px;">
+        <p style="font-size: 14px; color: #2c3315; text-align: center;">Click the button below to reset your password:</p>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="${resetUrl}" style="display: inline-block; background-color: #fed1d6; color: #2c3315; padding: 14px 28px; font-size: 16px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
+        </div>
+        
+        <p style="font-size: 12px; color: #777; text-align: center; margin-top: 20px;">
+          If the button above doesn't work, copy and paste the following link in your browser:
+        </p>
+        
+        <p style="word-wrap: break-word; font-size: 12px; text-align: center; color: #777; background-color: #f3f4f6; padding: 10px; border-radius: 5px; margin: 15px auto; display: inline-block;">
+          ${resetUrl}
+        </p>
+        
+        <p style="font-size: 12px; color: #777; text-align: center; margin-top: 20px;">
+          This link is valid for 1 hour. If you didn't request this, please ignore this email or contact our support team.
+        </p>
+      </div>
+      
+      <div style="background-color: #f7f7f7; padding: 12px; text-align: center; font-size: 12px; color: #777;">
+        <p>If you need help, please contact our support team.</p>
+      </div>
     </div>
-  `;
+`;
+
   
 
     // Send the reset email using the internal email utility.

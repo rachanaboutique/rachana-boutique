@@ -134,7 +134,7 @@ const MainData = () => {
                 <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-xl shadow-md p-6 flex flex-col items-center">
                     <h4 className="text-lg font-medium">Total Sales Amount</h4>
                     <h2 className="text-3xl font-bold">
-                        ₹{summary.totalSales?.toLocaleString() || 0}
+                    ₹{summary.totalSales?.toLocaleString("en-IN") || 0}
                     </h2>
                 </div>
                 <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-xl shadow-md p-6 flex flex-col items-center">

@@ -60,6 +60,7 @@ function ShoppingCheckout() {
       cartItems: cartItems.map((item) => ({
         productId: item?.productId,
         title: item?.title,
+        image: item?.image[0],
         price: item?.salePrice > 0 ? item?.salePrice : item?.price,
         quantity: item?.quantity,
         colors: item?.colors,
@@ -110,7 +111,7 @@ function ShoppingCheckout() {
                   title: "Payment successful! Redirecting to the success page...",
                   variant: "success",
                 });
-                navigate("/shop/payment-success"); // Redirect to success page
+                navigate("/shop/payment-success");
               } else {
                 toast({
                   title: "Payment was successful, but order confirmation failed. Please contact support.",

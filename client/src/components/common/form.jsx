@@ -184,69 +184,80 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
           />
         );
         break;
-      case "colors": {
-        const colorsArray = Array.isArray(value) ? value : [];
-        element = (
-          <div>
-            {colorsArray.map((color, idx) => (
-              <div key={idx} className="flex gap-2 items-center mb-2">
-                <Input
-                  placeholder="Color Title"
-                  value={color.title || ""}
-                  onChange={({ target }) => {
-                    const updatedColors = [...colorsArray];
-                    updatedColors[idx] = { ...updatedColors[idx], title: target.value };
-                    setFormData({
-                      ...formData,
-                      [controlItem.name]: updatedColors,
-                    });
-                  }}
-                />
-                {colorsUploadStatus[idx] !== "uploaded" && (
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (event) => {
-                      const file = event.target.files[0];
-                      if (file) {
-                        await uploadColorImage(file, idx, controlItem);
-                      }
-                    }}
-                  />
-                )}
-                <span className="text-sm">
-                  {colorsUploadStatus[idx] === "uploading" && "Uploading..."}
-                  {colorsUploadStatus[idx] === "uploaded" && "Uploaded"}
-                </span>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    const updatedColors = colorsArray.filter((_, index) => index !== idx);
-                    setFormData({ ...formData, [controlItem.name]: updatedColors });
-                    setColorsUploadStatus((prevStatus) => {
-                      const newStatus = { ...prevStatus };
-                      delete newStatus[idx];
-                      return newStatus;
-                    });
-                  }}
-                >
-                  Remove
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              onClick={() => {
-                const updatedColors = [...colorsArray, { title: "", image: "" }];
-                setFormData({ ...formData, [controlItem.name]: updatedColors });
-              }}
-            >
-              Add New Color
-            </Button>
-          </div>
-        );
-        break;
-      }
+        case "colors": {
+          const colorsArray = Array.isArray(value) ? value : [];
+          element = (
+            <div>
+              {colorsArray.map((color, idx) => (
+                <div key={idx} className="flex flex-col gap-2 mb-2 border p-2 rounded">
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      placeholder="Color Title"
+                      value={color.title || ""}
+                      onChange={({ target }) => {
+                        const updatedColors = [...colorsArray];
+                        updatedColors[idx] = { ...updatedColors[idx], title: target.value };
+                        setFormData({
+                          ...formData,
+                          [controlItem.name]: updatedColors,
+                        });
+                      }}
+                    />
+                    {color.image && (
+                      <img
+                        src={color.image}
+                        alt={`Color ${idx}`}
+                        className="w-16 h-16 object-cover rounded border"
+                      />
+                    )}
+                    {!color.image && colorsUploadStatus[idx] !== "uploading" && (
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (event) => {
+                          const file = event.target.files[0];
+                          if (file) {
+                            await uploadColorImage(file, idx, controlItem);
+                          }
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">
+                      {colorsUploadStatus[idx] === "uploading" && "Uploading..."}
+                      {colorsUploadStatus[idx] === "uploaded" && "Uploaded"}
+                    </span>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        const updatedColors = colorsArray.filter((_, index) => index !== idx);
+                        setFormData({ ...formData, [controlItem.name]: updatedColors });
+                        setColorsUploadStatus((prevStatus) => {
+                          const newStatus = { ...prevStatus };
+                          delete newStatus[idx];
+                          return newStatus;
+                        });
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                type="button"
+                onClick={() => {
+                  const updatedColors = [...colorsArray, { title: "", image: "" }];
+                  setFormData({ ...formData, [controlItem.name]: updatedColors });
+                }}
+              >
+                Add New Color
+              </Button>
+            </div>
+          );
+          break;
+        }
       case "video": {
         // Only render video upload if the isWatchAndBuy toggle is true.
         if (formData.isWatchAndBuy) {
