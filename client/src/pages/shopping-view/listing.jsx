@@ -198,7 +198,7 @@ function ShoppingListing() {
             </DropdownMenu>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-0 md:p-4">
           {filteredProducts.map((productItem) => (
             <ShoppingProductTile
               key={productItem.id}

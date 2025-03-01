@@ -28,7 +28,8 @@ body {
   :root {
     --background: #fed1d6;
     /* --background: #f5ced2; */
-    --foreground: #2c3315;
+    /* --foreground: #2c3315; */
+    --foreground: #000000;
     --playground: #ffffff;
     --card: #ffffff;
     --card-foreground: #333333;

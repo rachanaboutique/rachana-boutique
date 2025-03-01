@@ -12,7 +12,7 @@ const CategoryCard = ({ categoryItem }) => {
 
   return (
     <Card
-      className="w-full max-w-lg  shadow-lg border border-gray-300 transition-all duration-300 overflow-hidden hover:cursor-pointer"
+      className="rounded-none w-full max-w-lg  shadow-lg border border-gray-300 transition-all duration-300 overflow-hidden hover:cursor-pointer"
       onClick={handleClick}
     >
       <div className="relative group">
@@ -21,12 +21,13 @@ const CategoryCard = ({ categoryItem }) => {
           alt={categoryItem?.name}
           className="w-full h-[350px] object-cover transition-transform duration-700 group-hover:scale-105 z-0"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-70 group-hover:opacity-60 transition duration-700 z-10">
-          <div className="absolute bottom-0 left-0 p-4">
-            <span className="text-2xl font-extrabold text-white uppercase tracking-widest shadow-lg">
-              {categoryItem?.name}
-            </span>
-          </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-25  transition duration-700 ">
+
+        </div>
+        <div className="absolute bottom-0 left-0 p-4 ">
+          <span className="text-2xl font-extrabold text-white uppercase tracking-widest shadow-lg z-10">
+            {categoryItem?.name}
+          </span>
         </div>
       </div>
       <div className="relative z-20 p-6 bg-gradient-to-r from-white via-gray-50 to-white text-center border-t border-gray-300">

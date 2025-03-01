@@ -59,10 +59,10 @@ function Loader({ className }) {
             ease: "easeInOut",
           }}
         >
-          {/* 🌸 Floral Center */}
+
           <div className="flex items-center justify-center h-full">
             <motion.span
-              className="text-pink-500 text-3xl"
+              className="text-pink-500 text-xl md:text-3xl"
               animate={{
                 scale: [1, 1.1, 1],
                 rotate: [0, 360, 0],

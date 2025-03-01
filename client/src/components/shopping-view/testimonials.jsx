@@ -86,7 +86,7 @@ const renderSlide = (testimonial, index) => {
   return (
     <div
     key={index}
-    className=" w-full bg-white rounded-lg shadow-xl p-6 "
+    className=" w-full bg-white  shadow-xl p-6 "
   >
     <div className="flex justify-center items-center mb-4">
       <img

@@ -11,7 +11,7 @@ const InstagramFeed = ({ posts }) => {
             {posts.map((post, index) => (
                 <div
                     key={index}
-                    className="rounded-lg overflow-hidden relative group cursor-pointer h-[400px]"
+                    className=" overflow-hidden relative group cursor-pointer h-[400px]"
                     onClick={() => setSelectedPost(post)}
                 >
                     <div className="pointer-events-none ">

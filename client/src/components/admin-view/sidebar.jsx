@@ -53,12 +53,12 @@ const adminSidebarMenuItems = [
     path: "/admin/instafeed",
     icon: <Film />,
   },
-  {
-    id: "reviews",
-    label: "Reviews",
-    path: "/admin/reviews",
-    icon: <Star />,
-  },
+  // {
+  //   id: "reviews",
+  //   label: "Reviews",
+  //   path: "/admin/reviews",
+  //   icon: <Star />,
+  // },
   {
     id: "feedback",
     label: "Feedback",

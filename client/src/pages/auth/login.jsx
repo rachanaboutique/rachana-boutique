@@ -56,7 +56,7 @@ function AuthLogin() {
 
   return (
     <div className="-mt-20 mx-auto w-full max-w-md space-y-6">
-      <div className="w-44 h-44 flex items-center justify-center mx-auto">
+      <div className="w-56 h-56 flex items-center justify-center mx-auto">
         <img src={logo} alt="Logo" className="w-full h-full" />
       </div>
       <div className="text-center">

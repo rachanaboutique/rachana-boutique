@@ -61,7 +61,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart }) => {
   return (
     <>
       <div
-        className="relative h-full w-full overflow-hidden rounded-2xl bg-foreground group cursor-pointer"
+        className="relative h-full w-full overflow-hidden bg-foreground group cursor-pointer"
         onClick={handleCardClick}
       >
         {/* Top Left Like Icon */}
@@ -95,7 +95,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart }) => {
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
                 <svg
                   className="animate-spin h-10 w-10 text-[#EC003F] drop-shadow-lg"
-                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns="https://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -155,7 +155,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart }) => {
 
         {/* Action Area for Desktop */}
         {isStripeOpen && !isMobile && (
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-[200px] rounded-xl shadow-xl overflow-hidden backdrop-blur-md bg-white/10 border border-white/20 group-hover:scale-105 transition-transform duration-300 pr-6">
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-[200px]  shadow-xl overflow-hidden backdrop-blur-md bg-white/10 border border-white/20 group-hover:scale-105 transition-transform duration-300 pr-6">
             <div className="absolute top-2 right-2">
               <ExternalLink
                 className="text-white w-4 h-4 hover:text-gray-400 cursor-pointer"
@@ -188,72 +188,74 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart }) => {
 
       {/* Mobile Modal: Displays video with autoplay, a close button, title, price, and add-to-cart button */}
       {modalOpen && isMobile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-2">
-          <div className="relative bg-gray-900 rounded-lg overflow-hidden w-full max-w-md max-h-[90vh] m-4 flex flex-col">
-            {/* Close Button */}
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-2 right-2 text-white z-10 p-1 bg-gray-800 rounded-full"
-              title="Close"
-            >
-              <X className="w-6 h-6" />
-            </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-2">
+      <div className="relative bg-gray-900 rounded-lg overflow-hidden w-full max-w-md max-h-[90vh] m-4 flex flex-col">
+        {/* Close Button */}
+        <button
+          onClick={handleCloseModal}
+          className="absolute top-2 right-2 text-white z-10 p-1 bg-gray-800 rounded-full"
+          title="Close"
+        >
+          <X className="w-6 h-6" />
+        </button>
 
-            {/* Video Section (Limited Height) */}
-            <div className="relative w-full">
-              {videoLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
-                  <svg
-                    className="animate-spin h-10 w-10 text-[#EC003F] drop-shadow-lg"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-20 stroke-current"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-90 fill-current"
-                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                    ></path>
-                  </svg>
-                </div>
-              )}
-              {item?.video ? (
-                <video
-                  className="w-full max-h-[70vh] h-auto object-cover rounded-t-lg"
-                  src={item.video}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  onLoadedData={() => setVideoLoading(false)}
-                />
-              ) : (
-                <div className="p-4">
-                  <p className="text-white">Video not available</p>
-                </div>
-              )}
-            </div>
-
-            {/* Text & Add to Cart Section */}
-            <div className="p-4 bg-gray-800 overflow-y-auto flex-grow">
-              <p className="text-white text-lg font-bold mb-2">{item?.title}</p>
-              <p className="text-white text-lg font-bold mb-4">₹ {item?.salePrice}</p>
-              <button
-                onClick={() => handleAddToCartClick(item?._id, item?.totalStock)}
-                className="w-full px-4 py-2 text-sm text-white rounded-md bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 transform transition-all hover:scale-105 shadow-lg"
+        {/* Video Section (Limited Height) */}
+        <div className="relative w-full">
+          {videoLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
+              <svg
+                className="animate-spin h-10 w-10 text-[#EC003F] drop-shadow-lg"
+                xmlns="https://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
               >
-                Add to Cart
-              </button>
+                <circle
+                  className="opacity-20 stroke-current"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-90 fill-current"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
             </div>
-          </div>
+          )}
+          {item?.video ? (
+            <video
+              className="w-full max-h-[70vh] h-auto object-cover rounded-t-lg"
+              src={item.video}
+              preload="auto"
+              poster={item?.poster || ""}
+              autoPlay
+              loop
+              muted
+              playsInline
+              onLoadedData={() => setVideoLoading(false)}
+            />
+          ) : (
+            <div className="p-4">
+              <p className="text-white">Video not available</p>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Text & Add to Cart Section */}
+        <div className="p-4 bg-gray-800 overflow-y-auto flex-grow">
+          <p className="text-white text-lg font-bold mb-2">{item?.title}</p>
+          <p className="text-white text-lg font-bold mb-4">₹ {item?.salePrice}</p>
+          <button
+            onClick={() => handleAddToCartClick(item?._id, item?.totalStock)}
+            className="w-full px-4 py-2 text-sm text-white rounded-md bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 transform transition-all hover:scale-105 shadow-lg"
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
     </>
   );
 };

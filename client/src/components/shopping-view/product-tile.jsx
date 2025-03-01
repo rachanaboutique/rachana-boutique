@@ -38,13 +38,13 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
   };
 
   return (
-    <Card className="w-full max-w-[320px] mx-auto shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105">
+    <Card className="w-full max-w-[320px] mx-auto shadow-lg rounded-none overflow-hidden transition-transform transform hover:scale-105">
       {/* Image container with overlay for action buttons */}
       <div className="relative group cursor-pointer overflow-hidden" onClick={() => handleViewDetails(product?._id)}>
         <img
           src={product?.image[0]}
           alt={product?.title}
-          className="w-full h-[400px] object-cover transition-transform duration-300 group-hover:scale-110"
+          className="w-full h-[250px] md:h-[400px] object-cover transition-transform duration-300 group-hover:scale-110"
         />
 
         {/* Dynamic Badges */}

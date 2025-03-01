@@ -5,12 +5,17 @@ const Carousel = ({ bannersList }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
 
+  // ✅ Dynamically Preload the First Image
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % bannersList.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [bannersList.length]);
+    if (bannersList.length > 0) {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.href = bannersList[0].image; // Preload first banner image
+      link.type = "image/webp"; // Change this based on your actual format
+      document.head.appendChild(link);
+    }
+  }, [bannersList]);
 
   return (
     <div className="relative w-full h-full bg-gray-900">
@@ -21,22 +26,26 @@ const Carousel = ({ bannersList }) => {
             index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
         >
-          {/* Background Image */}
+          {/* ✅ Use Lazy Loading for Non-LCP Images */}
           <img
-            src={item?.image}
+            src={item.image}
             alt="Banner"
             className="w-full h-full object-fit md:object-cover"
+            loading={index === 0 ? "eager" : "lazy"} // First image loads eagerly
           />
+
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80"></div>
 
           {/* Text Content */}
           <div className="absolute bottom-16 md:bottom-24 left-4 md:left-16 text-white max-w-2xl">
-
             <h2 className="text-3xl md:text-6xl font-bold leading-snug tracking-wide drop-shadow-md animate-fade-slide-up ">
               {item?.description}
             </h2>
-            <button className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white text-lg rounded-lg shadow-lg transform transition-all hover:scale-105 animate-fade-slide-up delay-500" onClick={() => navigate("/shop/collections")}>
+            <button
+              className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white text-lg rounded-lg shadow-lg transform transition-all hover:scale-105 animate-fade-slide-up delay-500"
+              onClick={() => navigate("/shop/collections")}
+            >
               Shop Now
             </button>
           </div>

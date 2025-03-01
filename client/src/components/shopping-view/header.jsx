@@ -233,7 +233,7 @@ function ShoppingHeader() {
             </span>
           </div>
         </div>
-        <div className="flex h-14 items-center justify-between px-4 md:px-6">
+        <div className="max-w-[1440px] mx-auto flex h-14 items-center justify-between px-4 md:px-6">
           <Link to="/shop/home" className=" flex items-center gap-2">
             <img src={logo} alt="Logo" className="w-[180px] md:w-full  h-11" />
           </Link>
