@@ -129,12 +129,6 @@ const Footer = () => {
         <div className="md:w-[25%]">
           <h4 className="text-lg font-semibold text-foreground mb-4">Contact Us</h4>
           <div className="space-y-2 text-md">
-            <address className="not-italic leading-relaxed">
-              Flat No: 1162, 1st Block, 16th Floor,<br />
-              134 Appasamy Cerus Apts, 134 Arcot Road,<br />
-              Virugambakkam, Chennai - 600092
-              
-            </address>
             <div>
               <strong>Phone:</strong>
               <a href="tel:+919944783389" className="ml-2 text-rose-600 hover:underline">

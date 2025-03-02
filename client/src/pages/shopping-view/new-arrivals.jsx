@@ -113,7 +113,7 @@ function NewArrivals() {
   if (isLoading && productList.length === 0) return <Loader />;
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="container py-4 md:py-6">
       <div className="bg-playground w-full rounded-lg shadow-sm">
         <div className="p-4 border-b flex items-center justify-between">
           <h2 className="text-lg font-extrabold">New Arrivals</h2>
@@ -135,7 +135,7 @@ function NewArrivals() {
               <DropdownMenuContent align="end" className="mt-2 bg-gray-100 p-2 rounded-md shadow-[200px]">
                 <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
                   {sortOptions.map((sortItem) => (
-                    <DropdownMenuRadioItem value={sortItem.id} key={sortItem.id}>
+                    <DropdownMenuRadioItem className="hover:cursor-pointer" value={sortItem.id} key={sortItem.id}>
                       {sortItem.label}
                     </DropdownMenuRadioItem>
                   ))}

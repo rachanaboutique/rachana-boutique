@@ -156,7 +156,7 @@ function ShoppingListing() {
   if (isLoading && productList.length === 0) return <Loader />;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
+    <div className="container grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 py-4 md:py-6">
       {/* Filter Component */}
       <ProductFilter
         filters={filters}
@@ -187,6 +187,7 @@ function ShoppingListing() {
                 <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
                   {sortOptions.map((sortItem) => (
                     <DropdownMenuRadioItem
+                    className="hover:cursor-pointer"
                       value={sortItem.id}
                       key={sortItem.id}
                     >

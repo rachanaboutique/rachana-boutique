@@ -133,9 +133,9 @@ body {
 
 
 .bg-auth-bg {
-  background-image: url('./assets/login.png');
+  background-image: url('./assets/login-2.png');
   background-size: cover;
-  background-position: center;
+  background-position: top;
 }
 
 
