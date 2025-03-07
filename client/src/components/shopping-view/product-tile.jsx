@@ -6,26 +6,15 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useToast } from "../ui/use-toast";
 
-/*
-  Enhanced Shopping Product Tile Component
-
-  This component displays a product tile with rich aesthetics suitable for a saree boutique website.
-  Features include:
-  - An interactive image overlay with "View Details" and "Add to Cart" buttons
-  - Dynamic badges for stock and sale status
-  - Responsive hover effects to reveal actions smoothly
-*/
 function ShoppingProductTile({ product, handleAddtoCart }) {
   const navigate = useNavigate();
   const { isAuthenticated } = useSelector((state) => state.auth);
   const { toast } = useToast();
 
-  // Handle navigation to product details page
   const handleViewDetails = (productId) => {
     navigate(`/shop/details/${productId}`);
   };
 
-  // Handle Add to Cart button click with authentication check
   const handleAddToCartClick = (productId, totalStock) => {
     if (!isAuthenticated) {
       toast({
@@ -38,8 +27,8 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
   };
 
   return (
-    <Card className="w-full max-w-[320px] mx-auto shadow-lg rounded-none overflow-hidden transition-transform transform hover:scale-105">
-      {/* Image container with overlay for action buttons */}
+    <Card className="w-full max-w-[320px] mx-auto shadow-lg rounded-none overflow-hidden">
+      {/* Image container */}
       <div className="relative group cursor-pointer overflow-hidden" onClick={() => handleViewDetails(product?._id)}>
         <img
           src={product?.image[0]}
@@ -69,11 +58,10 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
           </>
         ) : null}
 
-        {/* Overlay for action buttons */}
-        <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black bg-opacity-40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        {/* Overlay for action buttons (Only Visible on Hover in Desktop) */}
+        <div className="hidden md:flex absolute inset-0 items-center justify-center gap-4 bg-black bg-opacity-40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <Button 
             onClick={(e) => {
-              // Prevent click propagation to the container so that the overlay buttons work independently
               e.stopPropagation();
               handleViewDetails(product?._id);
             }}
@@ -94,8 +82,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
                 e.stopPropagation();
                 handleAddToCartClick(product?._id, product?.totalStock);
               }}
-        
-              className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white shadow-lg  hover:scale-105  px-4 py-2 rounded-md"
+              className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white shadow-lg hover:scale-105 px-4 py-2 rounded-md"
             >
               Add to Cart
             </Button>

@@ -156,7 +156,7 @@ function ShoppingListing() {
   if (isLoading && productList.length === 0) return <Loader />;
 
   return (
-    <div className="container grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 py-4 md:py-6">
+    <div className="px-3 md:container grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 py-4 md:py-6">
       {/* Filter Component */}
       <ProductFilter
         filters={filters}

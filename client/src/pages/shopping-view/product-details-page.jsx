@@ -212,7 +212,7 @@ function ProductDetailsPage({ open, setOpen }) {
 
   return (
     <div className="container p-4 md:p-8">
-      <div className="grid grid-cols-1 md:grid-cols-[0.9fr_1.5fr] gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr] gap-8">
         <div className="flex flex-col gap-4">
           <ZoomableImage
             imageSrc={selectedImage}
@@ -220,49 +220,37 @@ function ProductDetailsPage({ open, setOpen }) {
             onZoomData={handleZoomData}
           />
           {/* Render all images as thumbnails */}
-          <div className="flex gap-4 ">
+          <div className="flex gap-2 flex-wrap ">
             {productDetails?.image?.map((image, index) => (
               <img
                 key={index}
                 src={image}
                 alt={`Thumbnail ${index}`}
-                className={`w-16 h-16 cursor-pointer rounded-lg ${selectedImage === image ? "border-4 border-foreground" : ""}`}
+                className={`w-1/5 h-24 md:h-40 object-cover cursor-pointer ${selectedImage === image ? "border-4 border-foreground" : ""}`}
                 onClick={() => setSelectedImage(image)}
               />
             ))}
           </div>
         </div>
 
-
-        <div className="flex flex-col justify-between">
+        <div className="flex flex-col gap-4 items-center">
+          <h1 className="text-4xl font-bold ">
+            {productDetails?.title}
+          </h1>
+          <h1 className="text-xl ">
+          Elegance Unveiled
+          </h1>
+          <Separator className="w-3/4 mt-2" />
           <div>
-            <h1 className="text-3xl font-extrabold flex items-center">
-              {productDetails?.title}
-            </h1>
+            {/** show a line separator */}
+
+
             {productDetails?.description && (
-              <ul className="list-disc list-inside text-muted-foreground text-xl mt-4">
+              <ul className="px-4 md:px-24 list-disc list-inside text-muted-foreground text-xl mt-4">
                 {renderDescriptionBulletPoints(productDetails.description)}
               </ul>
             )}
-
           </div>
-          {/* <div className="flex items-center gap-2 mt-4">
-              <StarRatingComponent disableHover={true} rating={averageReview} />
-              <span className="text-muted-foreground">
-                ({averageReview.toFixed(2)})
-              </span>
-            </div> */}
-          {zoomData.isHovering && (
-            <div
-              className="hidden md:block absolute top-[14%] left-[42%] z-10 w-1/2 h-3/4 overflow-hidden border shadow-lg bg-white"
-              style={{
-                backgroundImage: `url(${zoomData.imageSrc})`,
-                backgroundPosition: `${zoomData.zoomPosition.x}% ${zoomData.zoomPosition.y}%`,
-                backgroundRepeat: "no-repeat",
-                backgroundSize: "300%",
-              }}
-            ></div>
-          )}
           <div className="flex items-center gap-4 mt-6">
             <p
               className={`text-3xl font-bold text-primary ${productDetails?.salePrice > 0 ? "line-through" : ""}`}
@@ -274,13 +262,14 @@ function ProductDetailsPage({ open, setOpen }) {
                 ₹{productDetails?.salePrice}
               </p>
             )}
-          </div>
 
+          </div>
           {/* Color Selection with Image Cards */}
           {productDetails?.colors && (
             <div className="mt-6">
-              <Label className="text-lg font-semibold">Colors</Label>
-              <div className="flex gap-4 flex-wrap">
+
+              <div className="bg-gray-100 p-4 flex gap-4 flex-wrap items-center">
+                <Label className="text-lg font-semibold">Colors</Label>
                 {productDetails.colors.map((colorItem, index) => (
                   <div
                     key={index}
@@ -307,6 +296,7 @@ function ProductDetailsPage({ open, setOpen }) {
               </Button>
             ) : (
               <Button
+              className="w-full text-xl px-12 py-6"
                 onClick={() =>
                   handleAddToCart(productDetails?._id, productDetails?.totalStock)
                 }
@@ -316,7 +306,35 @@ function ProductDetailsPage({ open, setOpen }) {
             )}
           </div>
 
-          <Separator className="my-6" />
+        </div>
+
+
+
+
+        <div className="flex flex-col justify-between">
+
+
+
+          {/* <div className="flex items-center gap-2 mt-4">
+              <StarRatingComponent disableHover={true} rating={averageReview} />
+              <span className="text-muted-foreground">
+                ({averageReview.toFixed(2)})
+              </span>
+            </div> */}
+          {zoomData.isHovering && (
+            <div
+              className="hidden md:block absolute top-[15%] left-[49%] z-10 w-1/2 h-3/4 overflow-hidden border shadow-lg bg-white"
+              style={{
+                backgroundImage: `url(${zoomData.imageSrc})`,
+                backgroundPosition: `${zoomData.zoomPosition.x}% ${zoomData.zoomPosition.y}%`,
+                backgroundRepeat: "no-repeat",
+                backgroundSize: "300%",
+              }}
+            ></div>
+          )}
+
+
+
           {/* <div>
             <h2 className="text-xl font-bold mb-4">Reviews</h2>
             <div className="grid gap-6">
@@ -368,22 +386,27 @@ function ProductDetailsPage({ open, setOpen }) {
             </div>
           </div> */}
           {/* Related Products */}
-          {relatedProducts && relatedProducts.length > 0 && (
-            <div className="mt-10">
-              <h2 className="text-xl font-bold mb-4">Related Products</h2>
-              <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {relatedProducts.map((productItem) => (
-                  <ShoppingProductTile
-                    key={productItem._id}
-                    product={productItem}
-                    handleAddtoCart={handleRelatedProductsAddToCart}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+
         </div>
+
       </div>
+
+
+      <Separator className="my-6" />
+      {relatedProducts && relatedProducts.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-xl font-bold mb-4">You May Also Like</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedProducts.map((productItem) => (
+              <ShoppingProductTile
+                key={productItem._id}
+                product={productItem}
+                handleAddtoCart={handleRelatedProductsAddToCart}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -113,9 +113,9 @@ function NewArrivals() {
   if (isLoading && productList.length === 0) return <Loader />;
 
   return (
-    <div className="container py-4 md:py-6">
+    <div className="px-3 md:container pb-4 md:py-6">
       <div className="bg-playground w-full rounded-lg shadow-sm">
-        <div className="p-4 border-b flex items-center justify-between">
+        <div className="py-4 border-b flex items-center justify-between">
           <h2 className="text-lg font-extrabold">New Arrivals</h2>
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground">
@@ -144,7 +144,7 @@ function NewArrivals() {
             </DropdownMenu>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {newArrivalProducts && newArrivalProducts.length > 0 ? (
             newArrivalProducts.map((productItem) => (
               <ShoppingProductTile

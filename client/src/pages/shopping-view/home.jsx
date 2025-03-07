@@ -132,7 +132,7 @@ function ShoppingHome() {
                 : screenWidth > 1024 && screenWidth <= 1650
                   ? "mt-[3%]"
                   : "mt-[2%]"
-              } grid grid-cols-1 md:grid-cols-3 gap-4`}>
+              } grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4`}>
               {categoriesList.map((categoryItem, index) => (
                 <motion.div
                   key={categoryItem.id || index}
@@ -152,10 +152,10 @@ function ShoppingHome() {
             </div>
           </div>
         </section>
-        <section className="py-12 bg-gray-50">
+        <section className="py-6 md:py-12 bg-gray-50">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Feature Products</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {productList &&
                 productList.length > 0 &&
                 productList
