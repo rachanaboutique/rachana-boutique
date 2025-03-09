@@ -7,7 +7,7 @@ function ShoppingLayout() {
     <div className="flex flex-col bg-white overflow-hidden">
       {/* common header */}
       <ShoppingHeader />
-      <main className="mt-14 md:mt-20 flex flex-col w-full">
+      <main className="flex flex-col w-full">
         <Outlet />
       </main>
       <Footer />

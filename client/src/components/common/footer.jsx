@@ -101,7 +101,7 @@ const Footer = () => {
 
     <>
 
-      <div className="bg-gray-50">
+      <div className="bg-background py-6">
         <div className="px-5 md:container flex flex-col gap-4 md:flex-row justify-between  items-center py-12">
           <div className="text-center md:text-left">
             <h1 className="text-3xl md:text-4xl font-semibold ">Join the Elegance Club</h1>
@@ -112,13 +112,13 @@ const Footer = () => {
 
           <div className="w-full md:w-1/3">
             <form onSubmit={handleSubscribe} className="flex items-center border-b-2 border-gray-400 focus-within:border-rose-500">
-              <Mail className="text-gray-500 mr-2" />
+              <Mail className="text-black mr-2" />
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full outline-none px-2 py-2 text-lg bg-transparent"
+                className="w-full outline-none px-2 py-2 text-lg bg-transparent placeholder-gray-600"
               />
               <button type="submit" disabled={isLoading} className="text-rose-600 hover:text-rose-700 transition">
                 <ArrowRight size={24} />
@@ -128,95 +128,97 @@ const Footer = () => {
         </div>
       </div>
       <footer className="bg-white text-gray-700">
-      <div className="container mx-auto pt-6 pb-3 px-4">
-        {/* Flex Container */}
-        <div className="flex flex-col md:flex-row md:justify-between md:gap-x-12 gap-y-8">
-          
-          {/* About Section */}
-          <div className="md:w-[25%]">
-            <Link to="/shop/home" className="flex items-center gap-2">
-              <img src={logo} alt="Logo" className="w-full md:w-3/4" />
-            </Link>
-            <p className="text-lg my-4">
-              Welcome to our boutique, where tradition meets elegance. Explore our curated collection of exquisite sarees designed to make every occasion special.
-            </p>
-          </div>
+        <div className="container mx-auto pt-6 pb-3 px-4">
+          {/* Flex Container */}
+          <div className="flex flex-col md:flex-row md:justify-between md:gap-x-12 gap-y-8">
 
-          {/* Explore Products */}
-          <div className="md:w-[20%]">
-            <h4 className="text-lg font-semibold text-foreground mb-4">Explore Products</h4>
-            <ul className="space-y-2">
-              <li><Link to="/shop/home" className="text-md hover:underline hover:text-rose-600 transition">Home</Link></li>
-              <li><Link to="/shop/collection" className="text-md hover:underline hover:text-rose-600 transition">Collection</Link></li>
-              <li><Link to="/shop/new-arrivals" className="text-md hover:underline hover:text-rose-600 transition">New Arrivals</Link></li>
-            </ul>
-          </div>
+            {/* About Section */}
+            <div className="md:w-[25%]">
+              <Link to="/shop/home" className="flex items-center gap-2">
+                <img src={logo} alt="Logo" className="w-full md:w-3/4" />
+              </Link>
+              <p className="text-lg my-4">
+                Welcome to our boutique, where tradition meets elegance. Explore our curated collection of exquisite sarees designed to make every occasion special.
+              </p>
+            </div>
 
-          {/* Contact & Social Media */}
-          <div className="md:w-[25%]">
-            <h4 className="text-lg font-semibold text-foreground mb-4">Contact Us</h4>
-            <div className="space-y-2 text-md">
-              <div className="flex items-center">
-                <Phone className="w-5 h-5 text-rose-600 mr-2" />
-                <a href="tel:+919944783389" className="hover:underline">+91 9944783389</a>
-              </div>
-              <div className="flex items-center">
-                <Mail className="w-5 h-5 text-rose-600 mr-2" />
-                <a href="mailto:rachanaboutique@gmail.com" className="hover:underline">rachanaboutique@gmail.com</a>
-              </div>
-              {/* Social Media Links */}
-              <div className="flex gap-4 mt-3">
-                <a href="#" className="text-gray-700 hover:text-rose-600 transition">
-                  <Facebook size={24} />
-                </a>
-                <a href="#" className="text-gray-700 hover:text-rose-600 transition">
-                  <Instagram size={24} />
-                </a>
-                <a href="#" className="text-gray-700 hover:text-rose-600 transition">
-                  <Twitter size={24} />
-                </a>
+            {/* Explore Products */}
+            <div className="md:w-[20%]">
+              <h4 className="text-lg font-semibold text-foreground mb-4">Explore Products</h4>
+              <ul className="space-y-2">
+                <li><Link to="/shop/home" className="text-md hover:underline hover:text-rose-600 transition">Home</Link></li>
+                <li><Link to="/shop/collection" className="text-md hover:underline hover:text-rose-600 transition">Collection</Link></li>
+                <li><Link to="/shop/new-arrivals" className="text-md hover:underline hover:text-rose-600 transition">New Arrivals</Link></li>
+              </ul>
+            </div>
+
+            {/* Policies */}
+            <div className="md:w-[20%]">
+              <h4 className="text-lg font-semibold text-foreground mb-4">Policies</h4>
+              <ul className="space-y-2">
+                {policiesData.map((policy) => (
+                  <li key={policy.id}>
+                    <button onClick={() => openPolicyDialog(policy)} className="hover:underline text-foreground">
+                      {policy.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact & Social Media */}
+            <div className="md:w-[25%]">
+              <h4 className="text-lg font-semibold text-foreground mb-4">Contact Us</h4>
+              <div className="space-y-2 text-md">
+                <div className="flex items-center">
+                  <Phone className="w-5 h-5 text-rose-600 mr-2" />
+                  <a href="tel:+919944783389" className="hover:underline">+91 9944783389</a>
+                </div>
+                <div className="flex items-center">
+                  <Mail className="w-5 h-5 text-rose-600 mr-2" />
+                  <a href="mailto:rachanaboutique@gmail.com" className="hover:underline">rachanaboutique@gmail.com</a>
+                </div>
+                {/* Social Media Links */}
+                <div className="flex gap-4 mt-3">
+                  <a href="#" className="text-gray-700 hover:text-rose-600 transition">
+                    <Facebook size={24} />
+                  </a>
+                  <a href="#" className="text-gray-700 hover:text-rose-600 transition">
+                    <Instagram size={24} />
+                  </a>
+                  <a href="#" className="text-gray-700 hover:text-rose-600 transition">
+                    <Twitter size={24} />
+                  </a>
+                </div>
               </div>
             </div>
+
+
+
           </div>
 
-          {/* Policies */}
-          <div className="md:w-[20%]">
-            <h4 className="text-lg font-semibold text-foreground mb-4">Policies</h4>
-            <ul className="space-y-2">
-              {policiesData.map((policy) => (
-                <li key={policy.id}>
-                  <button onClick={() => openPolicyDialog(policy)} className="hover:underline text-foreground">
-                    {policy.title}
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {/* Bottom Section */}
+          <div className="mt-8 border-t border-gray-300 pt-4 text-center text-sm flex flex-col gap-2">
+            <div>&copy; {new Date().getFullYear()} Rachana Boutique. All rights reserved.</div>
           </div>
-
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-8 border-t border-gray-300 pt-4 text-center text-sm flex flex-col gap-2">
-          <div>&copy; {new Date().getFullYear()} Saree Boutique. All rights reserved.</div>
-        </div>
-      </div>
-
-      {/* Policy Dialog */}
-      <Dialog open={policyDialogOpen} onOpenChange={(open) => !open && closePolicyDialog()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{selectedPolicy?.title}</DialogTitle>
-          </DialogHeader>
-          {selectedPolicy?.points && (
-            <ol className="list-decimal ml-6 space-y-1 text-sm">
-              {selectedPolicy.points.map((point, index) => (
-                <li key={index}>{point}</li>
-              ))}
-            </ol>
-          )}
-        </DialogContent>
-      </Dialog>
-    </footer>
+        {/* Policy Dialog */}
+        <Dialog open={policyDialogOpen} onOpenChange={(open) => !open && closePolicyDialog()}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{selectedPolicy?.title}</DialogTitle>
+            </DialogHeader>
+            {selectedPolicy?.points && (
+              <ol className="list-decimal ml-6 space-y-1 text-sm">
+                {selectedPolicy.points.map((point, index) => (
+                  <li key={index}>{point}</li>
+                ))}
+              </ol>
+            )}
+          </DialogContent>
+        </Dialog>
+      </footer>
     </>
   );
 };

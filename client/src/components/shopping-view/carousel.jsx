@@ -1,9 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Carousel = ({ bannersList }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
+  const autoScrollIntervalRef = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Function to advance to the next slide
+  const goToNextSlide = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === bannersList.length - 1 ? 0 : prevIndex + 1
+    );
+  };
 
   // ✅ Dynamically Preload the First Image
   useEffect(() => {
@@ -17,8 +26,33 @@ const Carousel = ({ bannersList }) => {
     }
   }, [bannersList]);
 
+  // Auto-scroll effect
+  useEffect(() => {
+    // Only set up auto-scroll if we have more than one banner
+    if (bannersList.length > 1 && !isPaused) {
+      // Clear any existing interval
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current);
+      }
+
+      // Set up new interval for auto-scrolling (every 3 seconds)
+      autoScrollIntervalRef.current = setInterval(goToNextSlide, 3000);
+    }
+
+    // Cleanup function to clear interval when component unmounts
+    return () => {
+      if (autoScrollIntervalRef.current) {
+        clearInterval(autoScrollIntervalRef.current);
+      }
+    };
+  }, [bannersList.length, isPaused]);
+
   return (
-    <div className="relative w-full h-full bg-gray-900">
+    <div
+      className="relative w-full h-full bg-gray-900"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       {bannersList.map((item, index) => (
         <div
           key={index}

@@ -211,7 +211,7 @@ function ProductDetailsPage({ open, setOpen }) {
   }, [productList, productDetails]);
 
   return (
-    <div className="container p-4 md:p-8">
+    <div className="container mx-auto px-4 py-8 md:py-16">
       <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr] gap-8">
         <div className="flex flex-col gap-4">
           <ZoomableImage
@@ -219,90 +219,95 @@ function ProductDetailsPage({ open, setOpen }) {
             imageAlt={productDetails?.title}
             onZoomData={handleZoomData}
           />
-          {/* Render all images as thumbnails */}
-          <div className="flex gap-2 flex-wrap ">
+          {/* Render all images as thumbnails - exactly 4 per row */}
+          <div className="grid grid-cols-4 gap-2">
             {productDetails?.image?.map((image, index) => (
               <img
                 key={index}
                 src={image}
                 alt={`Thumbnail ${index}`}
-                className={`w-1/5 h-24 md:h-40 object-cover cursor-pointer ${selectedImage === image ? "border-4 border-foreground" : ""}`}
+                className={`w-full h-24 md:h-32 object-cover cursor-pointer transition-all duration-300 ${selectedImage === image ? "border-4 border-black" : "border border-gray-200 hover:border-gray-400"}`}
                 onClick={() => setSelectedImage(image)}
               />
             ))}
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 items-center">
-          <h1 className="text-4xl font-bold ">
-            {productDetails?.title}
-          </h1>
-          <h1 className="text-xl ">
-          Elegance Unveiled
-          </h1>
-          <Separator className="w-3/4 mt-2" />
+        <div className="flex flex-col gap-4">
+          <div className="text-center mb-4">
+            <h1 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-2">
+              {productDetails?.title}
+            </h1>
+            <h2 className="text-lg md:text-xl text-gray-600">
+              Elegance Unveiled
+            </h2>
+            <div className="w-24 h-1 bg-black mx-auto my-4"></div>
+          </div>
+
           <div>
-            {/** show a line separator */}
-
-
             {productDetails?.description && (
-              <ul className="px-4 md:px-24 list-disc list-inside text-muted-foreground text-xl mt-4">
+              <ul className="list-disc list-inside text-gray-600 text-lg mt-4 space-y-2">
                 {renderDescriptionBulletPoints(productDetails.description)}
               </ul>
             )}
           </div>
-          <div className="flex items-center gap-4 mt-6">
+          <div className="flex items-center justify-center gap-4 mt-6">
             <p
-              className={`text-3xl font-bold text-primary ${productDetails?.salePrice > 0 ? "line-through" : ""}`}
+              className={`text-2xl md:text-3xl font-medium ${productDetails?.salePrice > 0 ? "line-through text-gray-500" : ""}`}
             >
               ₹{productDetails?.price}
             </p>
             {productDetails?.salePrice > 0 && (
-              <p className="text-2xl font-bold text-muted-foreground">
+              <p className="text-2xl md:text-3xl font-medium">
                 ₹{productDetails?.salePrice}
               </p>
             )}
-
           </div>
-          {/* Color Selection with Image Cards */}
+          {/* Color Selection with Image Cards - 5 per row */}
           {productDetails?.colors && (
-            <div className="mt-6">
-
-              <div className="bg-gray-100 p-4 flex gap-4 flex-wrap items-center">
-                <Label className="text-lg font-semibold">Colors</Label>
-                {productDetails.colors.map((colorItem, index) => (
-                  <div
-                    key={index}
-                    onClick={() => handleColorSelect(colorItem, index)}
-                    className={`cursor-pointer flex flex-col items-center p-2 rounded-lg shadow ${selectedColor && selectedColor._id === colorItem._id ? "border-4 border-blue-500" : "border border-gray-200"}`}
-                  >
-                    <img
-                      src={colorItem.image}
-                      alt={colorItem.title}
-                      className="w-16 h-16 object-cover rounded-md"
-                    />
-                    <p className="mt-1 text-sm font-medium text-center">
-                      {colorItem.title}
-                    </p>
-                  </div>
-                ))}
+            <div className="mt-6 w-full">
+              <div className="w-full">
+                <Label className="text-lg font-semibold uppercase tracking-wide mb-2 block">Colors</Label>
+                <div className="w-12 h-0.5 bg-black mb-4"></div>
+                <div className="grid grid-cols-5 gap-3">
+                  {productDetails.colors.map((colorItem, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleColorSelect(colorItem, index)}
+                      className={`cursor-pointer flex flex-col items-center p-2 rounded-lg transition-all duration-300 ${
+                        selectedColor && selectedColor._id === colorItem._id
+                          ? "border-2 border-black shadow-md"
+                          : "border border-gray-200 hover:border-gray-400"
+                      }`}
+                    >
+                      <img
+                        src={colorItem.image}
+                        alt={colorItem.title}
+                        className="w-full h-16 object-cover rounded-md"
+                      />
+                      <p className="mt-2 text-sm font-medium text-center">
+                        {colorItem.title}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
-          <div className="mt-5">
+          <div className="mt-8 flex justify-center">
             {productDetails?.totalStock === 0 ? (
-              <Button className="w-full opacity-60 cursor-not-allowed">
+              <button className="w-full max-w-md px-8 py-3 opacity-60 cursor-not-allowed border-2 border-gray-300 text-gray-400 uppercase tracking-wider text-sm font-medium">
                 Out of Stock
-              </Button>
+              </button>
             ) : (
-              <Button
-              className="w-full text-xl px-12 py-6"
+              <button
+                className="w-full max-w-md px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
                 onClick={() =>
                   handleAddToCart(productDetails?._id, productDetails?.totalStock)
                 }
               >
                 Add to Cart
-              </Button>
+              </button>
             )}
           </div>
 
@@ -323,7 +328,7 @@ function ProductDetailsPage({ open, setOpen }) {
             </div> */}
           {zoomData.isHovering && (
             <div
-              className="hidden md:block absolute top-[15%] left-[49%] z-10 w-1/2 h-3/4 overflow-hidden border shadow-lg bg-white"
+              className="hidden md:block absolute top-[22%] left-[50%] z-10 w-1/2 h-3/4 overflow-hidden border shadow-lg bg-white"
               style={{
                 backgroundImage: `url(${zoomData.imageSrc})`,
                 backgroundPosition: `${zoomData.zoomPosition.x}% ${zoomData.zoomPosition.y}%`,
@@ -392,10 +397,14 @@ function ProductDetailsPage({ open, setOpen }) {
       </div>
 
 
-      <Separator className="my-6" />
+      <Separator className="my-12" />
       {relatedProducts && relatedProducts.length > 0 && (
         <div className="mt-10">
-          <h2 className="text-xl font-bold mb-4">You May Also Like</h2>
+          <div className="max-w-3xl mx-auto text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">You May Also Like</h2>
+            <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
+            <p className="text-gray-600">Discover more items that complement your style</p>
+          </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             {relatedProducts.map((productItem) => (
               <ShoppingProductTile

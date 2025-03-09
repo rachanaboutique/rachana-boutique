@@ -2,55 +2,71 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
-import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import { useToast } from "@/components/ui/use-toast";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 
 function SearchProducts() {
-  const [keyword, setKeyword] = useState("");
-  const [openSuggestions, setOpenSuggestions] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+
+  const [keyword, setKeyword] = useState(initialQuery);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // Create separate refs for the input box and suggestions container
   const inputRef = useRef(null);
-  const suggestionsRef = useRef(null);
 
-  const { productList, productDetails } = useSelector(
-    (state) => state.shopProducts
-  );
+  const { productList } = useSelector((state) => state.shopProducts);
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user } = useSelector((state) => state.auth);
 
   const { toast } = useToast();
 
-  // Compute suggestions based on the search keyword
-  const suggestions =
-    keyword.trim().length > 0
-      ? productList.filter((product) =>
-        product.title.toLowerCase().includes(keyword.toLowerCase())
-      )
-      : [];
+  // Popular saree searches
+  const popularSearches = [
+    "Silk Sarees",
+    "Banarasi Sarees",
+    "Cotton Sarees",
+    "Kanjivaram Sarees",
+    "Designer Sarees",
+    "Dresses",
+    "Summer Collection"
+  ];
 
-  // Detect clicks outside the input and suggestions to hide the suggestion dropdown
+  // Update search results with a small delay to prevent UI flicker
+  const [suggestions, setSuggestions] = useState([]);
+
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        inputRef.current &&
-        suggestionsRef.current &&
-        !inputRef.current.contains(event.target) &&
-        !suggestionsRef.current.contains(event.target)
-      ) {
-        setOpenSuggestions(false);
-      }
+    if (keyword.trim().length > 0) {
+      setIsLoading(true);
+      // Update URL query parameter
+      setSearchParams({ q: keyword });
+
+      // Small timeout to simulate loading and prevent UI flicker
+      const timer = setTimeout(() => {
+        const filteredProducts = productList.filter((product) =>
+          product.title.toLowerCase().includes(keyword.toLowerCase())
+        );
+        setSuggestions(filteredProducts);
+        setIsLoading(false);
+      }, 300);
+
+      return () => clearTimeout(timer);
+    } else {
+      setSuggestions([]);
+      setSearchParams({});
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+  }, [keyword, productList, setSearchParams]);
+
+  // Focus input on page load
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   }, []);
 
   function handleAddtoCart(getCurrentProductId) {
@@ -59,8 +75,7 @@ function SearchProducts() {
         userId: user?.id,
         productId: getCurrentProductId,
         quantity: 1,
-        colorId : productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
-
+        colorId: productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
       })
     ).then((data) => {
       if (data?.payload?.success) {
@@ -73,17 +88,23 @@ function SearchProducts() {
   }
 
   const handleViewDetails = (productId) => {
-    // Hide suggestions when navigating away
-    setOpenSuggestions(false);
     navigate(`/shop/details/${productId}`);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // The search is already handled by the useEffect updating the URL
+    // This is just to handle the form submission
   };
 
   function handleKeyDown(event) {
     if (event.key === "ArrowDown") {
+      event.preventDefault();
       setHighlightedIndex((prevIndex) =>
         prevIndex < suggestions.length - 1 ? prevIndex + 1 : 0
       );
     } else if (event.key === "ArrowUp") {
+      event.preventDefault();
       setHighlightedIndex((prevIndex) =>
         prevIndex > 0 ? prevIndex - 1 : suggestions.length - 1
       );
@@ -91,81 +112,87 @@ function SearchProducts() {
       if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
         handleViewDetails(suggestions[highlightedIndex]._id);
       }
-      setOpenSuggestions(false);
     }
   }
 
   return (
-    <div className="container mx-auto md:px-6 px-4 py-8">
-      <div className="relative mb-8">
-        <Input
-          ref={inputRef}
-          value={keyword}
-          name="keyword"
-          onChange={(event) => {
-            setKeyword(event.target.value);
-            setOpenSuggestions(true);
-            setHighlightedIndex(-1);
-          }}
-          onKeyDown={handleKeyDown}
-          className="py-6"
-          placeholder="Search Products..."
-        />
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-2xl font-light mb-6 text-center">Search our store</h2>
+        <form onSubmit={handleSearch} className="flex items-center border-b border-gray-300 pb-2 mb-6">
+          <input
+            ref={inputRef}
+            type="text"
+            value={keyword}
+            onChange={(e) => {
+              setKeyword(e.target.value);
+              setHighlightedIndex(-1);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Search for products..."
+            className="w-full bg-transparent text-lg outline-none"
+            autoFocus
+          />
+          <button type="submit" className="text-gray-700 hover:text-black transition-colors">
+            <Search className="h-5 w-5" />
+          </button>
+        </form>
 
-        {/* Suggestions Dropdown */}
-        {openSuggestions && keyword.trim().length > 0 && suggestions.length > 0 && (
-          <div
-            ref={suggestionsRef}
-            className="absolute top-full mt-2 w-full bg-white border rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto"
-          >
-            {suggestions.map((product, index) => (
-              <div
-                key={product._id}
-                className={`flex items-center p-4 hover:bg-gray-100 cursor-pointer ${index === highlightedIndex ? "bg-gray-200" : ""
-                  }`}
-                onMouseDown={() => handleViewDetails(product._id)}
+        {/* Popular Searches */}
+        <div className="mb-8">
+          <h3 className="text-sm uppercase tracking-wider text-gray-500 mb-3">Popular Searches</h3>
+          <div className="flex flex-wrap gap-2">
+            {popularSearches.map((term) => (
+              <button
+                key={term}
+                onClick={() => {
+                  setKeyword(term);
+                }}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm rounded-full transition-colors"
               >
-                <img
-                  src={product.image[0]}
-                  alt={product.title}
-                  className="w-12 h-12 object-cover rounded mr-4"
-                />
-                <div className="flex-1">
-                  <h4 className="font-semibold">{product.title}</h4>
-                  <p className="text-sm text-gray-500">
-                    ${product.salePrice || product.price}
-                  </p>
-                </div>
-                <Button
-                  onClick={(e) => {
-                    // Prevent click propagation to the container so that the overlay buttons work independently
-                    e.stopPropagation();
-                    handleViewDetails(product?._id);
-                  }}
-                  className="bg-foreground hover:bg-accent text-white px-4 py-2 rounded-md shadow"
-                >
-                  View Details
-                </Button>
-              </div>
+                {term}
+              </button>
             ))}
           </div>
-        )}
+        </div>
       </div>
 
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+        </div>
+      )}
+
+      {/* No results message */}
+      {!isLoading && keyword.trim().length > 0 && suggestions.length === 0 && (
+        <div className="text-center py-12">
+          <h1 className="text-3xl font-bold mb-2">No results found</h1>
+          <p className="text-gray-600">
+            We couldn't find any products matching "{keyword}"
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Try a different search term or browse our categories
+          </p>
+        </div>
+      )}
+
       {/* Products Grid */}
-      {keyword.trim().length > 0 && suggestions.length === 0 ? (
-        <h1 className="text-5xl font-extrabold">No result found!</h1>
-      ) : null}
-      {keyword.trim().length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {suggestions.map((item) => (
-            <ShoppingProductTile
-              key={item._id}
-              handleAddtoCart={handleAddtoCart}
-              product={item}
-              handleGetProductDetails={handleViewDetails}
-            />
-          ))}
+      {!isLoading && keyword.trim().length > 0 && suggestions.length > 0 && (
+        <div>
+          <h3 className="text-xl font-medium mb-4">
+            {suggestions.length} {suggestions.length === 1 ? 'result' : 'results'} for "{keyword}"
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {suggestions.map((item) => (
+              <ShoppingProductTile
+                key={item._id}
+                handleAddtoCart={handleAddtoCart}
+                product={item}
+                handleGetProductDetails={handleViewDetails}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
