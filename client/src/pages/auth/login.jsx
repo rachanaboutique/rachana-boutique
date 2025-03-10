@@ -55,12 +55,12 @@ function AuthLogin() {
   }
 
   return (
-    <div className="-mt-20 mx-auto w-full max-w-md space-y-6">
+    <div className="-mt-20 mx-auto w-full max-w-xs space-y-6">
       <div className="w-56 h-56 flex items-center justify-center mx-auto">
         <img src={logo} alt="Logo" className="w-full h-full" />
       </div>
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="text-3xl font-medium tracking-tight text-foreground">
           Sign in to your account
         </h1>
         <p className="mt-2">

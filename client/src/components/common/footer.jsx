@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 import { Separator } from "../../components/ui/separator";
 import { Mail, ArrowRight, Facebook, Instagram, Twitter, Phone } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 
 
 // Updated policies data with array of points for numbered rendering
@@ -186,8 +187,8 @@ const Footer = () => {
                   <a href="#" className="text-gray-700 hover:text-rose-600 transition">
                     <Instagram size={24} />
                   </a>
-                  <a href="#" className="text-gray-700 hover:text-rose-600 transition">
-                    <Twitter size={24} />
+                  <a href="https://wa.me/9944783389" className="text-gray-700 hover:text-rose-600 transition" target="_blank" rel="noopener noreferrer">
+                    <FaWhatsapp size={24} />
                   </a>
                 </div>
               </div>

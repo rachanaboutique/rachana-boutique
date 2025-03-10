@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import CommonForm from "../common/form";
 import { addressFormControls } from "@/config";
 import { addNewAddress, deleteAddress, editaAddress, fetchAllAddresses } from "@/store/shop/address-slice";
 import AddressCard from "./address-card";
 import { useToast } from "../ui/use-toast";
 import DeleteConfirmationModal from "@/components/common/delete-confirmation-modal";
+import { MapPin, Plus } from "lucide-react";
 
-
-// Initial form data constant (assumed to be imported or defined elsewhere)
+// Initial form data constant
 const initialAddressFormData = {
   address: "",
   city: "",
@@ -23,6 +22,7 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
   const [currentEditedId, setCurrentEditedId] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { addressList } = useSelector((state) => state.shopAddress);
@@ -54,6 +54,7 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
           setCurrentSelectedAddress(null);
           setCurrentEditedId(null);
           setFormData(initialAddressFormData);
+          setShowForm(false);
           toast({
             title: "Address updated successfully",
           });
@@ -69,6 +70,7 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
         if (data?.payload?.success) {
           dispatch(fetchAllAddresses(user?.id));
           setFormData(initialAddressFormData);
+          setShowForm(false);
           toast({
             title: "Address added successfully",
           });
@@ -110,6 +112,7 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
       pincode: getCurrentAddress?.pincode,
       notes: getCurrentAddress?.notes,
     });
+    setShowForm(true);
   }
 
   function isFormValid() {
@@ -126,37 +129,97 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
 
   return (
     <>
-      <Card>
-        <div className="mb-5 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {addressList && addressList.length > 0
-            ? addressList.map((singleAddressItem) => (
-                <AddressCard
-                  key={singleAddressItem._id}
-                  selectedId={selectedId}
-                  handleDeleteAddress={handleDeleteAddress}
-                  addressInfo={singleAddressItem}
-                  handleEditAddress={handleEditAddress}
-                  setCurrentSelectedAddress={setCurrentSelectedAddress}
-                />
-              ))
-            : null}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-2xl font-light uppercase tracking-wide mb-2">Your Addresses</h2>
+            <div className="w-12 h-0.5 bg-black"></div>
+          </div>
+          {!showForm && addressList.length < 3 && (
+            <button
+              onClick={() => {
+                setCurrentEditedId(null);
+                setFormData(initialAddressFormData);
+                setShowForm(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 text-sm font-medium"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add New Address</span>
+            </button>
+          )}
         </div>
-        <CardHeader>
-          <CardTitle>
-            {currentEditedId !== null ? "Edit Address" : "Add New Address"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <CommonForm
-            formControls={addressFormControls}
-            formData={formData}
-            setFormData={setFormData}
-            buttonText={currentEditedId !== null ? "Edit" : "Add"}
-            onSubmit={handleManageAddress}
-            isBtnDisabled={!isFormValid()}
-          />
-        </CardContent>
-      </Card>
+
+        {addressList && addressList.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {addressList.map((singleAddressItem) => (
+              <AddressCard
+                key={singleAddressItem._id}
+                selectedId={selectedId}
+                handleDeleteAddress={handleDeleteAddress}
+                addressInfo={singleAddressItem}
+                handleEditAddress={handleEditAddress}
+                setCurrentSelectedAddress={setCurrentSelectedAddress}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-gray-50 border border-gray-200 rounded-md mb-8">
+            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-100">
+              <MapPin className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Addresses Found</h3>
+            <p className="text-gray-500 mb-6">You haven't added any addresses yet.</p>
+            {!showForm && (
+              <button
+                onClick={() => {
+                  setCurrentEditedId(null);
+                  setFormData(initialAddressFormData);
+                  setShowForm(true);
+                }}
+                className="inline-block px-6 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+              >
+                Add Your First Address
+              </button>
+            )}
+          </div>
+        )}
+
+        {showForm && (
+          <div className="border border-gray-200 rounded-md p-6 bg-white">
+            <div className="mb-6">
+              <h3 className="text-xl font-light uppercase tracking-wide mb-2">
+                {currentEditedId !== null ? "Edit Address" : "Add New Address"}
+              </h3>
+              <div className="w-12 h-0.5 bg-black mb-6"></div>
+            </div>
+
+            <CommonForm
+              formControls={addressFormControls}
+              formData={formData}
+              setFormData={setFormData}
+              buttonText={currentEditedId !== null ? "Update Address" : "Save Address"}
+              onSubmit={handleManageAddress}
+              isBtnDisabled={!isFormValid()}
+              buttonClassName="px-6 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+            />
+
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setCurrentEditedId(null);
+                  setFormData(initialAddressFormData);
+                }}
+                className="text-sm text-gray-500 hover:text-black transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <DeleteConfirmationModal
         isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
@@ -166,5 +229,6 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
     </>
   );
 }
+
 
 export default Address;

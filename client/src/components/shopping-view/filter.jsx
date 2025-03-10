@@ -60,38 +60,41 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
   };
 
   return (
-    <div className="bg-gray-100 rounded-lg shadow-sm">
-      {/* Filter Title & Dropdown Toggle on Mobile */}
+    <div>
+      {/* Mobile Filter Toggle */}
       <div
-        className="p-4 border-b flex justify-between items-center"
+        className="md:hidden p-4 flex justify-between items-center border-b border-gray-200"
         onClick={toggleDropdown}
       >
-        <h2 className="text-lg font-extrabold">Filters</h2>
-        <button className="md:hidden p-2 rounded-md">
+        <span className="text-sm uppercase tracking-wide font-medium">Filter Options</span>
+        <button className="p-2">
           <ChevronDown
-            size={20}
+            size={16}
             className={`transition-transform duration-300 ${
               isDropdownOpen ? "rotate-180" : ""
             }`}
           />
         </button>
       </div>
+
       {/* Filter options */}
       <div
-        className={`p-4 space-y-4 md:block ${
+        className={`space-y-6 ${
           isDropdownOpen ? "block" : "hidden md:block"
         }`}
       >
         {/* Dynamic Category Filter */}
         <div>
-          <h3 className="text-base text-lg font-bold">Category</h3>
-          <div className="grid gap-2 mt-2">
+          <h3 className="text-base uppercase tracking-wide font-medium mb-3">Category</h3>
+          <div className="w-8 h-0.5 bg-black mb-4"></div>
+          <div className="space-y-2">
             {categoriesList.map((category) => (
               <Label
-                className="flex text-md font-medium items-center gap-2"
+                className="flex items-center gap-2 text-sm hover:text-black cursor-pointer group"
                 key={category._id}
               >
                 <Checkbox
+                  className="border-gray-300 data-[state=checked]:bg-black data-[state=checked]:border-black"
                   checked={
                     filters.category?.length > 0 &&
                     filters.category[0] === category._id
@@ -100,37 +103,45 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
                     handleSingleCategoryFilter(category._id)
                   }
                 />
-                {category.name}
+                <span className="group-hover:translate-x-0.5 transition-transform duration-200">
+                  {category.name}
+                </span>
               </Label>
             ))}
           </div>
         </div>
-        <Separator />
+
+        <Separator className="bg-gray-200" />
+
         {/* Static Price Filter */}
         <div>
-          <h3 className="text-base text-lg font-bold">Price</h3>
-          <div className="grid gap-2 mt-2">
+          <h3 className="text-base uppercase tracking-wide font-medium mb-3">Price Range</h3>
+          <div className="w-8 h-0.5 bg-black mb-4"></div>
+          <div className="space-y-2">
             {[
-              { id: "0-1000", label: "0 - 1000" },
-              { id: "1000-2000", label: "1000 - 2000" },
-              { id: "2000-3000", label: "2000 - 3000" },
-              { id: "3000-4000", label: "3000 - 4000" },
-              { id: "4000-5000", label: "4000 - 5000" },
-              { id: "5000-6000", label: "5000 - 6000" },
-              { id: "6000-", label: "6000 and above" }
+              { id: "0-1000", label: "₹0 - ₹1,000" },
+              { id: "1000-2000", label: "₹1,000 - ₹2,000" },
+              { id: "2000-3000", label: "₹2,000 - ₹3,000" },
+              { id: "3000-4000", label: "₹3,000 - ₹4,000" },
+              { id: "4000-5000", label: "₹4,000 - ₹5,000" },
+              { id: "5000-6000", label: "₹5,000 - ₹6,000" },
+              { id: "6000-", label: "₹6,000 and above" }
             ].map((option) => (
               <Label
-                className="flex text-md font-medium items-center gap-2"
+                className="flex items-center gap-2 text-sm hover:text-black cursor-pointer group"
                 key={option.id}
               >
                 <Checkbox
+                  className="border-gray-300 data-[state=checked]:bg-black data-[state=checked]:border-black"
                   checked={
                     filters.price?.length > 0 &&
                     filters.price.includes(option.id)
                   }
                   onCheckedChange={() => handleFilter("price", option.id)}
                 />
-                {option.label}
+                <span className="group-hover:translate-x-0.5 transition-transform duration-200">
+                  {option.label}
+                </span>
               </Label>
             ))}
           </div>

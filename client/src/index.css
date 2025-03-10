@@ -38,7 +38,7 @@ body {
     --secondary: #2b2b2b;
     --secondary-foreground: #e0e0e0;
     /* --muted: #e9768a; */
-    --muted:#ec003f;
+    --muted:#000000;
     --muted-foreground:#2c3315;
     --accent:#272d12;
     --accent-foreground: #f0f0f0;

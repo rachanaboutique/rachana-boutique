@@ -3,6 +3,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { forgotPassword } from "@/store/auth-slice";
+import logo from "@/assets/logo3.png";
+
 
 const initialState = {
   email: "",
@@ -52,7 +54,10 @@ function AuthForgotPassword() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md space-y-6">
+    <div className="-mt-36 mx-auto w-full max-w-xs space-y-6">
+       <div className="w-56 h-56 flex items-center justify-center mx-auto">
+                    <img src={logo} alt="Logo" className="w-full h-full" />
+                  </div>
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Forgot Password?

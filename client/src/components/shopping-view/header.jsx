@@ -6,9 +6,9 @@ import {
   Search,
   Phone,
   ChevronDown,
+  UserPlus,
   Instagram,
   Facebook,
-  Twitter
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
@@ -30,6 +30,7 @@ import UserCartWrapper from "./cart-wrapper";
 import { useState, useEffect, useRef } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
+import { FaWhatsapp } from "react-icons/fa";
 import { useToast } from "../ui/use-toast";
 
 function ShoppingHeader() {
@@ -57,20 +58,20 @@ function ShoppingHeader() {
       sessionStorage.removeItem("filters");
       const currentFilter =
         getCurrentMenuItem.id !== "home" &&
-        getCurrentMenuItem.id !== "collections" &&
-        getCurrentMenuItem.id !== "new-arrivals" &&
-        getCurrentMenuItem.id !== "contact"
+          getCurrentMenuItem.id !== "collections" &&
+          getCurrentMenuItem.id !== "new-arrivals" &&
+          getCurrentMenuItem.id !== "contact"
           ? {
-              category: [getCurrentMenuItem.id],
-            }
+            category: [getCurrentMenuItem.id],
+          }
           : null;
 
       sessionStorage.setItem("filters", JSON.stringify(currentFilter));
 
       location.pathname.includes("collections") && currentFilter !== null
         ? setSearchParams(
-            new URLSearchParams(`?category=${getCurrentMenuItem.id}`)
-          )
+          new URLSearchParams(`?category=${getCurrentMenuItem.id}`)
+        )
         : navigate(getCurrentMenuItem.path);
 
       onCloseSheet(); // Close the sheet when a menu item is clicked
@@ -94,6 +95,7 @@ function ShoppingHeader() {
       </nav>
     );
   }
+
 
   function HeaderRightContent() {
     const { user } = useSelector((state) => state.auth);
@@ -183,16 +185,7 @@ function ShoppingHeader() {
                 <UserCog className="mr-2 h-4 w-4" />
                 <span>My Account</span>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer"
-                onClick={() => {
-                  navigate("/shop/orders");
-                  setIsSheetOpen(false);
-                }}
-              >
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                <span>My Orders</span>
-              </DropdownMenuItem>
+              
               <DropdownMenuSeparator className="bg-gray-200 my-1" />
               <DropdownMenuItem
                 className="flex items-center py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer"
@@ -206,9 +199,7 @@ function ShoppingHeader() {
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white transition-colors px-4 py-1 text-sm rounded-none">
-                Sign In
-              </Button>
+              <UserPlus className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors hover:cursor-pointer" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
@@ -273,7 +264,7 @@ function ShoppingHeader() {
         messageIntervalRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array means this runs once on mount
 
   return (
@@ -288,8 +279,8 @@ function ShoppingHeader() {
                 +91 9944783389
               </a>
               <div className="text-xs">|</div>
-              <a href="mailto:support@fashionstore.com" className="text-xs hover:text-gray-300 transition-colors">
-                support@fashionstore.com
+              <a href="mailto:rachanaboutique@gmail.com" className="text-xs hover:text-gray-300 transition-colors">
+                rachanaboutique@gmail.com
               </a>
             </div>
 
@@ -322,8 +313,8 @@ function ShoppingHeader() {
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
                 <Facebook className="h-4 w-4" />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
-                <Twitter className="h-4 w-4" />
+              <a href="https://wa.me/9944783389" className="hover:text-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">
+                <FaWhatsapp size={17} />
               </a>
             </div>
           </div>
@@ -363,7 +354,7 @@ function ShoppingHeader() {
 
             {/* Desktop navigation */}
             <div className="hidden lg:block">
-              <MenuItems onCloseSheet={() => {}} />
+              <MenuItems onCloseSheet={() => { }} />
             </div>
 
             {/* Right side icons */}

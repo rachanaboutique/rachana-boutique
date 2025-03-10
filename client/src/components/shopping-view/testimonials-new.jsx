@@ -63,20 +63,29 @@ const Testimonials = () => {
         },
       },
     ],
+    appendDots: dots => (
+      <div>
+        <ul className="mt-8"> {dots} </ul>
+      </div>
+    ),
+    customPaging: i => (
+      <div className="w-3 h-3 mx-1 rounded-full bg-gray-200 hover:bg-gray-400 transition-colors"></div>
+    ),
   };
 
   return (
     <div className='relative'>
-      <div className='flex justify-end mb-8'>
-        <FeedbackCard />
-      </div>
-      
-      <div className='w-full mx-auto'>
+      <div className='w-full mx-auto relative pb-16'>
         <Slider {...settings}>
           {testimonials.map((testimonial, index) => (
             <TestimonialCard key={index} testimonial={testimonial} index={index} />
           ))}
         </Slider>
+
+        {/* Feedback button positioned at the bottom center */}
+        <div className="absolute -bottom-5 left-0 right-0 flex justify-center mt-8">
+          <FeedbackCard />
+        </div>
       </div>
     </div>
   );
@@ -97,17 +106,17 @@ const TestimonialCard = ({ testimonial, index }) => {
       }}
       className="px-4"
     >
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-full flex flex-col">
+      <div className="bg-white p-8 border border-gray-200 shadow-sm h-full flex flex-col">
         {/* Quote icon */}
-        <div className="mb-4 text-gray-200">
-          <Quote size={40} />
+        <div className="mb-6 text-gray-300">
+          <Quote size={32} />
         </div>
-        
+
         {/* Review text */}
-        <p className="text-gray-600 italic mb-6 flex-grow">"{testimonial.review}"</p>
-        
+        <p className="text-gray-600 mb-8 flex-grow leading-relaxed">"{testimonial.review}"</p>
+
         {/* Customer info */}
-        <div className="flex items-center mt-auto">
+        <div className="flex items-center mt-auto pt-6 border-t border-gray-100">
           <img
             src={testimonial.image}
             alt={testimonial.name}
@@ -126,24 +135,24 @@ const TestimonialCard = ({ testimonial, index }) => {
 // Previous and Next arrows with updated styling
 const PrevIcon = ({ onClick }) => {
   return (
-    <button 
-      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-10 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors" 
+    <button
+      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-10 w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center border border-gray-200 hover:bg-black hover:text-white hover:border-black transition-colors"
       onClick={onClick}
       aria-label="Previous"
     >
-      <ArrowLeft className="w-5 h-5 text-gray-600" />
+      <ArrowLeft className="w-5 h-5" />
     </button>
   );
 };
 
 const NextIcon = ({ onClick }) => {
   return (
-    <button 
-      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-10 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center border border-gray-200 hover:bg-gray-50 transition-colors" 
+    <button
+      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-10 w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center border border-gray-200 hover:bg-black hover:text-white hover:border-black transition-colors"
       onClick={onClick}
       aria-label="Next"
     >
-      <ArrowRight className="w-5 h-5 text-gray-600" />
+      <ArrowRight className="w-5 h-5" />
     </button>
   );
 };

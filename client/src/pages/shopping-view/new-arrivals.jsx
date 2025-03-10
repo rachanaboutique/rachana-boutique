@@ -1,7 +1,4 @@
-import ProductFilter from "@/components/shopping-view/filter";
-import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,14 +13,17 @@ import {
   fetchAllFilteredProducts,
   fetchProductDetails,
 } from "@/store/shop/products-slice";
-import { ArrowUpDownIcon } from "lucide-react";
+import { ArrowUpDownIcon, ChevronRight, ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useSearchParams } from "react-router-dom";
-import {Loader} from "@/components/ui/loader";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Loader } from "@/components/ui/loader";
+import { Helmet } from "react-helmet-async";
+import newArrivalsBanner from "@/assets/newarrivals.png";
 
 function NewArrivals() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { productList, productDetails, isLoading } = useSelector(
     (state) => state.shopProducts
   );
@@ -32,9 +32,8 @@ function NewArrivals() {
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState(null);
   const [searchParams] = useSearchParams();
-  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const { toast } = useToast();
-  
+
   const categorySearchParam = searchParams.get("category");
 
   // Initialize sort and filters from sessionStorage (when category changes)
@@ -53,19 +52,12 @@ function NewArrivals() {
     }
   }, [dispatch, sort, filters]);
 
-  // Open the product details dialog when productDetails is available.
-  useEffect(() => {
-    if (productDetails !== null) {
-      setOpenDetailsDialog(true);
-    }
-  }, [productDetails]);
-
   function handleSort(value) {
     setSort(value);
   }
 
   function handleGetProductDetails(getCurrentProductId) {
-    dispatch(fetchProductDetails(getCurrentProductId));
+    navigate(`/shop/product/${getCurrentProductId}`);
   }
 
   function handleAddtoCart(getCurrentProductId, getTotalStock) {
@@ -109,64 +101,96 @@ function NewArrivals() {
     ? productList.filter((product) => product.isNewArrival === true)
     : [];
 
-  // Show loader only when the product list is not yet available 
+  // Show loader only when the product list is not yet available
   if (isLoading && productList.length === 0) return <Loader />;
 
   return (
-    <div className="px-3 md:container pb-4 md:py-6">
-      <div className="bg-playground w-full rounded-lg shadow-sm">
-        <div className="py-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-extrabold">New Arrivals</h2>
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">
-              {newArrivalProducts.length} Products
-            </span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1 hover:bg-muted"
-                >
-                  <ArrowUpDownIcon className="h-4 w-4" />
-                  <span>Sort by</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="mt-2 bg-gray-100 p-2 rounded-md shadow-[200px]">
-                <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
-                  {sortOptions.map((sortItem) => (
-                    <DropdownMenuRadioItem className="hover:cursor-pointer" value={sortItem.id} key={sortItem.id}>
-                      {sortItem.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+    <>
+      <Helmet>
+        <title>New Arrivals | Rachana Boutique</title>
+        <meta name="description" content="Discover our latest arrivals - fresh designs and styles just added to our collection at Rachana Boutique." />
+      </Helmet>
+
+      <div className="bg-white">
+        {/* Banner */}
+        <div className="relative w-full h-[250px] md:h-[350px] overflow-hidden">
+          <img
+            src={newArrivalsBanner}
+            alt="New Arrivals"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-35 flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-4xl md:text-5xl font-light uppercase tracking-wide text-white mb-4">
+                New Arrivals
+              </h1>
+              <div className="w-24 h-1 bg-white mx-auto"></div>
+            </div>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {newArrivalProducts && newArrivalProducts.length > 0 ? (
-            newArrivalProducts.map((productItem) => (
-              <ShoppingProductTile
-                key={productItem.id}
-                handleGetProductDetails={handleGetProductDetails}
-                product={productItem}
-                handleAddtoCart={handleAddtoCart}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center">No new arrivals found</div>
-          )}
+
+       
+
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-white">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
+              <div>
+                <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
+                  New Arrivals
+                </h2>
+                <p className="text-gray-500">
+                  Showing {newArrivalProducts.length} products
+                </p>
+              </div>
+              <div className="mt-4 md:mt-0">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    <ArrowUpDownIcon className="h-4 w-4" />
+                    <span>Sort by: {sortOptions.find(option => option.id === sort)?.label || 'Default'}</span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="mt-2 bg-white p-2 rounded-md shadow-lg border border-gray-200">
+                    <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
+                      {sortOptions.map((sortItem) => (
+                        <DropdownMenuRadioItem
+                          className="hover:bg-gray-100 cursor-pointer px-4 py-2 rounded-md"
+                          value={sortItem.id}
+                          key={sortItem.id}
+                        >
+                          {sortItem.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {/* Products Grid - Using Original ShoppingProductTile */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {newArrivalProducts && newArrivalProducts.length > 0 ? (
+                newArrivalProducts.map((productItem) => (
+                  <ShoppingProductTile
+                    key={productItem._id}
+                    handleGetProductDetails={handleGetProductDetails}
+                    product={productItem}
+                    handleAddtoCart={handleAddtoCart}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-16">
+                  <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-100">
+                    <ShoppingBag className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-medium mb-2">No New Arrivals Found</h3>
+                  <p className="text-gray-500 mb-6">Check back soon for our latest products</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-      {/* 
-      <ProductDetailsDialog
-        open={openDetailsDialog}
-        setOpen={setOpenDetailsDialog}
-        productDetails={productDetails}
-      /> 
-      */}
-    </div>
+    </>
   );
 }
 
