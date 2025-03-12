@@ -183,7 +183,7 @@ function SearchProducts() {
           <h3 className="text-xl font-medium mb-4">
             {suggestions.length} {suggestions.length === 1 ? 'result' : 'results'} for "{keyword}"
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {suggestions.map((item) => (
               <ShoppingProductTile
                 key={item._id}

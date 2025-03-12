@@ -10,7 +10,8 @@ const ProductSlider = ({
   handleAddtoCart,
   title,
   description,
-  bgColor = "bg-gray-50" // Default background color
+  bgColor = "bg-gray-50",
+  isNewArrival,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -18,8 +19,8 @@ const ProductSlider = ({
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Responsive items per slide: 1 for mobile, 4 for desktop
-  const itemsPerSlide = isMobile ? 1 : 4;
+  // Responsive items per slide: 2 for mobile, 4 for desktop
+  const itemsPerSlide = isMobile ? 2 : 5;
 
   // Update isMobile state on window resize
   useEffect(() => {
@@ -89,7 +90,7 @@ const ProductSlider = ({
             <p className="text-gray-600">{description}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8">
             {products.map((product, index) => (
               <motion.div
                 key={product._id}
@@ -112,13 +113,13 @@ const ProductSlider = ({
             ))}
           </div>
 
-          {/* View all products button */}
+          {/* View products button */}
           <div className="text-center mt-12">
             <button
-              onClick={() => navigate('/shop/collections')}
+              onClick={() => navigate(isNewArrival ? '/shop/new-arrivals' : '/shop/collections')}
               className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
             >
-              View All Products
+              {isNewArrival ? 'View New Products' : 'View All Products'}
             </button>
           </div>
         </div>
@@ -157,7 +158,7 @@ const ProductSlider = ({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.5 }}
-                className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'} gap-6 md:gap-8`}
+                className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-6 md:gap-8`}
               >
                 {getCurrentSlideProducts().map((product, index) => (
                   <motion.div
@@ -202,13 +203,13 @@ const ProductSlider = ({
           )}
         </div>
 
-        {/* View all products button */}
+        {/* View products button */}
         <div className="text-center mt-12">
           <button
-            onClick={() => navigate('/shop/collections')}
+            onClick={() => navigate(isNewArrival ? '/shop/new-arrivals' : '/shop/collections')}
             className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
           >
-            View All Products
+            {isNewArrival ? 'View New Products' : 'View All Products'}
           </button>
         </div>
       </div>

@@ -5,39 +5,45 @@ import FeedbackCard from './feedback-card';
 import { motion } from 'framer-motion';
 
 // Updated testimonials for a clothing store
+
 const testimonials = [
   {
-    name: "Sophia Chen",
+    name: "Priya Sharma",
     title: "Fashion Enthusiast",
     review:
       "The quality of their clothing is exceptional! Every piece I've purchased has become a staple in my wardrobe. The attention to detail and fit is perfect.",
     image: "https://randomuser.me/api/portraits/women/25.jpg",
   },
   {
-    name: "Emma Wilson",
+    name: "Ananya Patel",
     title: "Loyal Customer",
-    review: "I love how their collections are always on-trend yet timeless. The fabrics are comfortable and the styles are versatile enough for both work and weekends.",
+    review:
+      "I love how their collections are always on-trend yet timeless. The fabrics are comfortable and the styles are versatile enough for both work and weekends.",
     image: "https://randomuser.me/api/portraits/women/30.jpg",
   },
   {
-    name: "Olivia Martinez",
+    name: "Riya Verma",
     title: "Style Blogger",
-    review: "As someone who's very particular about fashion, I'm impressed by their consistent quality and design aesthetic. Their customer service is also outstanding!",
+    review:
+      "As someone who's very particular about fashion, I'm impressed by their consistent quality and design aesthetic. Their customer service is also outstanding!",
     image: "https://randomuser.me/api/portraits/women/35.jpg",
   },
   {
-    name: "Ava Johnson",
+    name: "Kavya Reddy",
     title: "Fashion Consultant",
-    review: "The pieces I ordered arrived promptly and exceeded my expectations. The fit is perfect and the materials are high quality. Will definitely shop here again!",
+    review:
+      "The pieces I ordered arrived promptly and exceeded my expectations. The fit is perfect and the materials are high quality. Will definitely shop here again!",
     image: "https://randomuser.me/api/portraits/women/40.jpg",
   },
   {
-    name: "Isabella Taylor",
+    name: "Aarohi Gupta",
     title: "Regular Shopper",
-    review: "Their clothing has transformed my wardrobe. The pieces mix and match beautifully, and I always receive compliments when wearing their designs.",
+    review:
+      "Their clothing has transformed my wardrobe. The pieces mix and match beautifully, and I always receive compliments when wearing their designs.",
     image: "https://randomuser.me/api/portraits/women/45.jpg",
   },
 ];
+
 
 const Testimonials = () => {
   const settings = {

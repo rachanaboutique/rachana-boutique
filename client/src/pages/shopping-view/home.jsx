@@ -98,7 +98,7 @@ function ShoppingHome() {
 
   const isAnyLoading = productsLoading || bannersLoading || categoriesLoading || instaFeedLoading;
   if (isAnyLoading) return <Loader />;
-console.log(categoriesList  )
+  console.log(categoriesList)
   return (
     <>
 
@@ -124,7 +124,7 @@ console.log(categoriesList  )
         <div className="relative w-full h-[400px] md:h-[700px] mb-0">
           <Carousel bannersList={bannersList} />
         </div>
-        <section className="py-8 md:py-16 bg-white">
+        {/* <section className="py-8 md:py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-2 md:mb-12">
               <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Shop by Category</h2>
@@ -132,7 +132,7 @@ console.log(categoriesList  )
             <p className="text-gray-600">Discover our curated collections designed for every style and occasion</p>
             </div>
 
-            {/* Masonry layout using CSS columns */}
+           
             <div
               className="masonry-grid"
               style={{
@@ -145,7 +145,7 @@ console.log(categoriesList  )
                   key={categoryItem._id || index}
                   className="masonry-item mb-4 md:mb-6 break-inside-avoid"
                   style={{
-                    // Stagger the animation delay based on index
+          
                     animationDelay: `${index * 0.1}s`
                   }}
                 >
@@ -170,53 +170,7 @@ console.log(categoriesList  )
               ))}
             </div>
 
-            {/* View all categories button */}
-            <div className="text-center mt-12">
-              <button
-                onClick={() => navigate('/shop/collections')}
-                className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
-              >
-                View All Collections
-              </button>
-            </div>
-          </div>
-        </section>
-
-
-      {/*   <section className="pt-0 pb-8 md:py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-2 md:mb-12">
-              <h2 className="text-xl md:text-4xl font-light uppercase tracking-wide mb-1 md:mb-4">Shop by Category</h2>
-              <div className="w-12 md:w-24 h-1 bg-black mx-auto mb-1 md:mb-6"></div>
-              <p className="text-xs md:text-base text-gray-600">Discover our curated collections designed for every style and occasion</p>
-            </div>
-
-        
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {categoriesList && categoriesList.map((categoryItem, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.1 }}
-                  transition={{
-                    duration: 0.5,
-                    delay: index * 0.1,
-                    type: "spring",
-                    stiffness: 50,
-                  }}
-                  className="w-full"
-                >
-                  <CategoryCard
-                    categoryItem={categoryItem}
-                    index={index}
-                    variant="masonry"
-                  />
-                </motion.div>
-              ))}
-            </div>
-
-      
+           
             <div className="text-center mt-12">
               <button
                 onClick={() => navigate('/shop/collections')}
@@ -227,6 +181,53 @@ console.log(categoriesList  )
             </div>
           </div>
         </section> */}
+
+
+        <section className="pt-8 pb-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Shop by Category</h2>
+              <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
+              <p className="text-gray-600">Discover our curated collections designed for every style and occasion</p>
+            </div>
+
+            {/* Masonry layout container */}
+            <div className="columns-1 sm:columns-2 md:columns-3 gap-4">
+              {categoriesList &&
+                categoriesList.map((categoryItem, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.1 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: index * 0.1,
+                      type: "spring",
+                      stiffness: 50,
+                    }}
+                    className="break-inside-avoid mb-4"
+                  >
+                    <CategoryCard
+                      categoryItem={categoryItem}
+                      index={index}
+                      variant="masonry"
+                    />
+                  </motion.div>
+                ))}
+            </div>
+
+            <div className="text-center mt-12">
+              <button
+                onClick={() => navigate("/shop/collections")}
+                className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+              >
+                View All Collections
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* Featured Products Slider */}
         {productList && productList.filter(product => product?.isFeatured).length > 0 && (
           <ProductSlider
@@ -248,6 +249,7 @@ console.log(categoriesList  )
             title="New Arrivals"
             description="Explore our latest additions and be the first to wear them"
             bgColor="bg-white"
+            isNewArrival={true}
           />
         )}
 

@@ -192,7 +192,7 @@ function ShoppingListing() {
           <div className="absolute inset-0 bg-black bg-opacity-35 flex items-center justify-center">
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-light uppercase tracking-wide text-white mb-4">
-                {currentCategory?.title || "All Products"}
+                {currentCategory?.name || "All Products"}
               </h1>
               <div className="w-24 h-1 bg-white mx-auto"></div>
             </div>

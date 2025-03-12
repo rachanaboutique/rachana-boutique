@@ -148,7 +148,7 @@ const Footer = () => {
               <h4 className="text-lg font-semibold text-foreground mb-4">Explore Products</h4>
               <ul className="space-y-2">
                 <li><Link to="/shop/home" className="text-md hover:underline hover:text-rose-600 transition">Home</Link></li>
-                <li><Link to="/shop/collection" className="text-md hover:underline hover:text-rose-600 transition">Collection</Link></li>
+                <li><Link to="/shop/collections" className="text-md hover:underline hover:text-rose-600 transition">Collections</Link></li>
                 <li><Link to="/shop/new-arrivals" className="text-md hover:underline hover:text-rose-600 transition">New Arrivals</Link></li>
               </ul>
             </div>
@@ -181,11 +181,12 @@ const Footer = () => {
                 </div>
                 {/* Social Media Links */}
                 <div className="flex gap-4 mt-3">
-                  <a href="#" className="text-gray-700 hover:text-rose-600 transition">
-                    <Facebook size={24} />
-                  </a>
-                  <a href="#" className="text-gray-700 hover:text-rose-600 transition">
+              
+                  <a href="https://www.instagram.com/rachanas_boutique?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" className="text-gray-700 hover:text-rose-600 transition" target="_blank" rel="noopener noreferrer">
                     <Instagram size={24} />
+                  </a>
+                  <a href="https://www.facebook.com/profile.php?id=61570600405333" className="text-gray-700 hover:text-rose-600 transition" target="_blank" rel="noopener noreferrer">
+                    <Facebook size={24} />
                   </a>
                   <a href="https://wa.me/9944783389" className="text-gray-700 hover:text-rose-600 transition" target="_blank" rel="noopener noreferrer">
                     <FaWhatsapp size={24} />

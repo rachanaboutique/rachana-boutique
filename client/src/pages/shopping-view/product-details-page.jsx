@@ -405,7 +405,7 @@ function ProductDetailsPage({ open, setOpen }) {
             <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
             <p className="text-gray-600">Discover more items that complement your style</p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {relatedProducts.map((productItem) => (
               <ShoppingProductTile
                 key={productItem._id}

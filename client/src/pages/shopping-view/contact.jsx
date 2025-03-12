@@ -176,15 +176,7 @@ const Contact = () => {
                   <p className="text-gray-600 mb-6">Follow us on social media to stay updated with our latest collections and offers.</p>
 
                   <div className="flex flex-wrap gap-4">
-                    <a
-                      href="https://facebook.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
-                    >
-                      <Facebook size={20} className="text-blue-600" />
-                      <span>Facebook</span>
-                    </a>
+                   
                     <a
                       href="https://www.instagram.com/rachanas_boutique?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
                       target="_blank"
@@ -195,7 +187,16 @@ const Contact = () => {
                       <span>Instagram</span>
                     </a>
                     <a
-                      href="https://wa.me/919876543210"
+                      href="https://www.facebook.com/profile.php?id=61570600405333"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
+                    >
+                      <Facebook size={20} className="text-blue-600" />
+                      <span>Facebook</span>
+                    </a>
+                    <a
+                      href="https://wa.me/9944783389"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"

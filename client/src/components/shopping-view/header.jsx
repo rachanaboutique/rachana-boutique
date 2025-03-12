@@ -27,7 +27,8 @@ import {
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { logoutUser } from "@/store/auth-slice";
 import UserCartWrapper from "./cart-wrapper";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
+import RotatingMessages from "./rotating-messages";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
 import { FaWhatsapp } from "react-icons/fa";
@@ -37,7 +38,6 @@ function ShoppingHeader() {
   const { isAuthenticated } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [openCartSheet, setOpenCartSheet] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate(); // Add navigate at the component level
@@ -137,7 +137,17 @@ function ShoppingHeader() {
           </button>
 
           {/* Cart icon */}
-          <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
+          <Sheet
+            open={openCartSheet}
+            onOpenChange={(open) => {
+              // Only allow the sheet to be closed by user actions, not by re-renders
+              if (!open) {
+                setOpenCartSheet(false);
+              } else {
+                setOpenCartSheet(true);
+              }
+            }}
+          >
             <SheetTrigger asChild>
               <button
                 className="relative group flex items-center"
@@ -243,29 +253,7 @@ function ShoppingHeader() {
     }, 0);
   }
 
-  // For announcement messages, use a ref to store the interval ID
-  const messageIntervalRef = useRef(null);
-
-  // Set up the message rotation when the component mounts
-  // and clean it up when the component unmounts
-  useEffect(() => {
-    // Only set up if we don't already have an interval
-    if (!messageIntervalRef.current) {
-      messageIntervalRef.current = setInterval(() => {
-        // Use a functional update to avoid dependencies on currentMessageIndex
-        setCurrentMessageIndex(prevIndex => (prevIndex + 1) % messages.length);
-      }, 5000);
-    }
-
-    // Clean up on unmount
-    return () => {
-      if (messageIntervalRef.current) {
-        clearInterval(messageIntervalRef.current);
-        messageIntervalRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array means this runs once on mount
+  // Messages are now handled by the RotatingMessages component
 
   return (
     <>
@@ -285,32 +273,18 @@ function ShoppingHeader() {
             </div>
 
             <div className="w-full md:w-auto flex justify-center">
-              <div className="overflow-hidden h-5">
-                <div
-                  key={currentMessageIndex}
-                  className="text-xs md:text-sm font-medium text-center animate-fade-in"
-                  style={{
-                    animation: 'fadeIn 0.5s ease-in-out',
-                    opacity: 1,
-                  }}
-                >
-                  {messages[currentMessageIndex]}
-                </div>
-              </div>
+              <RotatingMessages
+                messages={messages}
+                interval={5000}
+                className="w-full"
+              />
             </div>
 
-            <style jsx>{`
-              @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-              }
-            `}</style>
-
             <div className="hidden md:flex items-center space-x-3">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
+              <a href="https://www.instagram.com/rachanas_boutique?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
                 <Instagram className="h-4 w-4" />
               </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
+              <a href="https://www.facebook.com/profile.php?id=61570600405333" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
                 <Facebook className="h-4 w-4" />
               </a>
               <a href="https://wa.me/9944783389" className="hover:text-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">
@@ -371,7 +345,17 @@ function ShoppingHeader() {
                 <Search className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
                 <span className="sr-only">Search</span>
               </button>
-              <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
+              <Sheet
+                open={openCartSheet}
+                onOpenChange={(open) => {
+                  // Only allow the sheet to be closed by user actions, not by re-renders
+                  if (!open) {
+                    setOpenCartSheet(false);
+                  } else {
+                    setOpenCartSheet(true);
+                  }
+                }}
+              >
                 <SheetTrigger asChild>
                   <button className="relative group">
                     <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
