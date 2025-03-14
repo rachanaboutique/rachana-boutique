@@ -158,7 +158,7 @@ const ProductSlider = ({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.5 }}
-                className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-4'} gap-6 md:gap-8`}
+                className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-5'} gap-6 md:gap-8`}
               >
                 {getCurrentSlideProducts().map((product, index) => (
                   <motion.div

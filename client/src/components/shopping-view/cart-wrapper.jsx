@@ -2,8 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import UserCartItemsContent from "./cart-items-content";
+import { memo } from "react";
 
-function UserCartWrapper({ cartItems, setOpenCartSheet, onMenuClose }) {
+// Using memo to prevent unnecessary re-renders
+const UserCartWrapper = memo(function UserCartWrapper({ cartItems, setOpenCartSheet, onMenuClose }) {
   const navigate = useNavigate();
 
   const totalCartAmount =
@@ -24,7 +26,13 @@ function UserCartWrapper({ cartItems, setOpenCartSheet, onMenuClose }) {
       </SheetHeader>
       <div className="mt-8 space-y-4">
         {cartItems && cartItems.length > 0
-          ? cartItems.map((item, index) => <UserCartItemsContent key={index} cartItem={item} />)
+          ? cartItems.map((item, index) => (
+              <UserCartItemsContent
+                key={index}
+                cartItem={item}
+                setOpenCartSheet={setOpenCartSheet}
+              />
+            ))
           : <p className="text-center">Your cart is empty</p>}
       </div>
       <div className="mt-8 space-y-4">
@@ -45,6 +53,5 @@ function UserCartWrapper({ cartItems, setOpenCartSheet, onMenuClose }) {
       </Button>
     </SheetContent>
   );
-}
-
+})
 export default UserCartWrapper;

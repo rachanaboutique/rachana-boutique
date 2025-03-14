@@ -509,8 +509,8 @@ const updateCartItemQty = async (req, res) => {
 };
 
 const deleteCartItem = async (req, res) => {
-  try { 
-    const { userId, productId } = req.params;
+  try {
+    const { userId, productId, colorId } = req.params;
     if (!userId || !productId) {
       return res.status(400).json({
         success: false,
@@ -530,9 +530,18 @@ const deleteCartItem = async (req, res) => {
       });
     }
 
-    cart.items = cart.items.filter(
-      (item) => !(item.productId._id.toString() === productId )
-    );
+    // If colorId is provided, only remove items with matching productId AND colorId
+    if (colorId) {
+      cart.items = cart.items.filter(
+        (item) => !(item.productId._id.toString() === productId &&
+                   item.colors._id.toString() === colorId)
+      );
+    } else {
+      // If no colorId, remove all items with matching productId (old behavior)
+      cart.items = cart.items.filter(
+        (item) => !(item.productId._id.toString() === productId)
+      );
+    }
 
     await cart.save();
 

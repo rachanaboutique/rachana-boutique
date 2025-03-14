@@ -1,4 +1,4 @@
-import { FileIcon, UploadCloudIcon, XIcon } from "lucide-react";
+import { FileIcon, UploadCloudIcon, XIcon, Loader2 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +17,8 @@ function ProductImageUpload({
   isSingleImage = false, // Controls single vs. multiple uploads
 }) {
   const [isUploading, setIsUploading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState([]);
   const inputRef = useRef(null);
 
   function handleImageFileChange(event) {
@@ -25,14 +27,23 @@ function ProductImageUpload({
       if (isSingleImage) {
         // For single image mode, replace the current arrays
         setImageFiles([selectedFiles[0]]);
-        setImageLoadingStates([false]);
+        setImageLoadingStates([true]);
         setUploadedImageUrls([]);
+        setPendingUploads([{ file: selectedFiles[0], index: 0 }]);
       } else {
         // For multiple images, append to the existing files
+        const currentLength = imageFiles?.length || 0;
+        const newFiles = selectedFiles.map((file, idx) => ({
+          file,
+          index: currentLength + idx
+        }));
+
+        setPendingUploads(prev => [...prev, ...newFiles]);
+
         setImageFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
         setImageLoadingStates((prevStates) => [
           ...prevStates,
-          ...selectedFiles.map(() => false),
+          ...selectedFiles.map(() => true),
         ]);
       }
     }
@@ -44,13 +55,22 @@ function ProductImageUpload({
     if (droppedFiles.length > 0) {
       if (isSingleImage) {
         setImageFiles([droppedFiles[0]]);
-        setImageLoadingStates([false]);
+        setImageLoadingStates([true]);
         setUploadedImageUrls([]);
+        setPendingUploads([{ file: droppedFiles[0], index: 0 }]);
       } else {
+        const currentLength = imageFiles?.length || 0;
+        const newFiles = droppedFiles.map((file, idx) => ({
+          file,
+          index: currentLength + idx
+        }));
+
+        setPendingUploads(prev => [...prev, ...newFiles]);
+
         setImageFiles((prevFiles) => [...prevFiles, ...droppedFiles]);
         setImageLoadingStates((prevStates) => [
           ...prevStates,
-          ...droppedFiles.map(() => false),
+          ...droppedFiles.map(() => true),
         ]);
       }
     }
@@ -67,6 +87,9 @@ function ProductImageUpload({
       return;
     }
 
+    // Set removing flag to prevent triggering uploads
+    setIsRemoving(true);
+
     if (isSingleImage) {
       setImageFiles([]);
       setUploadedImageUrls([]);
@@ -76,6 +99,11 @@ function ProductImageUpload({
       setUploadedImageUrls((prev) => prev.filter((_, i) => i !== index));
       setImageLoadingStates((prev) => prev.filter((_, i) => i !== index));
     }
+
+    // Reset removing flag after a short delay to ensure state updates have completed
+    setTimeout(() => {
+      setIsRemoving(false);
+    }, 100);
   }
 
   async function uploadImageToCloudinary(file, index) {
@@ -103,6 +131,11 @@ function ProductImageUpload({
           setUploadedImageUrls((prevUrls) => [...prevUrls, response.data.result[0].url]);
         }
       }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      // Remove the failed file from imageFiles
+      setImageFiles((prev) => prev.filter((_, i) => i !== index));
+      setImageLoadingStates((prev) => prev.filter((_, i) => i !== index));
     } finally {
       // Mark file upload as complete
       setImageLoadingStates((prevStates) => {
@@ -110,19 +143,27 @@ function ProductImageUpload({
         updatedStates[index] = false;
         return updatedStates;
       });
-      setIsUploading(false);
+
+      // Remove from pending uploads
+      setPendingUploads(prev => prev.filter(item => item.index !== index));
+
+      // Only set isUploading to false if no more pending uploads
+      if (pendingUploads.length <= 1) {
+        setIsUploading(false);
+      }
     }
   }
 
+  // Process pending uploads
   useEffect(() => {
-    // Only upload if the file is a new File object (and hasn't been uploaded)
-    imageFiles?.forEach((file, index) => {
-      if (file instanceof File) {
-        uploadImageToCloudinary(file, index);
-      }
-    });
+    if (isRemoving || pendingUploads.length === 0) return;
+
+    // Process one upload at a time
+    const { file, index } = pendingUploads[0];
+    uploadImageToCloudinary(file, index);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageFiles]);
+  }, [pendingUploads, isRemoving]);
 
   return (
     <div className={`w-full mt-4 ${isCustomStyling ? "" : "max-w-md mx-auto"}`}>
@@ -135,8 +176,9 @@ function ProductImageUpload({
         className="border-2 border-dashed rounded-lg p-4"
       >
         {isUploading && (
-          <div className="text-center text-muted-foreground mb-4">
-            Uploading... Please wait...
+          <div className="flex items-center justify-center text-muted-foreground mb-4 bg-gray-50 p-2 rounded">
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <span>Uploading {pendingUploads.length} image{pendingUploads.length !== 1 ? 's' : ''}...</span>
           </div>
         )}
 
@@ -144,21 +186,27 @@ function ProductImageUpload({
         {uploadedImageUrls && uploadedImageUrls.length > 0 && (
           <div className="flex flex-wrap gap-4 mb-4">
             {uploadedImageUrls.map((url, index) => (
-              <div key={index} className="relative">
+              <div key={`${url}-${index}`} className="relative">
                 <img
                   src={url}
                   alt={`Uploaded ${index + 1}`}
                   className="w-32 h-32 object-cover rounded-lg"
                 />
-                <button
-                  variant="ghost"
-                  size="icon"
-                  className="p-2 rounded-md bg-gray-100 absolute top-0 right-0 text-muted-foreground hover:bg-foreground hover:text-background"
-                  onClick={() => handleRemoveImage(index)}
-                >
-                  <XIcon className="w-4 h-4" />
-                  <span className="sr-only">Remove Image</span>
-                </button>
+                {imageLoadingStates[index] ? (
+                  <div className="absolute top-0 right-0 p-2 rounded-md bg-gray-100">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="p-2 rounded-md bg-gray-100 absolute top-0 right-0 text-muted-foreground hover:bg-foreground hover:text-background"
+                    onClick={() => handleRemoveImage(index)}
+                    disabled={isUploading}
+                  >
+                    <XIcon className="w-4 h-4" />
+                    <span className="sr-only">Remove Image</span>
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -167,11 +215,14 @@ function ProductImageUpload({
         {/* Always display the upload option so that users can add/replace images */}
         <Label
           htmlFor="image-upload"
-          className="flex flex-col items-center justify-center h-32 cursor-pointer border border-dashed rounded-lg p-4"
+          className={`flex flex-col items-center justify-center h-32 cursor-pointer border border-dashed rounded-lg p-4 hover:bg-gray-50 transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
         >
           <UploadCloudIcon className="w-10 h-10 text-muted-foreground mb-2" />
           <span>
             Drag & drop or click to upload {isSingleImage ? "an image" : "images"}
+          </span>
+          <span className="text-xs text-gray-500 mt-1">
+            {isSingleImage ? "1 image maximum" : "Multiple images allowed"}
           </span>
         </Label>
 
@@ -183,6 +234,8 @@ function ProductImageUpload({
           ref={inputRef}
           onChange={handleImageFileChange}
           multiple={!isSingleImage}
+          accept="image/*"
+          disabled={isUploading}
         />
       </div>
     </div>

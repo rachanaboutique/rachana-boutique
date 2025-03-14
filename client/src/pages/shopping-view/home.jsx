@@ -228,17 +228,7 @@ function ShoppingHome() {
           </div>
         </section>
 
-        {/* Featured Products Slider */}
-        {productList && productList.filter(product => product?.isFeatured).length > 0 && (
-          <ProductSlider
-            products={productList.filter(product => product?.isFeatured)}
-            handleGetProductDetails={handleGetProductDetails}
-            handleAddtoCart={handleAddtoCart}
-            title="Featured Collection"
-            description="Discover our most popular styles and seasonal favorites"
-            bgColor="bg-gray-50"
-          />
-        )}
+        
 
         {/* New Arrivals Slider */}
         {productList && productList.filter(product => product?.isNewArrival).length > 0 && (
@@ -250,6 +240,18 @@ function ShoppingHome() {
             description="Explore our latest additions and be the first to wear them"
             bgColor="bg-white"
             isNewArrival={true}
+          />
+        )}
+
+        {/* Featured Products Slider */}
+        {productList && productList.filter(product => product?.isFeatured).length > 0 && (
+          <ProductSlider
+            products={productList.filter(product => product?.isFeatured)}
+            handleGetProductDetails={handleGetProductDetails}
+            handleAddtoCart={handleAddtoCart}
+            title="Featured Picks"
+            description="Discover our most popular styles and seasonal favorites"
+            bgColor="bg-gray-50"
           />
         )}
 

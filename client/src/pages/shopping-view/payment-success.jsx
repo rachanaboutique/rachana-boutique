@@ -14,7 +14,7 @@ function PaymentSuccessPage() {
 
       <div className="bg-white min-h-[80vh] flex flex-col">
         {/* Page Header */}
-        <div className="bg-gray-50 py-8 border-b border-gray-200">
+        <div className="mt-12 bg-gray-50 py-8 border-b border-gray-200">
           <div className="container mx-auto px-4">
             <h1 className="text-3xl font-light uppercase tracking-wide text-center mb-2">Payment Successful</h1>
             <div className="w-16 h-0.5 bg-black mx-auto"></div>

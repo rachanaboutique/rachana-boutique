@@ -39,8 +39,12 @@ export const fetchCartItems = createAsyncThunk(
 // Delete Cart Item
 export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
-  async ({ userId, productId}, { rejectWithValue }) => {
-    const url = `${import.meta.env.VITE_BACKEND_URL}/shop/cart/${userId}/${productId}`;
+  async ({ userId, productId, colorId }, { rejectWithValue }) => {
+    // If colorId is provided, use it in the URL
+    const url = colorId
+      ? `${import.meta.env.VITE_BACKEND_URL}/shop/cart/${userId}/${productId}/${colorId}`
+      : `${import.meta.env.VITE_BACKEND_URL}/shop/cart/${userId}/${productId}`;
+
     try {
       const response = await axios.delete(url);
       return response.data;

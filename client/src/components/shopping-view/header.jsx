@@ -27,7 +27,7 @@ import {
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { logoutUser } from "@/store/auth-slice";
 import UserCartWrapper from "./cart-wrapper";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import RotatingMessages from "./rotating-messages";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
@@ -39,6 +39,8 @@ function ShoppingHeader() {
   const { cartItems } = useSelector((state) => state.shopCart);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [openCartSheet, setOpenCartSheet] = useState(false);
+  // Use a ref to track the last time the cart sheet state was changed
+  const lastCartSheetToggleTime = useRef(0);
   const { toast } = useToast();
   const navigate = useNavigate(); // Add navigate at the component level
 
@@ -140,17 +142,24 @@ function ShoppingHeader() {
           <Sheet
             open={openCartSheet}
             onOpenChange={(open) => {
-              // Only allow the sheet to be closed by user actions, not by re-renders
-              if (!open) {
-                setOpenCartSheet(false);
-              } else {
-                setOpenCartSheet(true);
+              // Prevent rapid toggling of the cart sheet
+              const now = Date.now();
+              if (open !== openCartSheet && now - lastCartSheetToggleTime.current > 300) {
+                lastCartSheetToggleTime.current = now;
+                setOpenCartSheet(open);
               }
             }}
           >
             <SheetTrigger asChild>
               <button
                 className="relative group flex items-center"
+                onClick={(e) => {
+                  // Prevent multiple rapid clicks
+                  if (isFetchingCart.current) {
+                    e.preventDefault();
+                    return;
+                  }
+                }}
               >
                 <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
                 {cartItems?.length > 0 && (
@@ -241,17 +250,35 @@ function ShoppingHeader() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-  // Using a ref to track if cart items have been fetched
+  // Using refs to track fetch operations
   const hasInitiallyFetchedCart = useRef(false);
+  const isFetchingCart = useRef(false);
+  const lastFetchTime = useRef(0);
 
-  // Manually fetch cart items once without using useEffect
-  if (user?.id && !hasInitiallyFetchedCart.current) {
-    hasInitiallyFetchedCart.current = true;
-    // Use setTimeout to defer the dispatch until after the initial render
-    setTimeout(() => {
+  // Fetch cart items when the component mounts or when user changes
+  useEffect(() => {
+    if (user?.id && !hasInitiallyFetchedCart.current) {
+      hasInitiallyFetchedCart.current = true;
       dispatch(fetchCartItems(user.id));
-    }, 0);
-  }
+    }
+  }, [user?.id, dispatch]);
+
+  // Separate effect to handle cart sheet opening
+  useEffect(() => {
+    if (user?.id && openCartSheet) {
+      // Prevent multiple fetches within a short time period (500ms)
+      const now = Date.now();
+      if (!isFetchingCart.current && now - lastFetchTime.current > 500) {
+        isFetchingCart.current = true;
+        lastFetchTime.current = now;
+
+        dispatch(fetchCartItems(user.id))
+          .finally(() => {
+            isFetchingCart.current = false;
+          });
+      }
+    }
+  }, [openCartSheet, user?.id, dispatch]);
 
   // Messages are now handled by the RotatingMessages component
 
@@ -348,16 +375,25 @@ function ShoppingHeader() {
               <Sheet
                 open={openCartSheet}
                 onOpenChange={(open) => {
-                  // Only allow the sheet to be closed by user actions, not by re-renders
-                  if (!open) {
-                    setOpenCartSheet(false);
-                  } else {
-                    setOpenCartSheet(true);
+                  // Prevent rapid toggling of the cart sheet
+                  const now = Date.now();
+                  if (open !== openCartSheet && now - lastCartSheetToggleTime.current > 300) {
+                    lastCartSheetToggleTime.current = now;
+                    setOpenCartSheet(open);
                   }
                 }}
               >
                 <SheetTrigger asChild>
-                  <button className="relative group">
+                  <button
+                    className="relative group"
+                    onClick={(e) => {
+                      // Prevent multiple rapid clicks
+                      if (isFetchingCart.current) {
+                        e.preventDefault();
+                        return;
+                      }
+                    }}
+                  >
                     <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
                     {cartItems?.length > 0 && (
                       <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
@@ -377,9 +413,7 @@ function ShoppingHeader() {
           </div>
         </div>
       </header>
-
-      {/* Spacer to prevent content from being hidden under fixed header */}
-      <div className="h-[calc(4rem+2.5rem)]"></div>
+      <div className="h-[calc(4.9rem)]"></div>
     </>
   );
 }

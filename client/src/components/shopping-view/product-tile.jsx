@@ -64,26 +64,28 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
         </button>
 
         {/* Dynamic Badges */}
+    
         {product?.totalStock === 0 ? (
-          <Badge className="absolute top-3 left-3 bg-destructive text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
+          <Badge className="absolute top-3 left-3 bg-red-700 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
             Out Of Stock
           </Badge>
         ) : product?.totalStock < 10 ? (
-          <Badge className="absolute top-3 left-3 bg-orange-500 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
+          <Badge className="absolute top-3 left-3 bg-orange-600 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
             {`Only ${product?.totalStock} left`}
           </Badge>
         ) : product?.salePrice > 0 ? (
           <>
-            <Badge className="absolute top-3 left-3 bg-muted text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
+            <Badge className="absolute top-3 left-3 bg-green-700 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
               Sale
             </Badge>
             {product?.isFeatured && (
-              <Badge className="absolute top-12 left-3 bg-accent text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
+              <Badge className="absolute top-12 left-3 bg-blue-700 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
                 Featured
               </Badge>
             )}
           </>
         ) : null}
+
 
         {/* Quick action buttons (visible on hover) */}
         <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 p-3 translate-y-full transition-transform duration-300 group-hover:translate-y-0">
