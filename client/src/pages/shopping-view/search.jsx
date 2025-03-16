@@ -69,13 +69,31 @@ function SearchProducts() {
     }
   }, []);
 
-  function handleAddtoCart(getCurrentProductId) {
+  function handleAddtoCart(getCurrentProductId, totalStock, product) {
+    // Find the product in the product list
+    const currentProduct = product || productList.find((p) => p._id === getCurrentProductId);
+
+    if (!currentProduct) {
+      toast({
+        title: "Product not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if the product has colors
+    const hasColors = currentProduct.colors && currentProduct.colors.length > 0;
+
+    // Use the first color if available, otherwise null
+    const colorId = hasColors ? currentProduct.colors[0]._id : null;
+
     dispatch(
       addToCart({
         userId: user?.id,
         productId: getCurrentProductId,
         quantity: 1,
-        colorId: productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
+        colorId: colorId,
+        product: currentProduct // Pass the entire product for reference
       })
     ).then((data) => {
       if (data?.payload?.success) {

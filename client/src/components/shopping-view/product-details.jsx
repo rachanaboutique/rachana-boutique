@@ -30,6 +30,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
   function handleAddToCart(getCurrentProductId, getTotalStock) {
     let getCartItems = cartItems.items || [];
 
+    // Check if we're exceeding stock limits
     if (getCartItems.length) {
       const indexOfCurrentItem = getCartItems.findIndex(
         (item) => item.productId === getCurrentProductId
@@ -41,16 +42,24 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
             title: `Only ${getQuantity} quantity can be added for this item`,
             variant: "destructive",
           });
-
           return;
         }
       }
     }
+
+    // Check if the product has colors
+    const hasColors = productDetails?.colors && productDetails.colors.length > 0;
+
+    // Use the first color if available, otherwise null
+    const colorId = hasColors ? productDetails.colors[0]._id : null;
+
     dispatch(
       addToCart({
         userId: user?.id,
         productId: getCurrentProductId,
         quantity: 1,
+        colorId: colorId,
+        product: productDetails // Pass the entire product for reference
       })
     ).then((data) => {
       if (data?.payload?.success) {

@@ -26,7 +26,8 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
         variant: "destructive",
       });
     } else {
-      handleAddtoCart(productId, totalStock);
+      // Pass the entire product to handle color selection properly
+      handleAddtoCart(productId, totalStock, product);
     }
   };
 
@@ -34,6 +35,9 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
     e.stopPropagation();
     setLiked(!liked);
   };
+
+  // Determine if product has color options
+  const hasColorOptions = product?.colors && product.colors.length > 0;
 
   return (
     <Card className="w-full max-w-[320px] mx-auto shadow-lg rounded-none overflow-hidden border border-gray-100 group transition-all duration-300 hover:shadow-xl">
@@ -64,7 +68,6 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
         </button>
 
         {/* Dynamic Badges */}
-    
         {product?.totalStock === 0 ? (
           <Badge className="absolute top-3 left-3 bg-red-700 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
             Out Of Stock
@@ -86,6 +89,12 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
           </>
         ) : null}
 
+        {/* Color options badge if available */}
+        {hasColorOptions && (
+          <Badge className="absolute top-3 right-12 bg-purple-600 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
+            {product.colors.length} {product.colors.length === 1 ? 'Color' : 'Colors'}
+          </Badge>
+        )}
 
         {/* Quick action buttons (visible on hover) */}
         <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 p-3 translate-y-full transition-transform duration-300 group-hover:translate-y-0">

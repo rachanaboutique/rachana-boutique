@@ -54,7 +54,8 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart }) => {
         variant: "destructive"
       });
     } else {
-      handleAddtoCart(productId, totalStock);
+      // Pass the entire item object to handle color selection properly
+      handleAddtoCart(productId, totalStock, item);
     }
   };
 

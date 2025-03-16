@@ -4,10 +4,8 @@ import { Link } from "react-router-dom";
 import { createSubscription } from "@/store/shop/newsletter-slice";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import logo from "@/assets/logo.png";
-import { Separator } from "../../components/ui/separator";
-import { Mail, ArrowRight, Facebook, Instagram, Twitter, Phone } from "lucide-react";
+import logo from "@/assets/logo-1.png";
+import { Mail, ArrowRight, Facebook, Instagram, Phone } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 
 
@@ -135,8 +133,8 @@ const Footer = () => {
 
             {/* About Section */}
             <div className="md:w-[25%]">
-              <Link to="/shop/home" className="flex items-center gap-2">
-                <img src={logo} alt="Logo" className="w-full md:w-3/4" />
+              <Link to="/shop/home" className="flex items-center">
+                <img src={logo} alt="Logo" className="w-full" />
               </Link>
               <p className="text-lg my-4">
                 Welcome to our boutique, where tradition meets elegance. Explore our curated collection of exquisite sarees designed to make every occasion special.

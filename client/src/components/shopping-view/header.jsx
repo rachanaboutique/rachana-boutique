@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { shoppingViewHeaderMenuItems } from "@/config";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo-1.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { logoutUser } from "@/store/auth-slice";
-import UserCartWrapper from "./cart-wrapper";
+import CustomCartDrawer from "./custom-cart-drawer";
 import { useState, useRef, useEffect } from "react";
 import RotatingMessages from "./rotating-messages";
 import { fetchCartItems } from "@/store/shop/cart-slice";
@@ -36,7 +36,7 @@ import { useToast } from "../ui/use-toast";
 
 function ShoppingHeader() {
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const { cartItems } = useSelector((state) => state.shopCart);
+  const { cartItems, isLoading: cartIsLoading } = useSelector((state) => state.shopCart);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [openCartSheet, setOpenCartSheet] = useState(false);
   // Use a ref to track the last time the cart sheet state was changed
@@ -139,43 +139,41 @@ function ShoppingHeader() {
           </button>
 
           {/* Cart icon */}
-          <Sheet
-            open={openCartSheet}
-            onOpenChange={(open) => {
-              // Prevent rapid toggling of the cart sheet
+          <button
+            className="relative group flex items-center"
+            onClick={(e) => {
+              // Prevent multiple rapid clicks or clicks while already fetching
+              if (isFetchingCart.current || cartIsLoading) {
+                e.preventDefault();
+                return;
+              }
+
+              // Prevent rapid toggling of the cart drawer
               const now = Date.now();
-              if (open !== openCartSheet && now - lastCartSheetToggleTime.current > 300) {
+              if (now - lastCartSheetToggleTime.current > 300) {
                 lastCartSheetToggleTime.current = now;
-                setOpenCartSheet(open);
+
+                // Simply open the drawer - the useEffect will handle fetching
+                setOpenCartSheet(true);
               }
             }}
           >
-            <SheetTrigger asChild>
-              <button
-                className="relative group flex items-center"
-                onClick={(e) => {
-                  // Prevent multiple rapid clicks
-                  if (isFetchingCart.current) {
-                    e.preventDefault();
-                    return;
-                  }
-                }}
-              >
-                <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
-                {cartItems?.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {cartItems.length}
-                  </span>
-                )}
-                <span className="sr-only">Shopping Bag</span>
-              </button>
-            </SheetTrigger>
-            <UserCartWrapper
-              setOpenCartSheet={setOpenCartSheet}
-              onMenuClose={() => setIsSheetOpen(false)}
-              cartItems={cartItems || []}
-            />
-          </Sheet>
+            <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
+            {cartItems?.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                {cartItems.length}
+              </span>
+            )}
+            <span className="sr-only">Shopping Bag</span>
+          </button>
+
+          {/* Custom Cart Drawer */}
+          <CustomCartDrawer
+            isOpen={openCartSheet}
+            onClose={() => setOpenCartSheet(false)}
+            cartItems={cartItems || []}
+            isLoading={cartItems.length === 0 ? cartIsLoading || isFetchingCart.current : false}
+          />
         </div>
 
         {/* User account */}
@@ -263,7 +261,7 @@ function ShoppingHeader() {
     }
   }, [user?.id, dispatch]);
 
-  // Separate effect to handle cart sheet opening
+  // Separate effect to handle cart drawer opening
   useEffect(() => {
     if (user?.id && openCartSheet) {
       // Prevent multiple fetches within a short time period (500ms)
@@ -272,11 +270,20 @@ function ShoppingHeader() {
         isFetchingCart.current = true;
         lastFetchTime.current = now;
 
+        // Fetch cart items when the drawer opens
         dispatch(fetchCartItems(user.id))
           .finally(() => {
-            isFetchingCart.current = false;
+            // Reset the fetching flag after a short delay
+            // This prevents rapid re-fetching while still allowing updates
+            setTimeout(() => {
+              isFetchingCart.current = false;
+            }, 500);
           });
       }
+    } else {
+      // If the cart drawer is closed, we can reset the fetching flag
+      // This ensures we'll fetch fresh data next time it opens
+      isFetchingCart.current = false;
     }
   }, [openCartSheet, user?.id, dispatch]);
 
@@ -350,7 +357,7 @@ function ShoppingHeader() {
 
             {/* Logo */}
             <Link to="/shop/home" className="flex items-center">
-              <img src={logo} alt="Fashion Store Logo" className="h-8 md:h-10" />
+              <img src={logo} alt="Fashion Store Logo" className="h-8 md:h-12" />
             </Link>
 
             {/* Desktop navigation */}
@@ -372,43 +379,35 @@ function ShoppingHeader() {
                 <Search className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
                 <span className="sr-only">Search</span>
               </button>
-              <Sheet
-                open={openCartSheet}
-                onOpenChange={(open) => {
-                  // Prevent rapid toggling of the cart sheet
+              <button
+                className="relative group"
+                onClick={(e) => {
+                  // Prevent multiple rapid clicks or clicks while already fetching
+                  if (isFetchingCart.current || cartIsLoading) {
+                    e.preventDefault();
+                    return;
+                  }
+
+                  // Prevent rapid toggling of the cart drawer
                   const now = Date.now();
-                  if (open !== openCartSheet && now - lastCartSheetToggleTime.current > 300) {
+                  if (now - lastCartSheetToggleTime.current > 300) {
                     lastCartSheetToggleTime.current = now;
-                    setOpenCartSheet(open);
+
+                    // Simply open the drawer - the useEffect will handle fetching
+                    setOpenCartSheet(true);
                   }
                 }}
               >
-                <SheetTrigger asChild>
-                  <button
-                    className="relative group"
-                    onClick={(e) => {
-                      // Prevent multiple rapid clicks
-                      if (isFetchingCart.current) {
-                        e.preventDefault();
-                        return;
-                      }
-                    }}
-                  >
-                    <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
-                    {cartItems?.length > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                        {cartItems.length}
-                      </span>
-                    )}
-                    <span className="sr-only">Shopping Bag</span>
-                  </button>
-                </SheetTrigger>
-                <UserCartWrapper
-                  setOpenCartSheet={setOpenCartSheet}
-                  onMenuClose={() => setIsSheetOpen(false)}
-                  cartItems={cartItems || []}
-                />
-              </Sheet>
+                <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
+                {cartItems?.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {cartItems.length}
+                  </span>
+                )}
+                <span className="sr-only">Shopping Bag</span>
+              </button>
+
+              {/* We don't need to duplicate the CustomCartDrawer here as it's already rendered above */}
             </div>
           </div>
         </div>

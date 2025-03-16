@@ -106,7 +106,7 @@ function ShoppingOrderDetailsView({ orderDetails }) {
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm truncate">{item.title}</h4>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
-                          <span>Color: {item?.colors?.title || "N/A"}</span>
+                          {item?.colors?.title && <span>Color: {item?.colors?.title}</span>}
                           <span>Quantity: {item.quantity}</span>
                         </div>
                       </div>

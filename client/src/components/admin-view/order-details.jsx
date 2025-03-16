@@ -95,7 +95,7 @@ function AdminOrderDetailsView({ orderDetails }) {
                 ? orderDetails?.cartItems.map((item) => (
                   <li className="flex items-center justify-between">
                     <span>Title: {item.title}</span>
-                    <span>Color: {item.colors?.title}</span>
+                    {item?.colors?.title && <span>Color: {item?.colors?.title}</span>}
                     <span>Quantity: {item.quantity}</span>
                     <span>Price: ₹{item.price}</span>
                   </li>

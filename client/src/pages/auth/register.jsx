@@ -5,7 +5,7 @@ import { registerUser } from "@/store/auth-slice";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "@/assets/logo3.png";
+import logo from "@/assets/main-logo.png";
 
 const initialState = {
   userName: "",

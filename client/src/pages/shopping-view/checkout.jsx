@@ -21,18 +21,30 @@ function ShoppingCheckout() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Calculate total with proper type conversion and error handling
   const totalCartAmount =
     cartItems && cartItems.length > 0
-      ? cartItems.reduce(
-        (sum, currentItem) =>
-          sum +
-          (currentItem?.salePrice > 0
-            ? currentItem?.salePrice
-            : currentItem?.price) *
-          currentItem?.quantity,
-        0
-      )
+      ? cartItems.reduce((sum, currentItem) => {
+          // Get the price (sale price if available, otherwise regular price)
+          const itemPrice = currentItem?.salePrice > 0
+            ? parseFloat(currentItem.salePrice)
+            : parseFloat(currentItem?.price || 0);
+
+          // Get the quantity with fallback to 0
+          const itemQuantity = parseInt(currentItem?.quantity || 0, 10);
+
+          // Calculate item total and add to sum
+          const itemTotal = itemPrice * itemQuantity;
+
+          // Log for debugging
+          console.log(`Checkout - Item: ${currentItem?.title}, Price: ${itemPrice}, Quantity: ${itemQuantity}, Total: ${itemTotal}`);
+
+          return sum + itemTotal;
+        }, 0)
       : 0;
+
+  // Format the total to 2 decimal places for display
+  const formattedTotal = totalCartAmount.toFixed(2);
 
   function handleInitiateRazorpayPayment() {
     if (cartItems.length === 0) {
@@ -249,7 +261,7 @@ function ShoppingCheckout() {
                 <div className="border-t border-gray-200 pt-4 space-y-3">
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal</span>
-                    <span>₹{totalCartAmount.toFixed(2)}</span>
+                    <span>₹{formattedTotal}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
                     <span>Shipping</span>
@@ -257,7 +269,7 @@ function ShoppingCheckout() {
                   </div>
                   <div className="flex justify-between font-medium text-lg pt-3 border-t border-gray-200">
                     <span>Total</span>
-                    <span>₹{totalCartAmount.toFixed(2)}</span>
+                    <span>₹{formattedTotal}</span>
                   </div>
                 </div>
 

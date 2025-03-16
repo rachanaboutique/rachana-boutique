@@ -6,13 +6,36 @@ const initialState = {
   isLoading: false,
 };
 
-// Add to Cart
+// Add to Cart - Enhanced to handle products with and without color options
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
-  async ({ userId, productId, quantity, colorId }, { rejectWithValue }) => {
+  async ({ userId, productId, quantity, colorId, product }, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/cart/add`;
+
     try {
-      const response = await axios.post(url, { userId, productId, quantity, colorId });
+      // If colorId is not provided but product has colors, use the first color
+      let finalColorId = colorId;
+
+      // Only use colors if the product has them
+      if (!finalColorId && product?.colors && product.colors.length > 0) {
+        finalColorId = product.colors[0]._id;
+      }
+
+      // For products without colors, don't send a colorId
+      const payload = {
+        userId,
+        productId,
+        quantity
+      };
+
+      // Only add colorId to the payload if it exists
+      if (finalColorId) {
+        payload.colorId = finalColorId;
+      }
+
+      // Make the API call with the appropriate payload
+      const response = await axios.post(url, payload);
+
       return response.data;
     } catch (error) {
       console.error("Error adding to cart from URL:", url, error.message);
@@ -36,11 +59,11 @@ export const fetchCartItems = createAsyncThunk(
   }
 );
 
-// Delete Cart Item
+// Delete Cart Item - Enhanced to handle composite IDs
 export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
   async ({ userId, productId, colorId }, { rejectWithValue }) => {
-    // If colorId is provided, use it in the URL
+    // Always use colorId in the URL if available for precise item deletion
     const url = colorId
       ? `${import.meta.env.VITE_BACKEND_URL}/shop/cart/${userId}/${productId}/${colorId}`
       : `${import.meta.env.VITE_BACKEND_URL}/shop/cart/${userId}/${productId}`;
@@ -55,13 +78,37 @@ export const deleteCartItem = createAsyncThunk(
   }
 );
 
-// Update Cart Quantity
+// Update Cart Quantity - Enhanced to handle color conflicts
 export const updateCartQuantity = createAsyncThunk(
   "cart/updateCartQuantity",
-  async ({ userId, productId, quantity, colorId }, { rejectWithValue }) => {
+  async ({ userId, productId, quantity, colorId, oldColorId }, { rejectWithValue }) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/cart/update-cart`;
     try {
-      const response = await axios.put(url, { userId, productId, quantity, colorId });
+      // Build the payload with required fields
+      const payload = {
+        userId,
+        productId
+      };
+
+      // Only add quantity to the payload if it exists
+      if (quantity !== undefined) {
+        payload.quantity = quantity;
+      }
+
+      // Only add colorId and oldColorId to the payload if they exist
+      if (colorId) {
+        payload.colorId = colorId;
+      }
+
+      if (oldColorId) {
+        payload.oldColorId = oldColorId;
+      }
+
+      console.log("Sending update cart request with payload:", payload);
+
+      // Make the API call with the appropriate payload
+      const response = await axios.put(url, payload);
+
       return response.data;
     } catch (error) {
       console.error("Error updating cart quantity from URL:", url, error);
@@ -69,7 +116,6 @@ export const updateCartQuantity = createAsyncThunk(
     }
   }
 );
-
 
 const shoppingCartSlice = createSlice({
   name: "shoppingCart",
@@ -92,7 +138,6 @@ const shoppingCartSlice = createSlice({
       })
       .addCase(addToCart.rejected, (state) => {
         state.isLoading = false;
-        state.cartItems = [];
       })
       // Fetch Cart Items
       .addCase(fetchCartItems.pending, (state) => {
@@ -126,7 +171,6 @@ const shoppingCartSlice = createSlice({
       })
       .addCase(updateCartQuantity.rejected, (state) => {
         state.isLoading = false;
-        state.cartItems = [];
       })
       // Delete Cart Item
       .addCase(deleteCartItem.pending, (state) => {
@@ -143,7 +187,6 @@ const shoppingCartSlice = createSlice({
       })
       .addCase(deleteCartItem.rejected, (state) => {
         state.isLoading = false;
-        state.cartItems = [];
       });
   },
 });

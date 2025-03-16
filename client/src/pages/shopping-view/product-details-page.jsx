@@ -364,7 +364,7 @@ function ProductDetailsPage({ open, setOpen }) {
             )}
           </div>
           {/* Color Selection with Image Cards - 5 per row */}
-          {productDetails?.colors && (
+          {productDetails?.colors &&  productDetails.colors.length > 0 && (
             <div className="mt-6 w-full">
               <div className="w-full text-center">
                 <Label className="text-lg font-semibold uppercase tracking-wide mb-2 block">Colors</Label>
