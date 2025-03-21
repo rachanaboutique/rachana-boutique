@@ -60,13 +60,16 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
   };
 
   return (
-    <div>
+    <div className="bg-white p-3 md:p-0 border border-gray-200 rounded-md shadow-sm mb-4 md:border-none">
       {/* Mobile Filter Toggle */}
       <div
-        className="md:hidden p-4 flex justify-between items-center border-b border-gray-200"
+        className="md:hidden flex justify-between items-start "
         onClick={toggleDropdown}
       >
-        <span className="text-sm uppercase tracking-wide font-medium">Filter Options</span>
+        <div>
+        <h2 className="text-xl font-light uppercase tracking-wide mb-2">Filters</h2>
+        <div className="w-12 h-0.5 bg-black mb-1"></div>
+        </div>
         <button className="p-2">
           <ChevronDown
             size={16}
@@ -79,18 +82,18 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
 
       {/* Filter options */}
       <div
-        className={`space-y-6 ${
+        className={`space-y-4 ${
           isDropdownOpen ? "block" : "hidden md:block"
         }`}
       >
         {/* Dynamic Category Filter */}
-        <div>
-          <h3 className="text-base uppercase tracking-wide font-medium mb-3">Category</h3>
+        <div className="mt-4 border-t border-gray-200">
+          <h3 className="text-lg uppercase tracking-wide font-medium my-2">Category</h3>
           <div className="w-8 h-0.5 bg-black mb-4"></div>
           <div className="space-y-2">
             {categoriesList.map((category) => (
               <Label
-                className="flex items-center gap-2 text-sm hover:text-black cursor-pointer group"
+                className="flex items-center gap-2 text-base hover:text-black cursor-pointer group"
                 key={category._id}
               >
                 <Checkbox
@@ -115,7 +118,7 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
 
         {/* Static Price Filter */}
         <div>
-          <h3 className="text-base uppercase tracking-wide font-medium mb-3">Price Range</h3>
+          <h3 className="text-lg uppercase tracking-wide font-medium mb-2">Price Range</h3>
           <div className="w-8 h-0.5 bg-black mb-4"></div>
           <div className="space-y-2">
             {[
@@ -128,7 +131,7 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
               { id: "6000-", label: "₹6,000 and above" }
             ].map((option) => (
               <Label
-                className="flex items-center gap-2 text-sm hover:text-black cursor-pointer group"
+                className="flex items-center gap-2 text-base hover:text-black cursor-pointer group"
                 key={option.id}
               >
                 <Checkbox

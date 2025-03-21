@@ -121,7 +121,7 @@ function NewArrivals() {
           />
           <div className="absolute inset-0 bg-black bg-opacity-35 flex items-center justify-center">
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-light uppercase tracking-wide text-white mb-4">
+              <h1 className="text-3xl md:text-4xl font-light uppercase tracking-wide text-white mb-4">
                 New Arrivals
               </h1>
               <div className="w-24 h-1 bg-white mx-auto"></div>
@@ -132,9 +132,9 @@ function NewArrivals() {
        
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           <div className="bg-white">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
+            <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
               <div>
                 <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
                   New Arrivals
@@ -164,6 +164,40 @@ function NewArrivals() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+            </div>
+
+
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b md:hidden">
+              <div className="flex items-center w-full justify-between">
+                <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
+                  New Arrivals
+                </h2>
+                <DropdownMenu >
+                  <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                    <ArrowUpDownIcon className="h-4 w-4" />
+                    <span>{sortOptions.find(option => option.id === sort)?.label || 'Default'}</span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="mt-2 bg-white p-2 rounded-md shadow-lg border border-gray-200">
+                    <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
+                      {sortOptions.map((sortItem) => (
+                        <DropdownMenuRadioItem
+                          className="hover:bg-gray-100 cursor-pointer px-4 py-2 rounded-md"
+                          value={sortItem.id}
+                          key={sortItem.id}
+                        >
+                          {sortItem.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+              </div>
+              <p className="text-gray-500">
+                  Showing {newArrivalProducts.length} products
+                </p>
+               
+            
             </div>
 
             {/* Products Grid - Using Original ShoppingProductTile */}

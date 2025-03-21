@@ -210,7 +210,7 @@ function ShoppingOrders() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Orders Found</h3>
           <p className="text-gray-500 mb-6">You haven't placed any orders yet.</p>
           <a
-            href="/shop"
+            href="/shop/home"
             className="inline-block px-6 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
           >
             Start Shopping

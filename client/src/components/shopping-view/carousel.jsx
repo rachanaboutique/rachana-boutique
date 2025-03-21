@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
+
 
 const Carousel = ({ bannersList }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -56,17 +58,18 @@ const Carousel = ({ bannersList }) => {
       {bannersList.map((item, index) => (
         <div
           key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-          }`}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
         >
           {/* ✅ Use Lazy Loading for Non-LCP Images */}
-          <img
+        <div className="w-full h-full">
+        <img
             src={item.image}
             alt="Banner"
-            className="w-full h-full object-fit md:object-cover"
+            className="w-full h-full object-center object-cover"
             loading={index === 0 ? "eager" : "lazy"} // First image loads eagerly
           />
+        </div>
 
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80"></div>
@@ -76,12 +79,22 @@ const Carousel = ({ bannersList }) => {
             <h2 className="text-3xl md:text-6xl font-bold leading-snug tracking-wide drop-shadow-md animate-fade-slide-up ">
               {item?.description}
             </h2>
-            <button
-              className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white text-lg rounded-lg shadow-lg transform transition-all hover:scale-105 animate-fade-slide-up delay-500"
-              onClick={() => navigate("/shop/collections")}
-            >
-              Shop Now
-            </button>
+            <div className="w-[160px] flex items-center justify-center px-4 py-2 border border-white rounded-full 
+                mt-4 group hover:cursor-pointer relative overflow-hidden 
+                bg-white/10 backdrop-blur-lg shadow-lg " onClick={() => navigate(`/shop/collections`)}>
+              {/* Gradient Overlay for Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+              <span className="text-xs md:text-sm uppercase tracking-wider font-medium text-white relative z-10 transition-all duration-300 group-hover:tracking-widest">
+                Shop Now
+              </span>
+
+              <div className="ml-2 w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/20 flex items-center justify-center 
+                  transform transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110">
+                <ArrowUpRight className="w-3 h-3 md:w-4 md:h-4 text-white transition-transform duration-300 group-hover:rotate-45" />
+              </div>
+            </div>
+
           </div>
         </div>
       ))}
@@ -92,11 +105,10 @@ const Carousel = ({ bannersList }) => {
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentIndex
-                ? "bg-foreground border-2 border-white scale-125"
-                : "bg-gray-500"
-            }`}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentIndex
+              ? "bg-foreground border-2 border-white scale-125"
+              : "bg-gray-500"
+              }`}
           ></button>
         ))}
       </div>

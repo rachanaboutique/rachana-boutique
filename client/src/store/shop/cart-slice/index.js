@@ -104,7 +104,6 @@ export const updateCartQuantity = createAsyncThunk(
         payload.oldColorId = oldColorId;
       }
 
-      console.log("Sending update cart request with payload:", payload);
 
       // Make the API call with the appropriate payload
       const response = await axios.put(url, payload);

@@ -98,7 +98,6 @@ function ShoppingHome() {
 
   const isAnyLoading = productsLoading || bannersLoading || categoriesLoading || instaFeedLoading;
   if (isAnyLoading) return <Loader />;
-  console.log(categoriesList)
   return (
     <>
 

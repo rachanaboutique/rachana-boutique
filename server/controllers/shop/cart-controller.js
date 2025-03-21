@@ -449,7 +449,6 @@ const updateCartItemQty = async (req, res) => {
       });
     }
 
-    console.log("Update cart request:", { userId, productId, quantity, colorId, oldColorId });
 
     const cart = await Cart.findOne({ userId });
 
@@ -541,7 +540,6 @@ const updateCartItemQty = async (req, res) => {
           // Remove the old item
           cart.items.splice(findCurrentProductIndex, 1);
 
-          console.log(`Merged items: Original quantity ${originalQuantity} + Existing quantity ${existingQuantity} = New quantity ${newTotalQuantity}`);
         } else {
           // Just update the color of the existing item
           const newColor = {

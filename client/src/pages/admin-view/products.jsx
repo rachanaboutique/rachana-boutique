@@ -10,10 +10,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { addProductFormElements } from "@/config";
 import { addNewProduct, deleteProduct, editProduct, fetchAllProducts } from "@/store/admin/products-slice";
 
-// Updated initial form data with new fields and without isFastMoving.
+// Updated initial form data with new fields
 const initialFormData = {
   image: "",
   title: "",
+  secondTitle: "",
+  productCode: "",
   description: "",
   category: "",
   isNewArrival: false,
@@ -111,6 +113,9 @@ function AdminProducts() {
           setImageFiles([]);
           setOpenCreateProductsDialog(false);
           setCurrentEditedId(null);
+          toast({
+            title: "Product updated successfully",
+          });
         }
       });
     } else {
@@ -142,12 +147,14 @@ function AdminProducts() {
     setFormData({
       image: product.image,
       title: product.title,
+      secondTitle: product.secondTitle || "",
+      productCode: product.productCode || "",
       description: product.description,
       category: product.category,
       isNewArrival: product.isNewArrival,
       isFeatured: product.isFeatured,
       price: product.price,
-      salePrice: product.salePrice,
+      salePrice: product.salePrice || "",
       totalStock: product.totalStock,
       averageReview: product.averageReview || 0,
       colors: product.colors || [],
@@ -163,7 +170,16 @@ function AdminProducts() {
   };
 
   function isFormValid() {
-    const optionalFields = ["isNewArrival", "isFeatured", "isWatchAndBuy", "video", "image"];
+    const optionalFields = [
+      "isNewArrival",
+      "isFeatured",
+      "isWatchAndBuy",
+      "video",
+      "image",
+      "salePrice",
+      "secondTitle"
+    ];
+
     if (imageLoadingStates?.includes(true)) return false;
 
     return Object.keys(formData)
@@ -247,6 +263,7 @@ function AdminProducts() {
             imageLoadingStates={imageLoadingStates}
             setImageLoadingStates={setImageLoadingStates}
             setImageLoadingState={setImageLoadingState}
+            isSingleImage={false}
           />
           <div className="py-6">
             <CommonForm

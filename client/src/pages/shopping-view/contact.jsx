@@ -74,7 +74,7 @@ const Contact = () => {
           />
           <div className="absolute inset-0 bg-black bg-opacity-35 flex items-center justify-center">
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-light uppercase tracking-wide text-white mb-4">Contact Us</h1>
+              <h1 className="text-3xl md:text-4xl font-light uppercase tracking-wide text-white mb-4">Contact Us</h1>
               <div className="w-24 h-1 bg-white mx-auto"></div>
             </div>
           </div>
@@ -84,7 +84,7 @@ const Contact = () => {
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Get In Touch</h2>
+              <h2 className="text-2xl md:text-3xl font-light uppercase tracking-wide mb-4">Get In Touch</h2>
               <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
               <p className="text-gray-600">We'd love to hear from you. Here's how you can reach us.</p>
             </div>

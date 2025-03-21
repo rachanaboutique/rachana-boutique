@@ -177,7 +177,7 @@ function ShoppingListing() {
   return (
     <>
       <Helmet>
-        <title>{currentCategory ? `${currentCategory.title} Collection` : 'All Products'} | Rachana Boutique</title>
+        <title>{currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique</title>
         <meta name="description" content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} />
       </Helmet>
 
@@ -186,12 +186,12 @@ function ShoppingListing() {
         <div className="relative w-full h-[250px] md:h-[350px] overflow-hidden">
           <img
             src={currentCategory?.image || banner}
-            alt={currentCategory?.title || "All Products"}
+            alt={currentCategory?.name || "All Products"}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black bg-opacity-35 flex items-center justify-center">
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-light uppercase tracking-wide text-white mb-4">
+              <h1 className="text-3xl md:text-4xl font-light uppercase tracking-wide text-white mb-4">
                 {currentCategory?.name || "All Products"}
               </h1>
               <div className="w-24 h-1 bg-white mx-auto"></div>
@@ -202,10 +202,10 @@ function ShoppingListing() {
       
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-8 ">
+        <div className="container mx-auto px-4 py-4 md:py-8 ">
           <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8">
             {/* Filter Component */}
-            <div className="bg-white p-6 border border-gray-200 rounded-md shadow-sm">
+            <div className="hidden md:block bg-white p-6 border border-gray-200 rounded-md shadow-sm">
               <h2 className="text-xl font-light uppercase tracking-wide mb-4">Filters</h2>
               <div className="w-12 h-0.5 bg-black mb-6"></div>
               <ProductFilter
@@ -217,7 +217,7 @@ function ShoppingListing() {
 
             {/* Product Listing */}
             <div className="bg-white">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
+              <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
                 <div>
                   <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
                     {currentCategory?.title || "All Products"}
@@ -248,6 +248,50 @@ function ShoppingListing() {
                   </DropdownMenu>
                 </div>
               </div>
+
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b md:hidden">
+                <div className="w-full flex items-center justify-between">
+                  <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
+                    {currentCategory?.title || "All Products"}
+                  </h2>
+                
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                      <ArrowUpDownIcon className="h-4 w-4" />
+                      <span>{sortOptions.find(option => option.id === sort)?.label || 'Default'}</span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="mt-2 bg-white p-2 rounded-md shadow-lg border border-gray-200">
+                      <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
+                        {sortOptions.map((sortItem) => (
+                          <DropdownMenuRadioItem
+                            className="hover:bg-gray-100 cursor-pointer px-4 py-2 rounded-md"
+                            value={sortItem.id}
+                            key={sortItem.id}
+                          >
+                            {sortItem.label}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+           
+                 
+                </div>
+                <p className="text-gray-500">
+                    Showing {filteredProducts.length} products
+                  </p>
+               
+              </div>
+
+              <div className="md:hidden">
+              
+              <ProductFilter
+                filters={filters}
+                setFilters={setFilters}
+                handleFilter={handleFilter}
+              />
+            </div>
+
 
               {/* Products Grid - Using Original ShoppingProductTile */}
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">

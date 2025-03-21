@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useToast } from "../../components/ui/use-toast";
 import { fetchProductDetails } from "@/store/shop/products-slice";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
@@ -37,6 +37,25 @@ function ProductDetailsPage({ open, setOpen }) {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const swipeThreshold = 50; // Minimum swipe distance to trigger navigation
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const diff = touchEndX.current - touchStartX.current;
+
+    if (diff > swipeThreshold) {
+      navigateImage("prev");
+    } else if (diff < -swipeThreshold) {
+      navigateImage("next");
+    }
+  };
 
   const handleZoomData = (data) => {
     setZoomData({
@@ -277,33 +296,37 @@ function ProductDetailsPage({ open, setOpen }) {
             <div className="flex flex-col gap-4">
 
             {/* Main Image Container */}
-            <div className="flex-1 relative">
-              <ZoomableImage
-                imageSrc={selectedImage}
-                imageAlt={productDetails?.title}
-                onZoomData={handleZoomData}
-              />
+            <div
+      className="flex-1 relative"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <ZoomableImage
+        imageSrc={selectedImage}
+        imageAlt={productDetails?.title}
+        onZoomData={handleZoomData}
+      />
 
-              {/* Mobile Arrows - Only visible on mobile */}
-              {productDetails?.image && productDetails.image.length > 1 && (
-                <div className="md:hidden">
-                  <button
-                    onClick={() => navigateImage('prev')}
-                    className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft className="h-5 w-5 text-gray-800" />
-                  </button>
-                  <button
-                    onClick={() => navigateImage('next')}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
-                    aria-label="Next image"
-                  >
-                    <ChevronRight className="h-5 w-5 text-gray-800" />
-                  </button>
-                </div>
-              )}
-            </div>
+      {/* Mobile Arrows - Only visible on mobile */}
+      {productDetails?.image && productDetails.image.length > 1 && (
+        <div className="md:hidden">
+          <button
+            onClick={() => navigateImage("prev")}
+            className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
+            aria-label="Previous image"
+          >
+            <ChevronLeft className="h-5 w-5 text-gray-800" />
+          </button>
+          <button
+            onClick={() => navigateImage("next")}
+            className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
+            aria-label="Next image"
+          >
+            <ChevronRight className="h-5 w-5 text-gray-800" />
+          </button>
+        </div>
+      )}
+    </div>
               {/* Render all images as thumbnails */}
           <div className="grid grid-cols-4 gap-2">
             {productDetails?.image?.map((image, index) => (
@@ -339,7 +362,7 @@ function ProductDetailsPage({ open, setOpen }) {
               {productDetails?.title}
             </h1>
             <h2 className="text-lg md:text-xl text-gray-600">
-              Elegance Unveiled
+             {productDetails?.secondTitle}
             </h2>
             <div className="w-24 h-1 bg-black mx-auto my-4"></div>
           </div>

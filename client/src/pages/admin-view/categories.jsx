@@ -69,7 +69,10 @@ function AdminCategories() {
       name: category.name,
       description: category.description,
     });
-    setUploadedImageUrls([category.image]);
+    // Reset all image-related states to ensure clean state
+    setImageFiles([]);
+    setImageLoadingStates([]);
+    setUploadedImageUrls(category.image ? [category.image] : []);
     setOpenCreateCategoriesDialog(true);
   }
 
@@ -113,8 +116,9 @@ function AdminCategories() {
 
   function resetForm() {
     setFormData(initialFormData);
-    setUploadedImageUrls("");
-    setImageFiles(null);
+    setUploadedImageUrls([]);
+    setImageFiles([]);
+    setImageLoadingStates([]);
     setCurrentEditedId(null);
     setOpenCreateCategoriesDialog(false);
   }

@@ -16,10 +16,16 @@ const ProductSlider = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const autoScrollIntervalRef = useRef(null);
+  const manualPauseTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Responsive items per slide: 2 for mobile, 4 for desktop
+  // Refs for touch swipe support
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const swipeThreshold = 50; // minimum swipe distance in pixels
+
+  // Responsive items per slide: 2 for mobile, 5 for desktop
   const itemsPerSlide = isMobile ? 2 : 5;
 
   // Update isMobile state on window resize
@@ -27,59 +33,49 @@ const ProductSlider = ({
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Calculate how many complete slides we can make
+  // Calculate total number of slides available
   const totalSlides = Math.ceil(products.length / itemsPerSlide);
 
   // Function to advance to the next slide
   const goToNextSlide = () => {
-    setCurrentIndex((prevIndex) => {
-      // If we're at the last slide, go back to the beginning
-      if (prevIndex >= totalSlides - 1) {
-        return 0;
-      }
-      // Otherwise, advance by 1
-      return prevIndex + 1;
-    });
+    setCurrentIndex((prevIndex) => (prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1));
   };
 
   // Function to go to the previous slide
   const goToPrevSlide = () => {
-    setCurrentIndex((prevIndex) => {
-      // If we're at the first slide, go to the last slide
-      if (prevIndex <= 0) {
-        return totalSlides - 1;
-      }
-      // Otherwise, go back by 1
-      return prevIndex - 1;
-    });
+    setCurrentIndex((prevIndex) => (prevIndex <= 0 ? totalSlides - 1 : prevIndex - 1));
+  };
+
+  // Pause auto slide for 3 seconds on manual interaction, then resume
+  const pauseAutoSlide = () => {
+    if (manualPauseTimeoutRef.current) {
+      clearTimeout(manualPauseTimeoutRef.current);
+    }
+    setIsPaused(true);
+    manualPauseTimeoutRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 3000);
   };
 
   // Auto-scroll effect
   useEffect(() => {
     if (products.length > itemsPerSlide && !isPaused) {
-      // Clear any existing interval
       if (autoScrollIntervalRef.current) {
         clearInterval(autoScrollIntervalRef.current);
       }
-
-      // Set up new interval for auto-scrolling (every 3 seconds)
       autoScrollIntervalRef.current = setInterval(goToNextSlide, 4000);
     }
-
-    // Cleanup function to clear interval when component unmounts
     return () => {
-      if (autoScrollIntervalRef.current) {
-        clearInterval(autoScrollIntervalRef.current);
-      }
+      if (autoScrollIntervalRef.current) clearInterval(autoScrollIntervalRef.current);
+      if (manualPauseTimeoutRef.current) clearTimeout(manualPauseTimeoutRef.current);
     };
   }, [products.length, isPaused, itemsPerSlide]);
 
-  // If we have 4 or fewer products on desktop or 1 product on mobile, just display them without sliding
+  // If there are not enough products for sliding, show them statically
   if (products.length <= itemsPerSlide) {
     return (
       <section className={`py-16 ${bgColor}`}>
@@ -89,7 +85,6 @@ const ProductSlider = ({
             <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
             <p className="text-gray-600">{description}</p>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8">
             {products.map((product, index) => (
               <motion.div
@@ -112,14 +107,12 @@ const ProductSlider = ({
               </motion.div>
             ))}
           </div>
-
-          {/* View products button */}
           <div className="text-center mt-12">
             <button
-              onClick={() => navigate(isNewArrival ? '/shop/new-arrivals' : '/shop/collections')}
+              onClick={() => navigate(isNewArrival ? "/shop/new-arrivals" : "/shop/collections")}
               className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
             >
-              {isNewArrival ? 'View New Products' : 'View All Products'}
+              {isNewArrival ? "View New Products" : "View All Products"}
             </button>
           </div>
         </div>
@@ -127,30 +120,63 @@ const ProductSlider = ({
     );
   }
 
-  // Get current slide products
+  // Get products for the current slide
   const getCurrentSlideProducts = () => {
     const startIdx = currentIndex * itemsPerSlide;
     return products.slice(startIdx, startIdx + itemsPerSlide);
   };
 
+  // Touch event handlers for swipe support, with auto slide pause
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    touchEndX.current = e.changedTouches[0].clientX;
+    const diff = touchEndX.current - touchStartX.current;
+    if (diff > swipeThreshold) {
+      goToPrevSlide();
+      pauseAutoSlide();
+    } else if (diff < -swipeThreshold) {
+      goToNextSlide();
+      pauseAutoSlide();
+    }
+  };
+
   return (
     <section className={`py-16 ${bgColor}`}>
       <div className="container mx-auto px-4">
+        {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">{title}</h2>
           <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
           <p className="text-gray-600">{description}</p>
         </div>
 
+        {/* Slider with external navigation arrows */}
         <div
-          className="relative"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
+          className="flex items-center"
         >
-         
+          {/* Left Arrow */}
+          <button
+            onClick={() => {
+              goToPrevSlide();
+              pauseAutoSlide();
+            }}
+            className="mr-2 bg-white/75 hover:bg-white p-2 rounded-full shadow-md"
+            aria-label="Previous Slide"
+          >
+            <ChevronLeft size={20} />
+          </button>
 
-          {/* Visible products container */}
-          <div className="overflow-hidden">
+          {/* Slider Container */}
+          <div
+            className="overflow-hidden w-full"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
@@ -158,7 +184,7 @@ const ProductSlider = ({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.5 }}
-                className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-5'} gap-6 md:gap-8`}
+                className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-5"} gap-2 md:gap-8`}
               >
                 {getCurrentSlideProducts().map((product, index) => (
                   <motion.div
@@ -171,7 +197,6 @@ const ProductSlider = ({
                       type: "spring",
                       stiffness: 50,
                     }}
-                  
                   >
                     <ShoppingProductTile
                       handleGetProductDetails={handleGetProductDetails}
@@ -184,32 +209,45 @@ const ProductSlider = ({
             </AnimatePresence>
           </div>
 
-          {/* Dots Navigation */}
-          {totalSlides > 1 && (
-            <div className="flex justify-center mt-8 space-x-2">
-              {Array.from({ length: totalSlides }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === currentIndex
-                      ? "bg-black border-2 border-gray-300 scale-125"
-                      : "bg-gray-400"
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
-                ></button>
-              ))}
-            </div>
-          )}
+          {/* Right Arrow */}
+          <button
+            onClick={() => {
+              goToNextSlide();
+              pauseAutoSlide();
+            }}
+            className="ml-2 bg-white/75 hover:bg-white p-2 rounded-full shadow-md"
+            aria-label="Next Slide"
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
 
-        {/* View products button */}
+        {/* Dots Navigation */}
+        {totalSlides > 1 && (
+          <div className="flex justify-center mt-8 space-x-2">
+            {Array.from({ length: totalSlides }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setCurrentIndex(index);
+                  pauseAutoSlide();
+                }}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentIndex ? "bg-black border-2 border-gray-300 scale-125" : "bg-gray-400"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              ></button>
+            ))}
+          </div>
+        )}
+
+        {/* View Products Button */}
         <div className="text-center mt-12">
           <button
-            onClick={() => navigate(isNewArrival ? '/shop/new-arrivals' : '/shop/collections')}
+            onClick={() => navigate(isNewArrival ? "/shop/new-arrivals" : "/shop/collections")}
             className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
           >
-            {isNewArrival ? 'View New Products' : 'View All Products'}
+            {isNewArrival ? "View New Products" : "View All Products"}
           </button>
         </div>
       </div>

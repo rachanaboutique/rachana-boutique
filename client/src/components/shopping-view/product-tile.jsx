@@ -66,9 +66,16 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
         >
           <Heart className={`w-4 h-4 ${liked ? 'fill-muted text-muted' : 'text-gray-600'}`} />
         </button>
+        {/* Product Code */}
+        {product.productCode && (
+          <Badge className="absolute top-3 left-3 bg-rose-50 text-rose-700 text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-semibold">
+            {product.productCode}
+          </Badge>
+        )}
+
 
         {/* Dynamic Badges */}
-        {product?.totalStock === 0 ? (
+        {/*   {product?.totalStock === 0 ? (
           <Badge className="absolute top-3 left-3 bg-red-700 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
             Out Of Stock
           </Badge>
@@ -87,14 +94,14 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
               </Badge>
             )}
           </>
-        ) : null}
+        ) : null} */}
 
         {/* Color options badge if available */}
-        {hasColorOptions && (
+        {/*   {hasColorOptions && (
           <Badge className="absolute top-3 right-12 bg-purple-600 text-white text-xs py-1 px-3 rounded-sm uppercase tracking-wider font-medium">
             {product.colors.length} {product.colors.length === 1 ? 'Color' : 'Colors'}
           </Badge>
-        )}
+        )} */}
 
         {/* Quick action buttons (visible on hover) */}
         <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 p-3 translate-y-full transition-transform duration-300 group-hover:translate-y-0">
@@ -127,7 +134,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
                 e.stopPropagation();
                 handleAddToCartClick(product?._id, product?.totalStock);
               }}
-              className="flex items-center justify-center gap-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-800 text-white px-3 py-2 rounded-sm shadow-md transition-colors"
+              className="flex items-center justify-center gap-1 bg-muted text-white px-3 py-2 rounded-sm shadow-md transition-colors"
             >
               <ShoppingBag className="w-4 h-4" />
               <span className="text-xs font-medium">Add to Cart</span>
@@ -138,7 +145,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
 
       {/* Product details area */}
       <CardContent className="p-4 bg-white">
-        <h2 className="text-base font-medium mb-1 text-foreground truncate hover:text-muted transition-colors cursor-pointer" onClick={() => handleViewDetails(product?._id)}>
+        <h2 className="text-center text-base font-medium mb-1 text-foreground truncate hover:text-muted transition-colors cursor-pointer" onClick={() => handleViewDetails(product?._id)}>
           {product?.title}
         </h2>
         <div className="flex justify-between items-center mt-2">

@@ -48,6 +48,20 @@ export const addProductFormElements = [
     placeholder: "Enter product title",
   },
   {
+    label: "Second Title",
+    name: "secondTitle",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter secondary title (optional)",
+  },
+  {
+    label: "Product Code",
+    name: "productCode",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter product code",
+  },
+  {
     label: "Description",
     name: "description",
     componentType: "textarea",
@@ -196,8 +210,8 @@ export const filterOptions = {
 export const sortOptions = [
   { id: "price-lowtohigh", label: "Price: Low to High" },
   { id: "price-hightolow", label: "Price: High to Low" },
-  { id: "title-atoz", label: "Title: A to Z" },
-  { id: "title-ztoa", label: "Title: Z to A" },
+/*   { id: "title-atoz", label: "Title: A to Z" },
+  { id: "title-ztoa", label: "Title: Z to A" }, */
 ];
 
 export const addressFormControls = [
