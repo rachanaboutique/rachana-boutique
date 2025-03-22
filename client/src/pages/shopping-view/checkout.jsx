@@ -16,7 +16,7 @@ function ShoppingCheckout() {
   const { approvalURL } = useSelector((state) => state.shopOrder);
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymentStart] = useState(false);
-  const {isPaymentLoading} = useSelector((state) => state.shopOrder);
+  const { isPaymentLoading } = useSelector((state) => state.shopOrder);
   const dispatch = useDispatch();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -25,22 +25,22 @@ function ShoppingCheckout() {
   const totalCartAmount =
     cartItems && cartItems.length > 0
       ? cartItems.reduce((sum, currentItem) => {
-          // Get the price (sale price if available, otherwise regular price)
-          const itemPrice = currentItem?.salePrice > 0
-            ? parseFloat(currentItem.salePrice)
-            : parseFloat(currentItem?.price || 0);
+        // Get the price (sale price if available, otherwise regular price)
+        const itemPrice = currentItem?.salePrice > 0
+          ? parseFloat(currentItem.salePrice)
+          : parseFloat(currentItem?.price || 0);
 
-          // Get the quantity with fallback to 0
-          const itemQuantity = parseInt(currentItem?.quantity || 0, 10);
+        // Get the quantity with fallback to 0
+        const itemQuantity = parseInt(currentItem?.quantity || 0, 10);
 
-          // Calculate item total and add to sum
-          const itemTotal = itemPrice * itemQuantity;
+        // Calculate item total and add to sum
+        const itemTotal = itemPrice * itemQuantity;
 
-     
-  
 
-          return sum + itemTotal;
-        }, 0)
+
+
+        return sum + itemTotal;
+      }, 0)
       : 0;
 
   // Format the total to 2 decimal places for display
@@ -196,7 +196,7 @@ function ShoppingCheckout() {
           </div>
         </div>
 
-   
+
 
         {/* Checkout Content */}
         <div className="container mx-auto px-4 py-8 md:py-16">
@@ -234,9 +234,10 @@ function ShoppingCheckout() {
                 <h2 className="text-2xl font-light uppercase tracking-wide mb-4">Shipping Address</h2>
                 <div className="w-16 h-0.5 bg-black mb-6"></div>
                 <Address
-                  selectedId={currentSelectedAddress}
                   setCurrentSelectedAddress={setCurrentSelectedAddress}
+                  selectedId={currentSelectedAddress}
                 />
+
               </div>
 
               {/* Right Side: Order Summary */}

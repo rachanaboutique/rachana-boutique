@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import ProductSlider from "@/components/shopping-view/product-slider";
+import {fetchAllProducts} from "@/store/admin/products-slice";
 
 function ProductDetailsPage({ open, setOpen }) {
   const [reviewMsg, setReviewMsg] = useState("");
@@ -120,24 +121,73 @@ function ProductDetailsPage({ open, setOpen }) {
 
 
 
-  function handleRelatedProductsAddToCart(getCurrentProductId) {
-    dispatch(
+  function handleRelatedProductsAddToCart(product) {
+    const productId = product._id;
+    const totalStock = product.totalStock;
+
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in to add items to the cart!",
+        variant: "destructive",
+      });
+      return Promise.reject("Not authenticated");
+    }
+
+    // Check if product is in stock
+    if (totalStock <= 0) {
+      toast({
+        title: "This product is out of stock",
+        variant: "destructive",
+      });
+      return Promise.reject("Out of stock");
+    }
+
+    // Check if adding one more would exceed stock limit
+    let currentCartItems = cartItems.items || [];
+    if (currentCartItems.length) {
+      const itemIndex = currentCartItems.findIndex(
+        (item) => item.productId === productId
+      );
+      if (itemIndex > -1) {
+        const currentQuantity = currentCartItems[itemIndex].quantity;
+        if (currentQuantity + 1 > totalStock) {
+          toast({
+            title: `Only ${totalStock} quantity available for this item`,
+            variant: "destructive",
+          });
+          return Promise.reject("Exceeds stock limit");
+        }
+      }
+    }
+
+    // Get the first color if available
+    const colorId = product?.colors && product.colors.length > 0
+      ? product.colors[0]._id
+      : undefined;
+
+    // Add to cart
+    return dispatch(
       addToCart({
         userId: user?.id,
-        productId: getCurrentProductId,
+        productId: productId,
         quantity: 1,
-        colorId: productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id
-
+        colorId: colorId,
       })
     ).then((data) => {
       if (data?.payload?.success) {
-        dispatch(fetchCartItems(user?.id));
-        toast({
-          title: "Product is added to cart",
+        // Force a refresh of the cart items to ensure we have the latest data
+        return dispatch(fetchCartItems(user?.id)).then(() => {
+          toast({
+            title: "Product added to cart",
+          });
+          return data;
         });
       }
+      return data;
     });
   }
+
   // Handle adding a review for the product
   const handleAddReview = () => {
     dispatch(
@@ -217,9 +267,18 @@ function ProductDetailsPage({ open, setOpen }) {
 
   // Fetch product details when component mounts or when the location changes.
   useEffect(() => {
-    if (getCurrentProductId) {
-      dispatch(fetchProductDetails(getCurrentProductId));
-    }
+    const fetchData = async () => {
+      if (getCurrentProductId) {
+        await dispatch(fetchProductDetails(getCurrentProductId));
+      }
+      
+      // Check if productList is empty or needs to be refreshed
+      if (!productList || productList.length === 0) {
+        await dispatch(fetchAllProducts()); // Make sure this action exists in your products-slice
+      }
+    };
+    
+    fetchData();
   }, [getCurrentProductId, location.key, dispatch]);
 
   // Fetch reviews and set the default selected image when product details are updated.
@@ -241,15 +300,20 @@ function ProductDetailsPage({ open, setOpen }) {
 
   // Separate useEffect to compute related products whenever productList or productDetails changes
   useEffect(() => {
-    if (productList && productDetails) {
-      const filteredProducts = productList.filter(
+    if (productList && productList.length > 0 && productDetails && productDetails._id && productDetails.category) {
+      const filtered = productList.filter(
         (product) =>
           product?.category === productDetails?.category &&
           product._id !== productDetails?._id
       );
-      setRelatedProducts(filteredProducts);
+      setRelatedProducts(filtered);
+    } else {
+      // Reset related products if data is missing
+      setRelatedProducts([]);
     }
   }, [productList, productDetails]);
+
+  
 
   // Update zoomData.imageSrc when selectedImage changes
   useEffect(() => {
@@ -280,81 +344,81 @@ function ProductDetailsPage({ open, setOpen }) {
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">
       <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr] gap-12 md:gap-16">
-       
-          <div className="flex items-start gap-4">
-            {/* Left Arrow - Desktop Only */}
-            {productDetails?.image && productDetails.image.length > 1 && (
-              <button
-                onClick={() => navigateImage('prev')}
-                className="mt-72 hidden md:block bg-white hover:bg-gray-100 rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110 border border-gray-200"
-                aria-label="Previous image"
-              >
-                <ChevronLeft className="h-6 w-6 text-gray-800" />
-              </button>
-            )}
 
-            <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-4">
+          {/* Left Arrow - Desktop Only */}
+          {productDetails?.image && productDetails.image.length > 1 && (
+            <button
+              onClick={() => navigateImage('prev')}
+              className="mt-72 hidden md:block bg-white hover:bg-gray-100 rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110 border border-gray-200"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-6 w-6 text-gray-800" />
+            </button>
+          )}
+
+          <div className="flex flex-col gap-4">
 
             {/* Main Image Container */}
             <div
-      className="flex-1 relative"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      <ZoomableImage
-        imageSrc={selectedImage}
-        imageAlt={productDetails?.title}
-        onZoomData={handleZoomData}
-      />
-
-      {/* Mobile Arrows - Only visible on mobile */}
-      {productDetails?.image && productDetails.image.length > 1 && (
-        <div className="md:hidden">
-          <button
-            onClick={() => navigateImage("prev")}
-            className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
-            aria-label="Previous image"
-          >
-            <ChevronLeft className="h-5 w-5 text-gray-800" />
-          </button>
-          <button
-            onClick={() => navigateImage("next")}
-            className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
-            aria-label="Next image"
-          >
-            <ChevronRight className="h-5 w-5 text-gray-800" />
-          </button>
-        </div>
-      )}
-    </div>
-              {/* Render all images as thumbnails */}
-          <div className="grid grid-cols-4 gap-2">
-            {productDetails?.image?.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Thumbnail ${index}`}
-                className={`w-full h-24 md:h-32 object-cover cursor-pointer transition-all duration-300 ${selectedImage === image ? "border-4 border-black" : "border border-gray-200 hover:border-gray-400"}`}
-                onClick={() => setSelectedImage(image)}
+              className="flex-1 relative"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <ZoomableImage
+                imageSrc={selectedImage}
+                imageAlt={productDetails?.title}
+                onZoomData={handleZoomData}
               />
-            ))}
-          </div>
+
+              {/* Mobile Arrows - Only visible on mobile */}
+              {productDetails?.image && productDetails.image.length > 1 && (
+                <div className="md:hidden">
+                  <button
+                    onClick={() => navigateImage("prev")}
+                    className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-gray-800" />
+                  </button>
+                  <button
+                    onClick={() => navigateImage("next")}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="h-5 w-5 text-gray-800" />
+                  </button>
+                </div>
+              )}
             </div>
-
-            {/* Right Arrow - Desktop Only */}
-            {productDetails?.image && productDetails.image.length > 1 && (
-              <button
-                onClick={() => navigateImage('next')}
-                className="mt-72 hidden md:block bg-white hover:bg-gray-100 rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110 border border-gray-200"
-                aria-label="Next image"
-              >
-                <ChevronRight className="h-6 w-6 text-gray-800" />
-              </button>
-            )}
+            {/* Render all images as thumbnails */}
+            <div className="grid grid-cols-4 gap-2">
+              {productDetails?.image?.map((image, index) => (
+                <img
+                  key={index}
+                  src={image}
+                  alt={`Thumbnail ${index}`}
+                  className={`w-full h-24 md:h-32 object-cover cursor-pointer transition-all duration-300 ${selectedImage === image ? "border-4 border-black" : "border border-gray-200 hover:border-gray-400"}`}
+                  onClick={() => setSelectedImage(image)}
+                />
+              ))}
+            </div>
           </div>
 
-        
-       
+          {/* Right Arrow - Desktop Only */}
+          {productDetails?.image && productDetails.image.length > 1 && (
+            <button
+              onClick={() => navigateImage('next')}
+              className="mt-72 hidden md:block bg-white hover:bg-gray-100 rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110 border border-gray-200"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-6 w-6 text-gray-800" />
+            </button>
+          )}
+        </div>
+
+
+
 
         <div className="flex flex-col gap-4">
           <div className="text-center mb-4">
@@ -362,7 +426,7 @@ function ProductDetailsPage({ open, setOpen }) {
               {productDetails?.title}
             </h1>
             <h2 className="text-lg md:text-xl text-gray-600">
-             {productDetails?.secondTitle}
+              {productDetails?.secondTitle}
             </h2>
             <div className="w-24 h-1 bg-black mx-auto my-4"></div>
           </div>
@@ -387,7 +451,7 @@ function ProductDetailsPage({ open, setOpen }) {
             )}
           </div>
           {/* Color Selection with Image Cards - 5 per row */}
-          {productDetails?.colors &&  productDetails.colors.length > 0 && (
+          {productDetails?.colors && productDetails.colors.length > 0 && (
             <div className="mt-6 w-full">
               <div className="w-full text-center">
                 <Label className="text-lg font-semibold uppercase tracking-wide mb-2 block">Colors</Label>
@@ -397,11 +461,10 @@ function ProductDetailsPage({ open, setOpen }) {
                     <div
                       key={index}
                       onClick={() => handleColorSelect(colorItem)}
-                      className={`cursor-pointer flex flex-col items-center p-2 rounded-lg transition-all duration-300 w-24 ${
-                        selectedColor && selectedColor._id === colorItem._id
+                      className={`cursor-pointer flex flex-col items-center p-2 rounded-lg transition-all duration-300 w-24 ${selectedColor && selectedColor._id === colorItem._id
                           ? "border-2 border-black shadow-md"
                           : "border border-gray-200 hover:border-gray-400"
-                      }`}
+                        }`}
                     >
                       <img
                         src={colorItem.image}
@@ -513,7 +576,7 @@ function ProductDetailsPage({ open, setOpen }) {
               </Button>
             </div>
           </div> */}
-          {/* Related Products */}
+       
 
         </div>
 
@@ -521,6 +584,7 @@ function ProductDetailsPage({ open, setOpen }) {
 
 
       <Separator />
+         {/* Related Products */}
       {relatedProducts && relatedProducts.length > 0 && (
         <ProductSlider
           products={relatedProducts}

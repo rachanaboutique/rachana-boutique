@@ -76,7 +76,7 @@ const Carousel = ({ bannersList }) => {
 
           {/* Text Content */}
           <div className="absolute bottom-16 md:bottom-24 left-4 md:left-16 text-white max-w-2xl">
-            <h2 className="text-3xl md:text-6xl font-bold leading-snug tracking-wide drop-shadow-md animate-fade-slide-up ">
+            <h2 className="w-4/5 md:w-full text-2xl md:text-6xl font-bold leading-snug tracking-wide drop-shadow-md animate-fade-slide-up ">
               {item?.description}
             </h2>
             <div className="w-[160px] flex items-center justify-center px-4 py-2 border border-white rounded-full 

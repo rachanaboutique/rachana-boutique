@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { shoppingViewHeaderMenuItems } from "@/config";
-import logo from "@/assets/logo-1.png";
+import logo from "@/assets/logo-4.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -335,7 +335,7 @@ function ShoppingHeader() {
             <div className="lg:hidden">
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-gray-700">
+                  <Button variant="ghost" size="icon" className="-ml-3 text-gray-700">
                     <Menu className="h-6 w-6" />
                     <span className="sr-only">Toggle menu</span>
                   </Button>
@@ -356,8 +356,8 @@ function ShoppingHeader() {
             </div>
 
             {/* Logo */}
-            <Link to="/shop/home" className="flex items-center">
-              <img src={logo} alt="Fashion Store Logo" className="h-8 md:h-12" />
+            <Link to="/shop/home" className="ml-0 md:-ml-12 flex items-center">
+              <img src={logo} alt="Fashion Store Logo" className="mt-1 md:mt-0 h-10 md:h-12" />
             </Link>
 
             {/* Desktop navigation */}

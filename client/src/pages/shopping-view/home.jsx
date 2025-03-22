@@ -36,7 +36,8 @@ function ShoppingHome() {
   const { bannersList, isLoading: bannersLoading } = useSelector((state) => state.shopBanners);
   const { categoriesList, isLoading: categoriesLoading } = useSelector((state) => state.shopCategories);
   const { instaFeedPosts, isLoading: instaFeedLoading } = useSelector((state) => state.shopInstaFeed);
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const cartItems = useSelector((state) => state.shopCart);
 
   const dispatch = useDispatch();
   const { toast } = useToast();
@@ -78,21 +79,70 @@ function ShoppingHome() {
     dispatch(fetchProductDetails(productId));
   }
 
-  function handleAddtoCart(productId) {
-    dispatch(
+  function handleAddtoCart(product) {
+    const productId = product._id;
+    const totalStock = product.totalStock;
+
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in to add items to the cart!",
+        variant: "destructive",
+      });
+      return Promise.reject("Not authenticated");
+    }
+
+    // Check if product is in stock
+    if (totalStock <= 0) {
+      toast({
+        title: "This product is out of stock",
+        variant: "destructive",
+      });
+      return Promise.reject("Out of stock");
+    }
+
+    // Check if adding one more would exceed stock limit
+    let currentCartItems = cartItems.items || [];
+    if (currentCartItems.length) {
+      const itemIndex = currentCartItems.findIndex(
+        (item) => item.productId === productId
+      );
+      if (itemIndex > -1) {
+        const currentQuantity = currentCartItems[itemIndex].quantity;
+        if (currentQuantity + 1 > totalStock) {
+          toast({
+            title: `Only ${totalStock} quantity available for this item`,
+            variant: "destructive",
+          });
+          return Promise.reject("Exceeds stock limit");
+        }
+      }
+    }
+
+    // Get the first color if available
+    const colorId = product?.colors && product.colors.length > 0
+      ? product.colors[0]._id
+      : undefined;
+
+    // Add to cart
+    return dispatch(
       addToCart({
         userId: user?.id,
         productId: productId,
         quantity: 1,
-        colorId: productList.find((product) => product._id === productId)?.colors[0]?._id,
+        colorId: colorId,
       })
     ).then((data) => {
       if (data?.payload?.success) {
-        dispatch(fetchCartItems(user?.id));
-        toast({
-          title: "Product added to cart",
+        // Force a refresh of the cart items to ensure we have the latest data
+        return dispatch(fetchCartItems(user?.id)).then(() => {
+          toast({
+            title: "Product added to cart",
+          });
+          return data;
         });
       }
+      return data;
     });
   }
 
@@ -181,8 +231,8 @@ function ShoppingHome() {
           </div>
         </section> */}
 
-
-        <section className="pt-8 pb-16 bg-white">
+{/* Masonry layout desktop */}
+        <section className="hidden md:block py-8 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Shop by Category</h2>
@@ -226,6 +276,114 @@ function ShoppingHome() {
             </div>
           </div>
         </section>
+{/* Mobile layout */}
+        <section className="py-8 bg-white md:hidden">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center mb-6">
+              <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Shop by Category</h2>
+              <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
+              <p className="text-gray-600">Discover our curated collections designed for every style and occasion</p>
+            </div>
+
+            {/* Custom layout container - mobile: first card full width, rest in 2 columns; desktop: masonry */}
+            <div className="hidden sm:block columns-2 md:columns-3 gap-4">
+              {categoriesList &&
+                categoriesList.map((categoryItem, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.1 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: index * 0.1,
+                      type: "spring",
+                      stiffness: 50,
+                    }}
+                    className="break-inside-avoid mb-4"
+                  >
+                    <CategoryCard
+                      categoryItem={categoryItem}
+                      index={index}
+                      variant="masonry"
+                    />
+                  </motion.div>
+                ))}
+            </div>
+
+            {/* Mobile layout - first card full width, rest in 2 columns, pattern repeats every 5 cards */}
+            <div className="sm:hidden">
+              {categoriesList && categoriesList.length > 0 &&
+                Array.from({ length: Math.ceil(categoriesList.length / 5) }).map((_, groupIndex) => {
+                  const startIndex = groupIndex * 5;
+                  const groupItems = categoriesList.slice(startIndex, startIndex + 5);
+
+                  return (
+                    <div key={`group-${groupIndex}`} className="mb-4">
+                      {/* First item in group - full width */}
+                      {groupItems[0] && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: false, amount: 0.1 }}
+                          transition={{
+                            duration: 0.5,
+                            delay: 0.1,
+                            type: "spring",
+                            stiffness: 50,
+                          }}
+                          className="mb-4"
+                        >
+                          <CategoryCard
+                            categoryItem={groupItems[0]}
+                            index={startIndex}
+                            variant="masonry"
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* Remaining items in group - 2 column grid */}
+                      {groupItems.length > 1 && (
+                        <div className="grid grid-cols-2 gap-4">
+                          {groupItems.slice(1).map((categoryItem, idx) => (
+                            <motion.div
+                              key={startIndex + idx + 1}
+                              initial={{ opacity: 0, y: 20 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: false, amount: 0.1 }}
+                              transition={{
+                                duration: 0.5,
+                                delay: (idx + 1) * 0.1,
+                                type: "spring",
+                                stiffness: 50,
+                              }}
+                            >
+                              <CategoryCard
+                                categoryItem={categoryItem}
+                                index={startIndex + idx + 1}
+                                variant="masonry"
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              }
+            </div>
+
+            <div className="text-center mt-12">
+              <button
+                onClick={() => navigate("/shop/collections")}
+                className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+              >
+                View All Collections
+              </button>
+            </div>
+          </div>
+        </section>
+
 
         
 
@@ -314,7 +472,7 @@ function ShoppingHome() {
           />
         </section>
 
-        <section className="py-16 bg-white">
+        <section className="py-8 md:py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Follow Our Style</h2>
@@ -337,7 +495,7 @@ function ShoppingHome() {
           </div>
         </section>
 
-        <section className="py-16 bg-gray-50">
+        <section className="py-8 md:py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Customer Stories</h2>
@@ -347,6 +505,9 @@ function ShoppingHome() {
             <Testimonials />
           </div>
         </section>
+        <div className="mt-4">
+
+        </div>
       </div>
     </>
   );

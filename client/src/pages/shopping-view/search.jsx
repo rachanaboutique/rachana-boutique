@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 function SearchProducts() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,13 +28,13 @@ function SearchProducts() {
 
   // Popular saree searches
   const popularSearches = [
-    "Silk Sarees",
-    "Banarasi Sarees",
-    "Cotton Sarees",
-    "Kanjivaram Sarees",
-    "Designer Sarees",
-    "Dresses",
-    "Summer Collection"
+    "Colourful Elegance",
+    "Multicolour Frenzy",
+    "Purple Garden",
+    "Traditional Elegance",
+    "Red Loctus",
+    "Blue Elephant",
+    "Polka Dots"
   ];
 
   // Update search results with a small delay to prevent UI flicker
@@ -48,8 +48,10 @@ function SearchProducts() {
 
       // Small timeout to simulate loading and prevent UI flicker
       const timer = setTimeout(() => {
+        const lowerCaseKeyword = keyword.toLowerCase();
         const filteredProducts = productList.filter((product) =>
-          product.title.toLowerCase().includes(keyword.toLowerCase())
+          product.title.toLowerCase().includes(lowerCaseKeyword) ||
+          (product.productCode && product.productCode.toLowerCase().includes(lowerCaseKeyword))
         );
         setSuggestions(filteredProducts);
         setIsLoading(false);
@@ -137,7 +139,7 @@ function SearchProducts() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
         <h2 className="text-2xl font-light mb-6 text-center">Search our store</h2>
-        <form onSubmit={handleSearch} className="flex items-center border-b border-gray-300 pb-2 mb-6">
+        <form onSubmit={handleSearch} className="flex items-center border-b border-gray-300 pb-2 mb-6 relative">
           <input
             ref={inputRef}
             type="text"
@@ -147,10 +149,20 @@ function SearchProducts() {
               setHighlightedIndex(-1);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Search for products..."
-            className="w-full bg-transparent text-lg outline-none"
+            placeholder="Search by product name or code..."
+            className="w-full bg-transparent text-lg outline-none pr-10"
             autoFocus
           />
+          {keyword && (
+            <button
+              type="button"
+              onClick={() => setKeyword("")}
+              className="absolute right-10 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
           <button type="submit" className="text-gray-700 hover:text-black transition-colors">
             <Search className="h-5 w-5" />
           </button>

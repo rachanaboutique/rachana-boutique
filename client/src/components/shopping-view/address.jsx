@@ -51,7 +51,10 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
       ).then((data) => {
         if (data?.payload?.success) {
           dispatch(fetchAllAddresses(user?.id));
-          setCurrentSelectedAddress(null);
+if (typeof setCurrentSelectedAddress === 'function') {
+  setCurrentSelectedAddress(null);
+}
+
           setCurrentEditedId(null);
           setFormData(initialAddressFormData);
           setShowForm(false);
@@ -117,6 +120,7 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
 
   function isFormValid() {
     return Object.keys(formData)
+      .filter((key) => key !== "notes")
       .map((key) => formData[key].trim() !== "")
       .every((item) => item);
   }

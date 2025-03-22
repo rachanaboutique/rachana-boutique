@@ -142,11 +142,11 @@ const TestimonialCard = ({ testimonial, index }) => {
 const PrevIcon = ({ onClick }) => {
   return (
     <button
-      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 z-10 w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center border border-gray-200 hover:bg-black hover:text-white hover:border-black transition-colors"
+      className="absolute left-2 top-1/2 -translate-y-1/2 -translate-x-6 z-10 w-8 h-8 md:w-12 md:h-12 rounded-full bg-white shadow-md flex items-center justify-center border border-gray-200 hover:bg-black hover:text-white hover:border-black transition-colors"
       onClick={onClick}
       aria-label="Previous"
     >
-      <ArrowLeft className="w-5 h-5" />
+      <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
     </button>
   );
 };
@@ -154,11 +154,11 @@ const PrevIcon = ({ onClick }) => {
 const NextIcon = ({ onClick }) => {
   return (
     <button
-      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 z-10 w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center border border-gray-200 hover:bg-black hover:text-white hover:border-black transition-colors"
+      className="absolute right-2 top-1/2 -translate-y-1/2 translate-x-6 z-10 w-8 h-8 md:w-12 rounded-full bg-white shadow-md flex items-center justify-center border border-gray-200 hover:bg-black hover:text-white hover:border-black transition-colors"
       onClick={onClick}
       aria-label="Next"
     >
-      <ArrowRight className="w-5 h-5" />
+      <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
     </button>
   );
 };

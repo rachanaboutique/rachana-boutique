@@ -28,7 +28,7 @@ function NewArrivals() {
     (state) => state.shopProducts
   );
   const { cartItems } = useSelector((state) => state.shopCart);
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState(null);
   const [searchParams] = useSearchParams();
@@ -59,8 +59,75 @@ function NewArrivals() {
   function handleGetProductDetails(getCurrentProductId) {
     navigate(`/shop/product/${getCurrentProductId}`);
   }
+    function handleAddtoCart(product) {
+      const productId = product._id;
+      const totalStock = product.totalStock;
+  
+      // Check if user is authenticated
+      if (!isAuthenticated) {
+        toast({
+          title: "Please log in to add items to the cart!",
+          variant: "destructive",
+        });
+        return Promise.reject("Not authenticated");
+      }
+  
+      // Check if product is in stock
+      if (totalStock <= 0) {
+        toast({
+          title: "This product is out of stock",
+          variant: "destructive",
+        });
+        return Promise.reject("Out of stock");
+      }
+  
+      // Check if adding one more would exceed stock limit
+      let currentCartItems = cartItems.items || [];
+      if (currentCartItems.length) {
+        const itemIndex = currentCartItems.findIndex(
+          (item) => item.productId === productId
+        );
+        if (itemIndex > -1) {
+          const currentQuantity = currentCartItems[itemIndex].quantity;
+          if (currentQuantity + 1 > totalStock) {
+            toast({
+              title: `Only ${totalStock} quantity available for this item`,
+              variant: "destructive",
+            });
+            return Promise.reject("Exceeds stock limit");
+          }
+        }
+      }
+  
+      // Get the first color if available
+      const colorId = product?.colors && product.colors.length > 0
+        ? product.colors[0]._id
+        : undefined;
+  
+      // Add to cart
+      return dispatch(
+        addToCart({
+          userId: user?.id,
+          productId: productId,
+          quantity: 1,
+          colorId: colorId,
+        })
+      ).then((data) => {
+        if (data?.payload?.success) {
+          // Force a refresh of the cart items to ensure we have the latest data
+          return dispatch(fetchCartItems(user?.id)).then(() => {
+            toast({
+              title: "Product added to cart",
+            });
+            return data;
+          });
+        }
+        return data;
+      });
+    }
 
-  function handleAddtoCart(getCurrentProductId, getTotalStock) {
+
+/*   function handleAddtoCart(getCurrentProductId, getTotalStock) {
     let currentCartItems = cartItems.items || [];
 
     if (currentCartItems.length) {
@@ -94,7 +161,7 @@ function NewArrivals() {
         toast({ title: "Product is added to cart" });
       }
     });
-  }
+  } */
 
   // Filter products for new arrivals (isNewArrival === true)
   const newArrivalProducts = productList
