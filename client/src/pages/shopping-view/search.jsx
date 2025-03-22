@@ -40,7 +40,7 @@ function SearchProducts() {
   // Update search results with a small delay to prevent UI flicker
   const [suggestions, setSuggestions] = useState([]);
 
-  useEffect(() => {
+ /*  useEffect(() => {
     if (keyword.trim().length > 0) {
       setIsLoading(true);
       // Update URL query parameter
@@ -62,8 +62,23 @@ function SearchProducts() {
       setSuggestions([]);
       setSearchParams({});
     }
-  }, [keyword, productList, setSearchParams]);
-
+  }, [keyword, productList, setSearchParams]); */
+  useEffect(() => {
+    if (keyword.trim().length > 0) {
+      setIsLoading(true);
+      const lowerCaseKeyword = keyword.toLowerCase();
+      const exactMatches = productList.filter((product) =>
+        product.title.toLowerCase().startsWith(lowerCaseKeyword)
+      );
+      const partialMatches = productList.filter((product) =>
+        product.title.toLowerCase().includes(lowerCaseKeyword) &&
+        !product.title.toLowerCase().startsWith(lowerCaseKeyword)
+      );
+      const suggestions = [...exactMatches, ...partialMatches];
+      setSuggestions(suggestions);
+      setIsLoading(false);
+    }
+  }, [keyword, productList]);
   // Focus input on page load
   useEffect(() => {
     if (inputRef.current) {

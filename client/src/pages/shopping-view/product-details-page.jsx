@@ -343,7 +343,7 @@ function ProductDetailsPage({ open, setOpen }) {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">
-      <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1.5fr] gap-12 md:gap-16">
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr] gap-12 md:gap-16">
 
         <div className="flex items-start gap-4">
           {/* Left Arrow - Desktop Only */}
@@ -514,7 +514,7 @@ function ProductDetailsPage({ open, setOpen }) {
             </div> */}
           {zoomData.isHovering && (
             <div
-              className="hidden md:block absolute top-[23%] left-[46%] z-10 w-1/2 h-3/4 overflow-hidden border shadow-lg bg-white"
+              className="hidden md:block absolute top-[24%] left-[51%] z-10 w-[40%] h-3/4 overflow-hidden border shadow-lg bg-white"
               style={{
                 backgroundImage: `url(${zoomData.imageSrc})`,
                 backgroundPosition: `${zoomData.zoomPosition.x}% ${zoomData.zoomPosition.y}%`,
@@ -585,7 +585,8 @@ function ProductDetailsPage({ open, setOpen }) {
 
       <Separator />
          {/* Related Products */}
-      {relatedProducts && relatedProducts.length > 0 && (
+     <div className="-mx-3.5">
+     {relatedProducts && relatedProducts.length > 0 && (
         <ProductSlider
           products={relatedProducts}
           handleGetProductDetails={(productId) => navigate(`/shop/product/${productId}`)}
@@ -595,6 +596,7 @@ function ProductDetailsPage({ open, setOpen }) {
           bgColor="bg-white"
         />
       )}
+     </div>
     </div>
   );
 }

@@ -66,7 +66,7 @@ const Contact = () => {
 
       <div className="bg-white">
         {/* Page Header */}
-        <div className="relative w-full h-[300px] md:h-[400px] overflow-hidden">
+        <div className="relative w-full h-[250px] md:h-[350px] overflow-hidden">
           <img
             src={banner}
             alt="Contact Us"

@@ -90,7 +90,7 @@ function ZoomableImage({ imageSrc, imageAlt, onZoomData }) {
           ref={imageRef}
           src={imageSrc}
           alt={imageAlt}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-fit"
         />
         {isHovering && (
           <div
