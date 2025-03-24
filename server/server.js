@@ -38,20 +38,38 @@ mongoose
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://rachana-boutique-chennai.web.app", "https://rachanaboutique.in"],
-    methods: ["GET", "POST", "DELETE", "PUT"],
+    origin: function(origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:5173", 
+        "https://rachana-boutique-chennai.web.app", 
+        "https://rachanaboutique.in",
+      ];
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
       "Authorization",
       "Cache-Control",
       "Expires",
       "Pragma",
+      "X-Requested-With"
     ],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   })
 );
+
+app.options('*', cors());
 
 app.use(cookieParser());
 app.use(express.json());
