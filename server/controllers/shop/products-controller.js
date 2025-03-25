@@ -45,7 +45,7 @@ const getFilteredProducts = async (req, res) => {
       success: true,
       data: products,
     });
-  } catch (e) {
+  } catch (error) {
     console.log(error);
     res.status(500).json({
       success: false,

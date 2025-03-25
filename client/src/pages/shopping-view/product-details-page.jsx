@@ -12,17 +12,19 @@ import { Separator } from "../../components/ui/separator";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import ProductSlider from "@/components/shopping-view/product-slider";
-import {fetchAllProducts} from "@/store/admin/products-slice";
+import { fetchAllProducts } from "@/store/admin/products-slice";
 
 function ProductDetailsPage({ open, setOpen }) {
   const [reviewMsg, setReviewMsg] = useState("");
   const [rating, setRating] = useState(0);
   const [selectedColor, setSelectedColor] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const { productList, productDetails } = useSelector((state) => state.shopProducts);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [zoomData, setZoomData] = useState({
     isHovering: false,
     zoomPosition: { x: 0, y: 0 },
@@ -39,23 +41,27 @@ function ProductDetailsPage({ open, setOpen }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  const [slideDirection, setSlideDirection] = useState(null);
+  const [isSliding, setIsSliding] = useState(false);
   const swipeThreshold = 50; // Minimum swipe distance to trigger navigation
 
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
+  // Handle image navigation with animation
+  const handleImageNavigation = (direction) => {
+    if (isSliding) return;
 
-  const handleTouchEnd = (e) => {
-    touchEndX.current = e.changedTouches[0].clientX;
-    const diff = touchEndX.current - touchStartX.current;
+    setSlideDirection(direction);
+    setIsSliding(true);
 
-    if (diff > swipeThreshold) {
-      navigateImage("prev");
-    } else if (diff < -swipeThreshold) {
-      navigateImage("next");
-    }
+    // Allow time for animation before changing the image
+    setTimeout(() => {
+      navigateImage(direction);
+
+      // Reset animation state after transition completes
+      setTimeout(() => {
+        setIsSliding(false);
+        setSlideDirection(null);
+      }, 50);
+    }, 150);
   };
 
   const handleZoomData = (data) => {
@@ -70,6 +76,7 @@ function ProductDetailsPage({ open, setOpen }) {
   };
 
   const handleAddToCart = (currentProductId, totalStock) => {
+    setIsAddingToCart(true);
     if (!isAuthenticated) {
       toast({
         title: "Please log in to add items to the cart!",
@@ -85,9 +92,9 @@ function ProductDetailsPage({ open, setOpen }) {
       );
       if (itemIndex > -1) {
         const currentQuantity = currentCartItems[itemIndex].quantity;
-        if (currentQuantity + 1 > totalStock) {
+        if (currentQuantity + quantity > totalStock) {
           toast({
-            title: `Only ${currentQuantity} quantity can be added for this item`,
+            title: `Only ${totalStock - currentQuantity} more can be added for this item`,
             variant: "destructive",
           });
           return;
@@ -104,17 +111,21 @@ function ProductDetailsPage({ open, setOpen }) {
       addToCart({
         userId: user?.id,
         productId: currentProductId,
-        quantity: 1,
+        quantity: quantity,
         colorId: selectedColor?._id,
       })
     ).then((data) => {
       if (data?.payload?.success) {
         // Force a refresh of the cart items to ensure we have the latest data
+        setIsAddingToCart(false);
         dispatch(fetchCartItems(user?.id)).then(() => {
           toast({
-            title: "Product is added to cart",
+            title: `${quantity} item${quantity > 1 ? 's' : ''} added to cart`,
           });
+          // Reset quantity to 1 after adding to cart
+          setQuantity(1);
         });
+
       }
     });
   };
@@ -239,6 +250,26 @@ function ProductDetailsPage({ open, setOpen }) {
     }
   };
 
+  // Handle quantity increase
+  const increaseQuantity = () => {
+    // Check if increasing would exceed stock
+    if (productDetails?.totalStock && quantity < productDetails.totalStock) {
+      setQuantity(prev => prev + 1);
+    } else {
+      toast({
+        title: `Maximum available quantity is ${productDetails?.totalStock}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle quantity decrease
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  };
+
   const renderDescriptionBulletPoints = (description) => {
     return description
       // Split on both literal "\n" and actual new lines
@@ -271,13 +302,13 @@ function ProductDetailsPage({ open, setOpen }) {
       if (getCurrentProductId) {
         await dispatch(fetchProductDetails(getCurrentProductId));
       }
-      
+
       // Check if productList is empty or needs to be refreshed
       if (!productList || productList.length === 0) {
         await dispatch(fetchAllProducts()); // Make sure this action exists in your products-slice
       }
     };
-    
+
     fetchData();
   }, [getCurrentProductId, location.key, dispatch]);
 
@@ -295,6 +326,9 @@ function ProductDetailsPage({ open, setOpen }) {
       if (productDetails?.colors && productDetails.colors.length > 0) {
         setSelectedColor(productDetails.colors[0]);
       }
+
+      // Reset quantity to 1 when product changes
+      setQuantity(1);
     }
   }, [productDetails?._id, productDetails?.image, productDetails?.colors, dispatch]);
 
@@ -313,7 +347,7 @@ function ProductDetailsPage({ open, setOpen }) {
     }
   }, [productList, productDetails]);
 
-  
+
 
   // Update zoomData.imageSrc when selectedImage changes
   useEffect(() => {
@@ -341,6 +375,15 @@ function ProductDetailsPage({ open, setOpen }) {
     setSelectedImage(productDetails.image[newIndex]);
   };
 
+  // Get CSS class for slide animation
+  const getSlideAnimationClass = () => {
+    if (!slideDirection) return '';
+
+    return slideDirection === 'next'
+      ? 'animate-slide-left'
+      : 'animate-slide-right';
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr] gap-12 md:gap-16">
@@ -349,7 +392,7 @@ function ProductDetailsPage({ open, setOpen }) {
           {/* Left Arrow - Desktop Only */}
           {productDetails?.image && productDetails.image.length > 1 && (
             <button
-              onClick={() => navigateImage('prev')}
+              onClick={() => handleImageNavigation('prev')}
               className="mt-72 hidden md:block bg-white hover:bg-gray-100 rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110 border border-gray-200"
               aria-label="Previous image"
             >
@@ -360,29 +403,29 @@ function ProductDetailsPage({ open, setOpen }) {
           <div className="flex flex-col gap-4">
 
             {/* Main Image Container */}
-            <div
-              className="flex-1 relative"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
-              <ZoomableImage
-                imageSrc={selectedImage}
-                imageAlt={productDetails?.title}
-                onZoomData={handleZoomData}
-              />
+            <div className="flex-1 relative">
+              <div className={`${getSlideAnimationClass()}`}>
+                <ZoomableImage
+                  imageSrc={selectedImage}
+                  imageAlt={productDetails?.title}
+                  onZoomData={handleZoomData}
+                  onNavigate={handleImageNavigation}
+                  images={productDetails?.image}
+                />
+              </div>
 
               {/* Mobile Arrows - Only visible on mobile */}
               {productDetails?.image && productDetails.image.length > 1 && (
                 <div className="md:hidden">
                   <button
-                    onClick={() => navigateImage("prev")}
+                    onClick={() => handleImageNavigation("prev")}
                     className="absolute left-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
                     aria-label="Previous image"
                   >
                     <ChevronLeft className="h-5 w-5 text-gray-800" />
                   </button>
                   <button
-                    onClick={() => navigateImage("next")}
+                    onClick={() => handleImageNavigation("next")}
                     className="absolute right-1 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md transition-all duration-300"
                     aria-label="Next image"
                   >
@@ -408,7 +451,7 @@ function ProductDetailsPage({ open, setOpen }) {
           {/* Right Arrow - Desktop Only */}
           {productDetails?.image && productDetails.image.length > 1 && (
             <button
-              onClick={() => navigateImage('next')}
+              onClick={() => handleImageNavigation('next')}
               className="mt-72 hidden md:block bg-white hover:bg-gray-100 rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110 border border-gray-200"
               aria-label="Next image"
             >
@@ -420,15 +463,20 @@ function ProductDetailsPage({ open, setOpen }) {
 
 
 
-        <div className="flex flex-col gap-4">
-          <div className="text-center mb-4">
+        <div className="flex flex-col  gap-4">
+          <div className="text-center flex flex-col items-center mb-4">
             <h1 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-2">
               {productDetails?.title}
             </h1>
-            <h2 className="text-lg md:text-xl text-gray-600">
+            <h2 className="text-lg md:text-xl text-gray-500">
               {productDetails?.secondTitle}
             </h2>
             <div className="w-24 h-1 bg-black mx-auto my-4"></div>
+            {productDetails?.productCode && (
+              <div className="bg-gray-100 py-2 px-4 w-1/3 rounded-md text-lg md:text-xl text-gray-800">
+                Code: {productDetails?.productCode}
+              </div>
+            )}
           </div>
 
           <div>
@@ -462,8 +510,8 @@ function ProductDetailsPage({ open, setOpen }) {
                       key={index}
                       onClick={() => handleColorSelect(colorItem)}
                       className={`cursor-pointer flex flex-col items-center p-2 rounded-lg transition-all duration-300 w-24 ${selectedColor && selectedColor._id === colorItem._id
-                          ? "border-2 border-black shadow-md"
-                          : "border border-gray-200 hover:border-gray-400"
+                        ? "border-2 border-black shadow-md"
+                        : "border border-gray-200 hover:border-gray-400"
                         }`}
                     >
                       <img
@@ -480,21 +528,53 @@ function ProductDetailsPage({ open, setOpen }) {
               </div>
             </div>
           )}
-          <div className="mt-8 flex justify-center">
-            {productDetails?.totalStock === 0 ? (
-              <button className="w-full max-w-md px-8 py-3 opacity-60 cursor-not-allowed border-2 border-gray-300 text-gray-400 uppercase tracking-wider text-sm font-medium">
-                Out of Stock
-              </button>
-            ) : (
-              <button
-                className="w-full max-w-md px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
-                onClick={() =>
-                  handleAddToCart(productDetails?._id, productDetails?.totalStock)
-                }
-              >
-                Add to Cart
-              </button>
-            )}
+          {/* Quantity Control and Add to Cart Button */}
+          <div className="mt-8 flex flex-col gap-4">
+
+
+            {/* Add to Cart Button */}
+            <div className="flex justify-center">
+              {productDetails?.totalStock === 0 ? (
+                <button className="w-full max-w-md px-8 py-3 opacity-60 cursor-not-allowed border-2 border-gray-300 text-gray-400 uppercase tracking-wider text-sm font-medium">
+                  Out of Stock
+                </button>
+              ) : (
+                <div className="flex items-center gap-4">
+                  {productDetails?.totalStock > 0 && (
+                    <div className="flex justify-center items-center">
+                      <div className="flex items-center border-2 border-black">
+                        <button
+                          onClick={decreaseQuantity}
+                          className="px-4 py-3 border-r-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <div className="bg-gray-100 text-black px-6 py-2 font-medium text-center min-w-[60px]">
+                          {quantity}
+                        </div>
+                        <button
+                          onClick={increaseQuantity}
+                          className="px-4 py-3 border-l-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    className="w-full max-w-md px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                    onClick={() =>
+                      handleAddToCart(productDetails?._id, productDetails?.totalStock)
+                    }
+                  >
+                   {isAddingToCart ? (<p>Adding...</p>) : (<p> Add to Cart </p>)}
+                  </button>
+                </div>
+
+              )}
+            </div>
           </div>
 
         </div>
@@ -576,7 +656,7 @@ function ProductDetailsPage({ open, setOpen }) {
               </Button>
             </div>
           </div> */}
-       
+
 
         </div>
 
@@ -584,19 +664,19 @@ function ProductDetailsPage({ open, setOpen }) {
 
 
       <Separator />
-         {/* Related Products */}
-     <div className="-mx-3.5">
-     {relatedProducts && relatedProducts.length > 0 && (
-        <ProductSlider
-          products={relatedProducts}
-          handleGetProductDetails={(productId) => navigate(`/shop/product/${productId}`)}
-          handleAddtoCart={handleRelatedProductsAddToCart}
-          title="You May Also Like"
-          description="Discover more items that complement your style"
-          bgColor="bg-white"
-        />
-      )}
-     </div>
+      {/* Related Products */}
+      <div className="-mx-3.5">
+        {relatedProducts && relatedProducts.length > 0 && (
+          <ProductSlider
+            products={relatedProducts}
+            handleGetProductDetails={(productId) => navigate(`/shop/product/${productId}`)}
+            handleAddtoCart={handleRelatedProductsAddToCart}
+            title="You May Also Like"
+            description="Discover more items that complement your style"
+            bgColor="bg-white"
+          />
+        )}
+      </div>
     </div>
   );
 }

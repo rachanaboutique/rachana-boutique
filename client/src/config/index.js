@@ -59,7 +59,7 @@ export const addProductFormElements = [
     name: "productCode",
     componentType: "input",
     type: "text",
-    placeholder: "Enter product code",
+    placeholder: "Enter product code (optional)",
   },
   {
     label: "Description",

@@ -129,7 +129,7 @@ const ShoppingProductTile = ({
 
         {/* Product Code Badge (if available) */}
         {product.productCode && (
-          <div className="absolute top-2 right-2 bg-white text-black text-xs font-medium px-2 py-1 rounded">
+          <div className="hidden md:block absolute top-2 right-2 bg-white text-black text-xs font-semibold px-2 py-1 rounded">
             Code: {product.productCode}
           </div>
         )}

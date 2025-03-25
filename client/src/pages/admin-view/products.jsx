@@ -171,6 +171,7 @@ function AdminProducts() {
 
   function isFormValid() {
     const optionalFields = [
+      "productCode",
       "isNewArrival",
       "isFeatured",
       "isWatchAndBuy",

@@ -126,7 +126,7 @@ const TestimonialCard = ({ testimonial, index }) => {
           <img
             src={testimonial.image}
             alt={testimonial.name}
-            className="w-12 h-12 rounded-full object-cover border border-gray-200"
+            className="w-20 h-20 rounded-full object-cover border border-gray-200"
           />
           <div className="ml-4">
             <h4 className="font-medium text-gray-900">{testimonial.name}</h4>

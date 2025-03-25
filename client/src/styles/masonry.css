@@ -96,3 +96,173 @@
 .category-card-hover-effect:hover .category-line {
   width: 100%;
 }
+
+/* Instagram-like Video Modal Styles */
+.video-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.video-modal-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.video-modal-video {
+  max-height: 80vh;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.video-modal-info {
+  background-color: white;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 16px;
+  transform: translateY(0);
+  transition: transform 0.3s ease;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.video-modal-info.expanded {
+  transform: translateY(-50%);
+}
+
+/* Floating add to cart button animation */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(236, 0, 63, 0.7);
+    transform: scale(1);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(236, 0, 63, 0);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 0, 63, 0);
+    transform: scale(1);
+  }
+}
+
+.video-modal-content button {
+  animation: pulse 2s infinite;
+}
+
+/* Watch and Buy Mobile Card Styles */
+.watch-buy-mobile-card {
+  aspect-ratio: 9/16;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.watch-buy-mobile-card .play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.watch-buy-mobile-card .play-button::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-left: 16px solid black;
+  border-bottom: 10px solid transparent;
+  margin-left: 4px;
+}
+
+/* Slider customizations for Watch and Buy section */
+.watch-buy-slider .slick-dots {
+  bottom: -30px;
+}
+
+.watch-buy-slider .slick-dots li button:before {
+  font-size: 8px;
+  color: #888;
+}
+
+.watch-buy-slider .slick-dots li.slick-active button:before {
+  color: #000;
+}
+
+.watch-buy-slider .slick-slide {
+  padding: 0 8px;
+}
+
+/* Desktop Watch and Buy enhancements */
+@media (min-width: 768px) {
+  /* Card hover effects */
+  .group:hover .group-hover\:scale-105 {
+    transform: scale(1.05);
+  }
+
+  /* Smooth transitions */
+  .transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+
+  /* Card active state */
+  [aria-current="true"] .bg-black\/80 {
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Like button animation */
+  @keyframes heartBeat {
+    0% {
+      transform: scale(1);
+    }
+    14% {
+      transform: scale(1.3);
+    }
+    28% {
+      transform: scale(1);
+    }
+    42% {
+      transform: scale(1.3);
+    }
+    70% {
+      transform: scale(1);
+    }
+  }
+
+  .fill-current.scale-110 {
+    animation: heartBeat 1.3s ease-in-out;
+  }
+
+  /* Add to cart button hover effect */
+  .hover\:scale-105:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}

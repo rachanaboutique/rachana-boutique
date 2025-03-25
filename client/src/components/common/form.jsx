@@ -47,7 +47,7 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
   };
 
   // Helper function for uploading video to Cloudinary.
-  const uploadVideo = async (file) => {
+/*   const uploadVideo = async (file) => {
     setVideoUploadStatus("uploading");
     const data = new FormData();
     data.append("my_file", file);
@@ -69,6 +69,48 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
       setVideoUploadStatus("idle");
     }
   };
+ */
+
+// Updated uploadVideo function with fixed variable naming
+const uploadVideo = async (file) => {
+  setVideoUploadStatus("uploading");
+  
+  try {
+    const cloudinaryFormData = new FormData();
+    cloudinaryFormData.append("file", file);
+    cloudinaryFormData.append("upload_preset", "watch_any_buy"); 
+    cloudinaryFormData.append("resource_type", "video");
+    
+    const response = await fetch(
+      "https://api.cloudinary.com/v1_1/dhkdsvdvr/video/upload",
+      {
+        method: "POST",
+        body: cloudinaryFormData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to upload video to Cloudinary");
+    }
+
+    const data = await response.json();
+    
+    // Using setFormData with the outer formData variable
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      video: data.secure_url,
+    }));
+    
+    setVideoUploadStatus("uploaded");
+    
+    return { url: data.secure_url, public_id: data.public_id };
+  } catch (err) {
+    console.error("Error uploading video: ", err);
+    setVideoUploadStatus("idle");
+    throw err;
+  }
+};
+
 
   function togglePasswordVisibility(name) {
     setPasswordVisibility((prevState) => ({
@@ -258,49 +300,62 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
           );
           break;
         }
-      case "video": {
-        // Only render video upload if the isWatchAndBuy toggle is true.
-        if (formData.isWatchAndBuy) {
-          element = (
-            <div className="flex gap-2 items-center mb-2">
-              {videoUploadStatus !== "uploaded" ? (
-                <Input
-                  type="file"
-                  accept="video/*"
-                  onChange={async (event) => {
-                    const file = event.target.files[0];
-                    if (file) {
-                      await uploadVideo(file);
-                    }
-                  }}
-                />
-              ) : null}
-              <span className="text-sm">
-                {videoUploadStatus === "uploading" && "Uploading..."}
-                {videoUploadStatus === "uploaded" && "Uploaded"}
-              </span>
-              {videoUploadStatus === "uploaded" && (
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setFormData({
-                      ...formData,
-                      video: ""
-                    });
-                    // Reset upload status so that the file input is displayed again.
-                    setVideoUploadStatus("idle");
-                  }}
-                >
-                  Remove Video
-                </Button>
-              )}
-            </div>
-          );
-        } else {
-          element = null;
+        case "video": {
+          // Only render video upload if the isWatchAndBuy toggle is true.
+          if (formData.isWatchAndBuy) {
+            element = (
+              <div>
+                {/* Show existing or newly uploaded video */}
+                {formData.video && (
+                  <div style={{ marginBottom: "10px" }}>
+                    <video
+                      src={formData.video}
+                      controls
+                      width="200"
+                      style={{ borderRadius: "8px", border: "1px solid #ccc" }}
+                    />
+                    <button
+                      onClick={() => {
+                        setFormData({ ...formData, video: "" });
+                        setVideoUploadStatus("idle"); // Reset upload status
+                      }}
+                    >
+                      Remove Video
+                    </button>
+                  </div>
+                )}
+        
+                {/* Video Upload Input (only if no video exists) */}
+                {!formData.video && (
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={async (event) => {
+                      const file = event.target.files[0];
+                      if (file) {
+                        setVideoUploadStatus("uploading");
+                        await uploadVideo(file); // Upload function
+                        setVideoUploadStatus("uploaded");
+                        setFormData({
+                          ...formData,
+                          video: URL.createObjectURL(file), // Store preview URL
+                        });
+                      }
+                    }}
+                  />
+                )}
+        
+                {/* Show upload status */}
+                {videoUploadStatus === "uploading" && <p>Uploading...</p>}
+                {videoUploadStatus === "uploaded" && <p>Uploaded</p>}
+              </div>
+            );
+          } else {
+            element = null;
+          }
+          break;
         }
-        break;
-      }
+        
       default:
         element = null;
     }
