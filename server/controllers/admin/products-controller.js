@@ -1,7 +1,7 @@
 const { imageUploadUtil, videoUploadUtil } = require("../../helpers/cloudinary");
 const Product = require("../../models/Product");
 const ProductReview = require("../../models/Review");
-
+const sharp = require('sharp');
 
 // Handles image upload for both single and multiple files
 /* const handleImageUpload = async (req, res) => {

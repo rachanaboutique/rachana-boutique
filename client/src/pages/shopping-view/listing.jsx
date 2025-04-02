@@ -28,6 +28,7 @@ function ShoppingListing() {
   const categorySearchParam = searchParams.get("category");
   const [currentCategory, setCurrentCategory] = useState(null);
 
+ 
   // Find current category details
   useEffect(() => {
     if (categorySearchParam && categoriesList.length > 0) {
@@ -238,14 +239,97 @@ function ShoppingListing() {
     );
   }, [dispatch, categorySearchParam, filters, sort]);
 
+  const structuredData = useMemo(() => {
+    const baseUrl = 'https://rachanaboutique.in';
+    
+    let data = {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "All Products",
+      "url": `${baseUrl}${location.pathname}${location.search}`,
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": baseUrl
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Collections",
+            "item": `${baseUrl}/shop/collections`
+          }
+        ]
+      }
+    };
+
+    if (currentCategory) {
+      data.name = `${currentCategory.name} Collection`;
+      data.url = `${baseUrl}/shop/collections?category=${currentCategory._id}`;
+      data.breadcrumb.itemListElement.push({
+        "@type": "ListItem",
+        "position": 3,
+        "name": currentCategory.name,
+        "item": `${baseUrl}/shop/collections?category=${currentCategory._id}`
+      });
+
+      data = {
+        ...data,
+        "description": `Explore our ${currentCategory.name} collection of premium sarees and ethnic wear at Rachana Boutique.`,
+        "image": currentCategory.image || banner,
+        "offers": {
+          "@type": "AggregateOffer",
+          "offerCount": filteredProducts.length,
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": "https://schema.org/InStock"
+        }
+      };
+    }
+
+    return data;
+  }, [currentCategory, location.pathname, location.search, filteredProducts?.length]);
+
+
   // Show loader only when productList is initially loading (i.e. empty)
   if (isLoading && productList.length === 0) return <Loader />;
 
   return (
     <>
-      <Helmet>
+            <Helmet>
         <title>{currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique</title>
-        <meta name="description" content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} />
+        <meta 
+          name="description" 
+          content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} 
+        />
+        <meta 
+          name="keywords" 
+          content={`${currentCategory?.name || 'ethnic wear'}, ${currentCategory?.title || 'sarees'}, boutique collection, Indian wear, Rachana Boutique`} 
+        />
+        <meta name="robots" content="index, follow" />
+        
+        {/* Open Graph tags */}
+        <meta property="og:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique`} />
+        <meta property="og:description" content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} />
+        <meta property="og:image" content={currentCategory?.image || banner} />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:type" content="website" />
+        
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique`} />
+        <meta name="twitter:description" content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} />
+        <meta name="twitter:image" content={currentCategory?.image || banner} />
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href={window.location.href} />
+
+        {/* JSON-LD structured data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
       </Helmet>
 
       <div className="bg-white">

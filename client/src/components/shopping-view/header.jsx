@@ -371,7 +371,7 @@ function ShoppingHeader() {
             </div>
 
             {/* Mobile right icons */}
-            <div className="flex items-center gap-3 lg:hidden">
+            <div className="flex items-center  lg:hidden">
               <button
                 onClick={() => navigate('/shop/search')}
                 className="relative group p-2"

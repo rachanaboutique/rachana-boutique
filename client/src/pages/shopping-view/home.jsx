@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Slider from "react-slick";
-
+import ReactPlayer from 'react-player';
 import classNames from "classnames";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, X } from "lucide-react";
 import "@/styles/masonry.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -65,13 +65,13 @@ function ShoppingHome() {
     dots: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 1,
+    slidesToShow: 5,
     slidesToScroll: 1,
-    autoplay: false,
+    autoplay: true,
     arrows: false,
     adaptiveHeight: true,
     centerMode: true,
-    centerPadding: '40px',
+    centerPadding: '50px',
     responsive: [
       {
         breakpoint: 480,
@@ -86,7 +86,7 @@ function ShoppingHome() {
       {
         breakpoint: 768,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 2,
           slidesToScroll: 1,
           dots: true,
           centerMode: true,
@@ -543,209 +543,162 @@ function ShoppingHome() {
 
 
               <div className="w-full mb-8">
-                {isMobile ? (
-                  // Mobile view with enhanced slider
-                  <div className="mobile-slider-container watch-buy-slider">
-                    <Slider {...sliderSettings} className="watch-buy-slider">
-                      {filteredProducts.map((productItem, index) => (
-                        <div key={productItem._id} className="px-1 pb-6">
-                          <div
-                            onClick={() => {
-                              setSelectedVideo(productItem);
-                              setShowVideoModal(true);
+
+                <div className="">
+                  <Slider {...sliderSettings} className="watch-buy-slider">
+                    {filteredProducts.map((productItem, index) => (
+                      <div key={productItem._id} className="px-1 pb-6">
+                        <div
+                          onClick={() => {
+                            setSelectedVideo(productItem);
+                            setShowVideoModal(true);
+                          }}
+                          className="relative"
+                        >
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.5,
+                              delay: index * 0.1,
                             }}
-                            className="relative"
+                            className="relative cursor-pointer rounded-lg shadow-md overflow-hidden watch-buy-mobile-card"
+                            style={{
+                              aspectRatio: "9/16",
+                              background: "#f8f8f8",
+                            }}
                           >
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{
-                                duration: 0.5,
-                                delay: index * 0.1,
-                              }}
-                              className="relative cursor-pointer rounded-lg shadow-md overflow-hidden watch-buy-mobile-card"
-                              style={{
-                                aspectRatio: "9/16",
-                                background: "#f8f8f8",
-                              }}
-                            >
-                              {/* Video thumbnail with play button overlay */}
-                              <div className="absolute inset-0 flex items-center justify-center z-10">
-                                <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center">
-                                  <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-black border-b-[8px] border-b-transparent ml-1"></div>
-                                </div>
+                            {/* Video thumbnail with play button overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center z-10">
+                              <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center">
+                                <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-black border-b-[8px] border-b-transparent ml-1"></div>
                               </div>
+                            </div>
 
-                              {/* Product title overlay at the top */}
-                              <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/70 to-transparent p-3">
-                                <h3 className="text-white text-sm font-medium line-clamp-1">{productItem?.title}</h3>
-                              </div>
+                            {/* Product title overlay at the top */}
+                            <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/70 to-transparent p-3">
+                              <h3 className="text-white text-sm font-medium line-clamp-1">{productItem?.title}</h3>
+                            </div>
 
-                              <FastMovingCard
-                                item={productItem}
-                                index={index}
-                                activeItem={activeItem}
-                                handleAddtoCart={handleAddtoCart}
-                                isMobileCard={true}
-                              />
-                            </motion.div>
+                            <FastMovingCard
+                              item={productItem}
+                              index={index}
+                              activeItem={activeItem}
+                              handleAddtoCart={handleAddtoCart}
+                              isMobileCard={true}
+                            />
+                          </motion.div>
 
-                            {/* Product info below the card */}
-                            <div className="mt-2 px-1">
-                              <div className="flex justify-between items-center">
-                                <p className="text-sm font-bold">₹{productItem.price}</p>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddtoCart(productItem);
-                                  }}
-                                  className="text-xs bg-black text-white px-3 py-1 rounded-full"
-                                >
-                                  Add to Cart
-                                </button>
-                              </div>
+                          {/* Product info below the card */}
+                          <div className="mt-2 px-1">
+                            <div className="flex justify-between items-center">
+                              <p className="text-sm font-bold">₹{productItem.price}</p>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddtoCart(productItem);
+                                }}
+                                className="text-xs bg-black text-white px-3 py-1 rounded-full"
+                              >
+                                Add to Cart
+                              </button>
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </Slider>
-                  </div>
-                ) : (
-                  // Desktop view with interactive cards (unchanged)
-                  <ul
-                    ref={wrapperRef}
-                    className="group flex flex-col gap-3 md:h-[640px] md:flex-row md:gap-[1.5%]"
-                  >
-                    {filteredProducts.map((productItem, index) => (
-                      <motion.li
-                        key={productItem._id}
-                        ref={ref}
-                        onClick={() => {
-                          setActiveItem(index);
-                          // Only open video modal on mobile
-                          if (isMobile) {
-                            setSelectedVideo(productItem);
-                            setShowVideoModal(true);
-                          }
-                        }}
-                        aria-current={activeItem === index}
-                        initial={{ x: -100, opacity: 0 }}
-                        animate={{
-                          x: inView ? 0 : -100,
-                          opacity: inView ? 1 : 0,
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 50,
-                          damping: 25,
-                        }}
-                        className={classNames(
-                          "relative cursor-pointer md:w-[16%] md:first:w-[16%] md:last:w-[16%] md:[&[aria-current='true']]:w-[40%]",
-                          "md:[transition:width_var(--transition,200ms_ease-in)]",
-                          "md:before-block before:absolute before:bottom-0 before:left-[-10px] before:right-[-10px] before:top-0 before:hidden before:bg-white",
-                          "md:[&:not(:hover),&:not(:first),&:not(:last)]:group-hover:w-[14%] md:hover:w-[20%]",
-                          "first:pointer-events-auto last:pointer-events-auto",
-                          "md:[&_img]:opacity-100"
-                        )}
-                      >
-                        <FastMovingCard
-                          item={productItem}
-                          index={index}
-                          activeItem={activeItem}
-                          handleAddtoCart={handleAddtoCart}
-                        />
-                      </motion.li>
+                      </div>
                     ))}
-                  </ul>
-                )}
+                  </Slider>
+                </div>
+
               </div>
 
             </div>
 
             {/* Instagram-like Video Modal - Only for Mobile */}
-            {showVideoModal && selectedVideo && isMobile && (
-  <div
-    className="fixed inset-0 bg-black z-50 flex flex-col"
-    onClick={() => setShowVideoModal(false)}
-  >
-    {/* Modal Header */}
-    <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center text-white z-10">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowVideoModal(false);
-        }}
-        className="text-white"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      <h3 className="text-lg font-medium truncate">{selectedVideo.name}</h3>
-      <div className="w-6"></div> {/* Empty div for spacing */}
-    </div>
-
-    {/* Video Content - Full Screen */}
-    <div className="flex-grow flex items-center justify-center">
-      <div className="w-full h-full">
-        {selectedVideo.videoUrl || selectedVideo.video ? (
-          <video
-            src={selectedVideo.videoUrl || selectedVideo.video}
-            className="w-full h-full object-fit"
-            controls
-            autoPlay
-            playsInline
-            loop
-          />
-        ) : (
-          <div className="text-white text-center p-4 w-full h-full flex items-center justify-center">
-            <div>
-              <p>Video preview not available</p>
-              <img
-                src={selectedVideo.image?.[0] || ''}
-                alt={selectedVideo.name}
-                className="max-h-[70vh] mx-auto mt-4 object-contain"
-              />
-            </div>
-          </div>
-        )}
+            {showVideoModal && selectedVideo  && (
+              <div
+                className="fixed inset-0 bg-black z-50 flex flex-col"
+                onClick={() => setShowVideoModal(false)}
+              >
+                {/* Modal Header */}
+                <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center text-white z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowVideoModal(false);
+                    }}
+                    className="text-white"
+                  >
+                     <div className="icon-container">
+        <X className="h-6 w-6" stroke="currentColor" /> {/* Use X icon */}
       </div>
-    </div>
+                  </button>
+                  <h3 className="text-lg font-medium truncate">{selectedVideo.name}</h3>
+                  <div className="w-6"></div> {/* Empty div for spacing */}
+                </div>
 
-    {/* Product Info and Actions - Slide Up from Bottom */}
-    <div className="bg-transparent backdrop-blur-xs p-4 rounded-t-3xl absolute bottom-0 w-full shadow-lg">
-  <div className="text-white flex justify-between items-start mb-3">
-    <div className=" flex-1">
-      <h3 className="text-lg font-medium">{selectedVideo?.title}</h3>
-    </div>
-    <div className="text-xl font-bold ml-2">₹{selectedVideo.price}</div>
-  </div>
-  
-  <div className="flex gap-2">
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        handleAddtoCart(selectedVideo);
-      }}
-      className="flex-1 bg-black text-white py-3 rounded-full font-medium"
-    >
-      Add to Cart
-    </button>
-    
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        navigate(`/shop/details/${selectedVideo._id}`);
-        setShowVideoModal(false);
-      }}
-      className="flex-1 bg-white border border-black text-black py-3 rounded-full font-medium"
-    >
-      View Details
-    </button>
+                {/* Video Content - Full Screen */}
+                <div className="-mt-32 flex-grow flex items-center justify-center">
+  <div className="w-full h-full md:h-[550px]">
+    {selectedVideo.videoUrl || selectedVideo.video ? (
+      <ReactPlayer
+        url={selectedVideo.videoUrl || selectedVideo.video}
+        className="w-full h-full"
+        playing
+        controls
+        loop
+        width="100%"
+        height="100%"
+      />
+    ) : (
+      <div className="text-white text-center p-4 w-full h-full flex items-center justify-center">
+        <div>
+          <p>Video preview not available</p>
+          <img
+            src={selectedVideo.image?.[0] || ''}
+            alt={selectedVideo.name}
+            className="max-h-[70vh] mx-auto mt-4 object-contain"
+          />
+        </div>
+      </div>
+    )}
   </div>
 </div>
-  </div>
-)}
+
+                {/* Product Info and Actions - Slide Up from Bottom */}
+                <div className="flex flex-col items-center bg-transparent backdrop-blur-xs p-4 rounded-t-3xl absolute bottom-0 w-full shadow-lg ">
+                  <div className="text-white flex justify-between items-start mb-3">
+                    <div className=" flex-1">
+                      <h3 className="text-lg font-medium">{selectedVideo?.title}</h3>
+                    </div>
+                    <div className="text-xl font-bold ml-2">₹{selectedVideo.price}</div>
+                  </div>
+
+                  <div className="w-full md:w-1/4 flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddtoCart(selectedVideo);
+                      }}
+                      className="border border-white flex-1 bg-black text-white py-3 rounded-full font-medium"
+                    >
+                      Add to Cart
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/shop/details/${selectedVideo._id}`);
+                        setShowVideoModal(false);
+                      }}
+                      className="flex-1 bg-white border border-black text-black py-3 rounded-full font-medium"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
 
           </section>

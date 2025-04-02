@@ -1,4 +1,30 @@
+# Global rules
 User-agent: *
 Allow: /
+Allow: /shop/home
+Allow: /shop/collections
+Allow: /shop/new-arrivals
+Allow: /shop/contact
+Allow: /shop/search
 
+# Prevent indexing of sensitive pages
+Disallow: /shop/checkout
+Disallow: /shop/account
+Disallow: /shop/payment-success
+Disallow: /shop/paypal-return
+Disallow: /shop/cart
+Disallow: /auth/*
+Disallow: /admin/*
+
+# Prevent crawling of search result pages
+Disallow: /*?q=*
+Disallow: /*?search=*
+
+# Allow crawling of category pages
+Allow: /shop/collections?category=*
+
+# Crawl-delay for all bots (optional)
+Crawl-delay: 1
+
+# Sitemap location
 Sitemap: https://rachanaboutique.in/sitemap.xml

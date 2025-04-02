@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import classNames from "classnames";
-import { Heart, ExternalLink, X } from "lucide-react";
+import { Heart, ExternalLink, X, ShoppingBag, Loader } from "lucide-react";
 import { useToast } from "../ui/use-toast";
 
 const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard = false }) => {
@@ -62,7 +62,6 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
       handleAddtoCart(item);
     }
   };
-
   return (
     <>
       {/* Mobile Card Style for the new Instagram-like UI */}
@@ -142,24 +141,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
               {desktopVideoLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
                   <div className="relative">
-                    <svg
-                      className="animate-spin h-12 w-12 text-white drop-shadow-lg"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-20 stroke-current"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        strokeWidth="3"
-                      ></circle>
-                      <path
-                        className="opacity-90 fill-current"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                      ></path>
-                    </svg>
+                    <Loader className="w-6 h-6 text-white animate-spin" />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-xs text-white">Loading</span>
                     </div>
@@ -269,9 +251,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                     onClick={(e) => handleAddToCartClick(e)}
                     className="w-full px-4 py-1.5 text-sm text-white rounded-md bg-black hover:bg-gray-800 border border-white/20 transform transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
+                     <ShoppingBag size={18} className={isAddingToCart ? "opacity-20" : ""} />
                     Add to Cart
                   </button>
                 </div>

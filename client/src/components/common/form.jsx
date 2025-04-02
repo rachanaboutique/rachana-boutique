@@ -74,7 +74,6 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
 // Updated uploadVideo function with fixed variable naming
 const uploadVideo = async (file) => {
   setVideoUploadStatus("uploading");
-  
   try {
     const cloudinaryFormData = new FormData();
     cloudinaryFormData.append("file", file);
@@ -95,12 +94,12 @@ const uploadVideo = async (file) => {
 
     const data = await response.json();
     
-    // Using setFormData with the outer formData variable
+    // Set the Cloudinary URL in the form data
     setFormData((prevFormData) => ({
       ...prevFormData,
       video: data.secure_url,
     }));
-    
+
     setVideoUploadStatus("uploaded");
     
     return { url: data.secure_url, public_id: data.public_id };
@@ -110,6 +109,8 @@ const uploadVideo = async (file) => {
     throw err;
   }
 };
+
+
 
 
   function togglePasswordVisibility(name) {
@@ -301,11 +302,9 @@ const uploadVideo = async (file) => {
           break;
         }
         case "video": {
-          // Only render video upload if the isWatchAndBuy toggle is true.
           if (formData.isWatchAndBuy) {
             element = (
               <div>
-                {/* Show existing or newly uploaded video */}
                 {formData.video && (
                   <div style={{ marginBottom: "10px" }}>
                     <video
@@ -317,7 +316,7 @@ const uploadVideo = async (file) => {
                     <button
                       onClick={() => {
                         setFormData({ ...formData, video: "" });
-                        setVideoUploadStatus("idle"); // Reset upload status
+                        setVideoUploadStatus("idle");
                       }}
                     >
                       Remove Video
@@ -325,7 +324,6 @@ const uploadVideo = async (file) => {
                   </div>
                 )}
         
-                {/* Video Upload Input (only if no video exists) */}
                 {!formData.video && (
                   <input
                     type="file"
@@ -335,17 +333,12 @@ const uploadVideo = async (file) => {
                       if (file) {
                         setVideoUploadStatus("uploading");
                         await uploadVideo(file); // Upload function
-                        setVideoUploadStatus("uploaded");
-                        setFormData({
-                          ...formData,
-                          video: URL.createObjectURL(file), // Store preview URL
-                        });
+                        // No need to set the blob URL here
                       }
                     }}
                   />
                 )}
         
-                {/* Show upload status */}
                 {videoUploadStatus === "uploading" && <p>Uploading...</p>}
                 {videoUploadStatus === "uploaded" && <p>Uploaded</p>}
               </div>
