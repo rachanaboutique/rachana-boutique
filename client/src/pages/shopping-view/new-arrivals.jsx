@@ -13,7 +13,8 @@ import {
   fetchAllFilteredProducts,
   fetchProductDetails,
 } from "@/store/shop/products-slice";
-import { ArrowUpDownIcon, ChevronRight, ShoppingBag } from "lucide-react";
+import { ArrowUpDownIcon, ShoppingBag } from "lucide-react";
+import Breadcrumb from "@/components/shopping-view/breadcrumb";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -62,7 +63,7 @@ function NewArrivals() {
     function handleAddtoCart(product) {
       const productId = product._id;
       const totalStock = product.totalStock;
-  
+
       // Check if user is authenticated
       if (!isAuthenticated) {
         toast({
@@ -71,7 +72,7 @@ function NewArrivals() {
         });
         return Promise.reject("Not authenticated");
       }
-  
+
       // Check if product is in stock
       if (totalStock <= 0) {
         toast({
@@ -80,7 +81,7 @@ function NewArrivals() {
         });
         return Promise.reject("Out of stock");
       }
-  
+
       // Check if adding one more would exceed stock limit
       let currentCartItems = cartItems.items || [];
       if (currentCartItems.length) {
@@ -98,12 +99,12 @@ function NewArrivals() {
           }
         }
       }
-  
+
       // Get the first color if available
       const colorId = product?.colors && product.colors.length > 0
         ? product.colors[0]._id
         : undefined;
-  
+
       // Add to cart
       return dispatch(
         addToCart({
@@ -168,6 +169,32 @@ function NewArrivals() {
     ? productList.filter((product) => product.isNewArrival === true)
     : [];
 
+  // Create structured data for SEO
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "New Arrivals",
+    "description": "Discover our latest arrivals - fresh designs and styles just added to our collection at Rachana Boutique.",
+    "url": "https://rachanaboutique.in/shop/new-arrivals",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://rachanaboutique.in/shop/home"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "New Arrivals",
+          "item": "https://rachanaboutique.in/shop/new-arrivals"
+        }
+      ]
+    }
+  };
+
   // Show loader only when the product list is not yet available
   if (isLoading && productList.length === 0) return <Loader />;
 
@@ -176,6 +203,9 @@ function NewArrivals() {
       <Helmet>
         <title>New Arrivals | Rachana Boutique</title>
         <meta name="description" content="Discover our latest arrivals - fresh designs and styles just added to our collection at Rachana Boutique." />
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
       </Helmet>
 
       <div className="bg-white">
@@ -196,10 +226,16 @@ function NewArrivals() {
           </div>
         </div>
 
-       
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: "Home", path: "/shop/home" },
+            { label: "New Arrivals", path: "/shop/new-arrivals" }
+          ]}
+        />
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="container mx-auto px-4 py-4">
           <div className="bg-white">
             <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
               <div>
@@ -258,13 +294,13 @@ function NewArrivals() {
                     </DropdownMenuRadioGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                
+
               </div>
               <p className="text-gray-500">
                   Showing {newArrivalProducts.length} products
                 </p>
-               
-            
+
+
             </div>
 
             {/* Products Grid - Using Original ShoppingProductTile */}

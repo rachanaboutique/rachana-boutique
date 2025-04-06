@@ -135,11 +135,11 @@ const ShoppingProductTile = ({
         )}
 
         {/* Stock Status Badge */}
-        {totalStock === 0 && (
+       {/*  {totalStock === 0 && (
           <div className="absolute top-10 left-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded">
             Out of Stock
           </div>
-        )}
+        )} */}
 
         <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between opacity-0 transform translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
           <button

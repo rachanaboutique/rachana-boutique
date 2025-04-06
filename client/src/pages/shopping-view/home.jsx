@@ -1,12 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import Slider from "react-slick";
-import ReactPlayer from 'react-player';
-import classNames from "classnames";
 import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, X } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import "@/styles/masonry.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -16,7 +12,7 @@ import {
   fetchAllFilteredProducts,
   fetchProductDetails,
 } from "@/store/shop/products-slice";
-import ShoppingProductTile from "@/components/shopping-view/product-tile";
+
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchCategories } from "@/store/shop/categories-slice";
@@ -24,19 +20,18 @@ import { fetchBanners } from "@/store/shop/banners-slice";
 import { fetchInstaFeed } from "@/store/shop/instafeed-slice";
 import CategoryCard from "@/components/shopping-view/categoryCard";
 import Carousel from "@/components/shopping-view/carousel";
-import FastMovingCard from "@/components/shopping-view/fast-moving-card";
+
 import InstagramFeed from "@/components/shopping-view/instagramFeed";
 import Testimonials from "@/components/shopping-view/testimonials-new";
 import Banner from "@/components/shopping-view/banner";
 import ProductSlider from "@/components/shopping-view/product-slider";
+import WatchAndBuy from "@/components/shopping-view/watch-and-buy-desktop";
+import WatchAndBuyMobile from "@/components/shopping-view/watch-and-buy-mobile";
 import bannerThree from "../../assets/saree.png";
 import { Loader } from "../../components/ui/loader";
 
 function ShoppingHome() {
-  const [activeItem, setActiveItem] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showVideoModal, setShowVideoModal] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -46,7 +41,7 @@ function ShoppingHome() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  let screenWidth = window.innerWidth;
+
   const navigate = useNavigate();
   const { productList, isLoading: productsLoading } = useSelector((state) => state.shopProducts);
   const { bannersList, isLoading: bannersLoading } = useSelector((state) => state.shopBanners);
@@ -58,64 +53,7 @@ function ShoppingHome() {
   const dispatch = useDispatch();
   const { toast } = useToast();
 
-  const wrapperRef = useRef(null);
-  const timeoutRef = useRef(null);
-  // Settings for the mobile slider
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 5,
-    slidesToScroll: 1,
-    autoplay: true,
-    arrows: false,
-    adaptiveHeight: true,
-    centerMode: true,
-    centerPadding: '50px',
-    responsive: [
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          dots: true,
-          centerMode: true,
-          centerPadding: '70px',
-        }
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-          dots: true,
-          centerMode: true,
-          centerPadding: '60px',
-        }
-      }
-    ]
-  };
-  const { ref, inView } = useInView({
-    rootMargin: screenWidth <= 768 ? "3100px" : "0px",
-    threshold: 0.2,
-  });
 
-
-  useEffect(() => {
-    if (!wrapperRef.current) return;
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-    wrapperRef.current.style.setProperty(
-      "--transition",
-      "600ms cubic-bezier(0.22, 0.61, 0.36, 1)"
-    );
-
-    timeoutRef.current = setTimeout(() => {
-      wrapperRef.current?.style.removeProperty("--transition");
-    }, 900);
-
-    return () => timeoutRef.current && clearTimeout(timeoutRef.current);
-  }, [activeItem]);
 
   // Fetch all required data once
   useEffect(() => {
@@ -213,6 +151,8 @@ function ShoppingHome() {
     };
   }, []);
 
+
+
   const isAnyLoading = productsLoading || bannersLoading || categoriesLoading || instaFeedLoading;
   if (isAnyLoading) return <Loader />;
   return (
@@ -248,7 +188,7 @@ function ShoppingHome() {
             <p className="text-gray-600">Discover our curated collections designed for every style and occasion</p>
             </div>
 
-           
+
             <div
               className="masonry-grid"
               style={{
@@ -261,7 +201,7 @@ function ShoppingHome() {
                   key={categoryItem._id || index}
                   className="masonry-item mb-4 md:mb-6 break-inside-avoid"
                   style={{
-          
+
                     animationDelay: `${index * 0.1}s`
                   }}
                 >
@@ -286,7 +226,7 @@ function ShoppingHome() {
               ))}
             </div>
 
-           
+
             <div className="text-center mt-12">
               <button
                 onClick={() => navigate('/shop/collections')}
@@ -531,177 +471,19 @@ function ShoppingHome() {
           </div>
         </section> */}
 
-        {/* Watch and Buy Section */}
+        {/* Watch and Buy Section - Desktop and Mobile versions */}
         {hasWatchAndBuyProducts && (
-          <section className="py-6 md:py-12 bg-white">
-            <div className="container mx-auto px-4">
-              <div className="max-w-3xl mx-auto text-center mb-8">
-                <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Watch And Buy</h2>
-                <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
-                <p className="text-gray-600">Explore our curated collection of trending products</p>
-              </div>
-
-
-              <div className="w-full mb-8">
-
-                <div className="">
-                  <Slider {...sliderSettings} className="watch-buy-slider">
-                    {filteredProducts.map((productItem, index) => (
-                      <div key={productItem._id} className="px-1 pb-6">
-                        <div
-                          onClick={() => {
-                            setSelectedVideo(productItem);
-                            setShowVideoModal(true);
-                          }}
-                          className="relative"
-                        >
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              duration: 0.5,
-                              delay: index * 0.1,
-                            }}
-                            className="relative cursor-pointer rounded-lg shadow-md overflow-hidden watch-buy-mobile-card"
-                            style={{
-                              aspectRatio: "9/16",
-                              background: "#f8f8f8",
-                            }}
-                          >
-                            {/* Video thumbnail with play button overlay */}
-                            <div className="absolute inset-0 flex items-center justify-center z-10">
-                              <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center">
-                                <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-black border-b-[8px] border-b-transparent ml-1"></div>
-                              </div>
-                            </div>
-
-                            {/* Product title overlay at the top */}
-                            <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/70 to-transparent p-3">
-                              <h3 className="text-white text-sm font-medium line-clamp-1">{productItem?.title}</h3>
-                            </div>
-
-                            <FastMovingCard
-                              item={productItem}
-                              index={index}
-                              activeItem={activeItem}
-                              handleAddtoCart={handleAddtoCart}
-                              isMobileCard={true}
-                            />
-                          </motion.div>
-
-                          {/* Product info below the card */}
-                          <div className="mt-2 px-1">
-                            <div className="flex justify-between items-center">
-                              <p className="text-sm font-bold">₹{productItem.price}</p>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAddtoCart(productItem);
-                                }}
-                                className="text-xs bg-black text-white px-3 py-1 rounded-full"
-                              >
-                                Add to Cart
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </Slider>
-                </div>
-
-              </div>
-
+          <>
+            {/* Desktop version */}
+            <div className="hidden md:block">
+              <WatchAndBuy products={filteredProducts} handleAddtoCart={handleAddtoCart} />
             </div>
 
-            {/* Instagram-like Video Modal - Only for Mobile */}
-            {showVideoModal && selectedVideo  && (
-              <div
-                className="fixed inset-0 bg-black z-50 flex flex-col"
-                onClick={() => setShowVideoModal(false)}
-              >
-                {/* Modal Header */}
-                <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center text-white z-10">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowVideoModal(false);
-                    }}
-                    className="text-white"
-                  >
-                     <div className="icon-container">
-        <X className="h-6 w-6" stroke="currentColor" /> {/* Use X icon */}
-      </div>
-                  </button>
-                  <h3 className="text-lg font-medium truncate">{selectedVideo.name}</h3>
-                  <div className="w-6"></div> {/* Empty div for spacing */}
-                </div>
-
-                {/* Video Content - Full Screen */}
-                <div className="-mt-32 flex-grow flex items-center justify-center">
-  <div className="w-full h-full md:h-[550px]">
-    {selectedVideo.videoUrl || selectedVideo.video ? (
-      <ReactPlayer
-        url={selectedVideo.videoUrl || selectedVideo.video}
-        className="w-full h-full"
-        playing
-        controls
-        loop
-        width="100%"
-        height="100%"
-      />
-    ) : (
-      <div className="text-white text-center p-4 w-full h-full flex items-center justify-center">
-        <div>
-          <p>Video preview not available</p>
-          <img
-            src={selectedVideo.image?.[0] || ''}
-            alt={selectedVideo.name}
-            className="max-h-[70vh] mx-auto mt-4 object-contain"
-          />
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-
-                {/* Product Info and Actions - Slide Up from Bottom */}
-                <div className="flex flex-col items-center bg-transparent backdrop-blur-xs p-4 rounded-t-3xl absolute bottom-0 w-full shadow-lg ">
-                  <div className="text-white flex justify-between items-start mb-3">
-                    <div className=" flex-1">
-                      <h3 className="text-lg font-medium">{selectedVideo?.title}</h3>
-                    </div>
-                    <div className="text-xl font-bold ml-2">₹{selectedVideo.price}</div>
-                  </div>
-
-                  <div className="w-full md:w-1/4 flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddtoCart(selectedVideo);
-                      }}
-                      className="border border-white flex-1 bg-black text-white py-3 rounded-full font-medium"
-                    >
-                      Add to Cart
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/shop/details/${selectedVideo._id}`);
-                        setShowVideoModal(false);
-                      }}
-                      className="flex-1 bg-white border border-black text-black py-3 rounded-full font-medium"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-
-          </section>
+            {/* Mobile version */}
+            <div className="md:hidden">
+              <WatchAndBuyMobile products={filteredProducts} handleAddtoCart={handleAddtoCart} />
+            </div>
+          </>
         )}
 
         <section>

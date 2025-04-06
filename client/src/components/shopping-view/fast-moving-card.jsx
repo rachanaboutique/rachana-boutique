@@ -90,10 +90,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
               </div>
             )}
 
-            {/* Product Info Overlay - We're now handling this in the parent component */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-3">
-           
-            </div>
+            {/* No product info overlay - handled in parent component */}
           </div>
         </div>
       ) : (
@@ -149,7 +146,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                 </div>
               )}
 
-             
+
             </>
           )}
 
@@ -209,7 +206,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
               {item?.name || item?.title}
             </h2>
 
-           
+
           </div>
 
           {/* Action Area for Desktop */}

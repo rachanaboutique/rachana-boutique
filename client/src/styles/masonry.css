@@ -168,10 +168,276 @@
 /* Watch and Buy Mobile Card Styles */
 .watch-buy-mobile-card {
   aspect-ratio: 9/16;
-  border-radius: 12px;
   overflow: hidden;
   position: relative;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Watch and Buy Slider Styles */
+.watch-buy-slider {
+  margin: 0;
+  padding: 0;
+}
+
+.watch-buy-slider .slick-track {
+  display: flex;
+  gap: 0;
+}
+
+.watch-buy-slider .slick-slide {
+  height: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.watch-buy-slider .slick-list {
+  margin: 0;
+}
+
+.watch-buy-slider .slick-dots {
+  margin-top: 0;
+  bottom: -15px;
+}
+
+/* Custom spacing for cards */
+.watch-buy-slider .slick-slide > div {
+  margin: 0;
+  padding: 0;
+}
+
+/* Fix width for different screen sizes */
+@media (min-width: 1280px) {
+  .watch-buy-slider .slick-slide {
+    width: 20% !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .watch-buy-slider .slick-slide {
+    width: 25% !important;
+  }
+}
+
+/* Mobile video stacker styles */
+@media (max-width: 767px) {
+  .video-stacker-container {
+    touch-action: none; /* Disable browser's default touch actions */
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+
+  .video-stack-wrapper {
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  /* Enhanced YouTube Shorts-like transitions */
+  .mobile-video-slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: none; /* No transition by default - we control this with JS */
+    will-change: transform; /* Optimize for animations */
+  }
+
+  .mobile-video-slide.active {
+    transform: translateY(0);
+    z-index: 10;
+  }
+
+  .mobile-video-slide.prev {
+    transform: translateY(-100%); /* Position previous card fully above */
+    z-index: 9;
+    visibility: visible; /* Ensure it's visible when needed */
+  }
+
+  .mobile-video-slide.next {
+    transform: translateY(100%); /* Position next card fully below */
+    z-index: 9;
+    visibility: visible; /* Ensure it's visible when needed */
+  }
+
+  /* Fixed YouTube Shorts-like swiping with precise finger control - one card at a time */
+  .swiping-up .mobile-video-slide.active {
+    transform: translateY(calc(var(--swipe-progress) * -100%)); /* Move UP (negative) when swiping up */
+    transition: none; /* No transition during active swiping for direct control */
+  }
+
+  .swiping-up .mobile-video-slide.next {
+    transform: translateY(calc(100% + (var(--swipe-progress) * -100%))); /* Next card stays at bottom until current card moves away */
+    transition: none; /* No transition during active swiping for direct control */
+  }
+
+  .swiping-down .mobile-video-slide.active {
+    transform: translateY(calc(var(--swipe-progress) * 100%)); /* Move DOWN (positive) when swiping down */
+    transition: none; /* No transition during active swiping for direct control */
+  }
+
+  .swiping-down .mobile-video-slide.prev {
+    transform: translateY(calc(-100% + (var(--swipe-progress) * 100%))); /* Prev card stays at top until current card moves away */
+    transition: none; /* No transition during active swiping for direct control */
+  }
+
+  /* Active swiping state - completely removes transitions for direct finger control */
+  .active-swiping .mobile-video-slide {
+    transition: none !important;
+  }
+
+  /* Transition only applied when releasing finger - shorter duration for smoother effect */
+  .transitioning .mobile-video-slide {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); /* Spring-like transition with custom easing */
+  }
+
+  /* Special handling for the active card during transition to prevent jumps */
+  .transitioning .mobile-video-slide.active {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Manual transition classes for direct DOM manipulation */
+  .mobile-video-slide.manual-transition {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .mobile-video-slide.moving-up {
+    transform: translateY(-100%) !important;
+  }
+
+  .mobile-video-slide.moving-down {
+    transform: translateY(100%) !important;
+  }
+
+  .mobile-video-slide.moving-to-center {
+    transform: translateY(0) !important;
+  }
+
+  /* Ensure video controls are always on top */
+  .video-controls-top {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 50;
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Enhanced swipe indicators with YouTube Shorts-like feedback */
+  .swipe-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    z-index: 20;
+    animation: pulse-opacity 2s infinite;
+    transition: opacity 0.3s, transform 0.3s, width 0.3s;
+  }
+
+  /* Indicator animation */
+  @keyframes pulse-opacity {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Indicator positions */
+  .swipe-indicator.top {
+    top: 20px;
+  }
+
+  .swipe-indicator.bottom {
+    bottom: 90px;
+  }
+
+  /* Active swiping indicator states */
+  .active-swiping .swipe-indicator {
+    width: 50px;
+    opacity: 0.8;
+  }
+
+  .swiping-up .swipe-indicator.top {
+    opacity: 0.9;
+    transform: translateX(-50%) scaleX(1.2);
+  }
+
+  .swiping-down .swipe-indicator.bottom {
+    opacity: 0.9;
+    transform: translateX(-50%) scaleX(1.2);
+  }
+
+  /* Full width video */
+  .mobile-video-slide .video-card,
+  .mobile-video-card {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none;
+    max-height: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .mobile-video-slide .react-player,
+  .mobile-video-card .react-player {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  /* Make sure controls and product info are always visible */
+  .mobile-video-slide .absolute,
+  .mobile-video-card .absolute {
+    z-index: 20;
+  }
+
+  /* Product info overlay styling */
+  .mobile-video-slide .bg-gradient-to-t,
+  .mobile-video-card .bg-gradient-to-t {
+    z-index: 30;
+    padding-bottom: 20px; /* Extra padding at bottom for better visibility */
+  }
+
+  /* Video controls styling */
+  .video-controls {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+    z-index: 40;
+  }
+
+  .video-control-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .video-control-button:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
 }
 
 .watch-buy-mobile-card .play-button {
@@ -260,9 +526,103 @@
     animation: heartBeat 1.3s ease-in-out;
   }
 
+  /* VideoStacker UI Styles */
+  .video-stacker-container {
+    background-color: #000;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .video-stack-wrapper {
+    perspective: 1000px;
+  }
+
+  .video-card {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Video card hover effect */
+  .video-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Animation for video card transitions */
+  @keyframes slideInFromRight {
+    0% {
+      transform: translateX(100%) scale(0.9);
+      opacity: 0.7;
+    }
+    100% {
+      transform: translateX(60%) scale(0.9);
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    0% {
+      transform: translateX(-100%) scale(0.9);
+      opacity: 0.7;
+    }
+    100% {
+      transform: translateX(-60%) scale(0.9);
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes slideToCenter {
+    0% {
+      transform: translateX(60%) scale(0.9);
+      opacity: 0.7;
+    }
+    100% {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* React Player styling */
+  .react-player {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  /* Timeline indicators */
+  .video-timeline-indicator {
+    transition: all 0.3s ease;
+  }
+
+  .video-timeline-indicator:hover {
+    transform: scaleY(1.5);
+  }
+}
+
   /* Add to cart button hover effect */
   .hover\:scale-105:hover {
     transform: scale(1.05);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
+
+/* Add styles for video controls */
+.video-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 15px;
+  z-index: 30;
+}
+
+.video-control-button {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  backdrop-filter: blur(4px);
 }

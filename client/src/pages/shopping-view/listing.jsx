@@ -2,11 +2,12 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import ProductFilter from "@/components/shopping-view/filter";
-import { fetchProductDetails, fetchAllFilteredProducts } from "@/store/shop/products-slice";
+import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ArrowUpDownIcon, ShoppingBag, ChevronRight } from "lucide-react";
+import { ArrowUpDownIcon, ShoppingBag } from "lucide-react";
+import ProductFilter from "@/components/shopping-view/filter";
+import Breadcrumb from "@/components/shopping-view/breadcrumb";
 import { Loader } from "@/components/ui/loader";
 import { sortOptions } from "@/config";
 import { Helmet } from "react-helmet-async";
@@ -17,7 +18,7 @@ import banner from '@/assets/allproducts.png';
 function ShoppingListing() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { productList, productDetails, isLoading } = useSelector((state) => state.shopProducts);
+  const { productList, isLoading } = useSelector((state) => state.shopProducts);
   const { categoriesList } = useSelector((state) => state.shopCategories);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -28,7 +29,7 @@ function ShoppingListing() {
   const categorySearchParam = searchParams.get("category");
   const [currentCategory, setCurrentCategory] = useState(null);
 
- 
+
   // Find current category details
   useEffect(() => {
     if (categorySearchParam && categoriesList.length > 0) {
@@ -67,10 +68,21 @@ function ShoppingListing() {
               return product.salePrice >= min && product.salePrice <= max;
             })
           );
-        } else {
-          // Handle other filters
+        } else if (key === "outOfStock") {
+          // Handle out of stock filter
           updatedProducts = updatedProducts.filter((product) =>
-            values.some((value) => product[key] === value)
+            product.totalStock <= 0
+          );
+        } else {
+          // Handle other filters (isNewArrival, isFeatured, category)
+          updatedProducts = updatedProducts.filter((product) =>
+            values.some((value) => {
+              // Convert string "true" to boolean true for boolean fields
+              if (value === "true" && typeof product[key] === "boolean") {
+                return product[key] === true;
+              }
+              return product[key] === value;
+            })
           );
         }
       });
@@ -85,6 +97,8 @@ function ShoppingListing() {
 
     return updatedProducts;
   }, [productList, filters, sort, categorySearchParam]);
+
+
 
   const handleFilter = (filterKey, filterValue) => {
     const updatedFilters = { ...filters };
@@ -120,7 +134,7 @@ function ShoppingListing() {
     function handleAddtoCart(product) {
       const productId = product._id;
       const totalStock = product.totalStock;
-  
+
       // Check if user is authenticated
       if (!isAuthenticated) {
         toast({
@@ -129,7 +143,7 @@ function ShoppingListing() {
         });
         return Promise.reject("Not authenticated");
       }
-  
+
       // Check if product is in stock
       if (totalStock <= 0) {
         toast({
@@ -138,7 +152,7 @@ function ShoppingListing() {
         });
         return Promise.reject("Out of stock");
       }
-  
+
       // Check if adding one more would exceed stock limit
       let currentCartItems = cartItems.items || [];
       if (currentCartItems.length) {
@@ -156,12 +170,12 @@ function ShoppingListing() {
           }
         }
       }
-  
+
       // Get the first color if available
       const colorId = product?.colors && product.colors.length > 0
         ? product.colors[0]._id
         : undefined;
-  
+
       // Add to cart
       return dispatch(
         addToCart({
@@ -241,7 +255,7 @@ function ShoppingListing() {
 
   const structuredData = useMemo(() => {
     const baseUrl = 'https://rachanaboutique.in';
-    
+
     let data = {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
@@ -300,29 +314,29 @@ function ShoppingListing() {
     <>
             <Helmet>
         <title>{currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique</title>
-        <meta 
-          name="description" 
-          content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} 
+        <meta
+          name="description"
+          content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`}
         />
-        <meta 
-          name="keywords" 
-          content={`${currentCategory?.name || 'ethnic wear'}, ${currentCategory?.title || 'sarees'}, boutique collection, Indian wear, Rachana Boutique`} 
+        <meta
+          name="keywords"
+          content={`${currentCategory?.name || 'ethnic wear'}, ${currentCategory?.title || 'sarees'}, boutique collection, Indian wear, Rachana Boutique`}
         />
         <meta name="robots" content="index, follow" />
-        
+
         {/* Open Graph tags */}
         <meta property="og:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique`} />
         <meta property="og:description" content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} />
         <meta property="og:image" content={currentCategory?.image || banner} />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="website" />
-        
+
         {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique`} />
         <meta name="twitter:description" content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} />
         <meta name="twitter:image" content={currentCategory?.image || banner} />
-        
+
         {/* Canonical URL */}
         <link rel="canonical" href={window.location.href} />
 
@@ -350,22 +364,18 @@ function ShoppingListing() {
           </div>
         </div>
 
-      
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: "Home", path: "/shop/home" },
+            { label: "Collections", path: "/shop/collections" },
+            ...currentCategory ? [{ label: currentCategory.name, path: `/shop/collections?category=${currentCategory._id}` }] : []
+          ]}
+        />
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-4 md:py-8 ">
-          <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8">
-            {/* Filter Component */}
-            <div className="hidden md:block bg-white p-6 border border-gray-200 rounded-md shadow-sm">
-              <h2 className="text-xl font-light uppercase tracking-wide mb-4">Filters</h2>
-              <div className="w-12 h-0.5 bg-black mb-6"></div>
-              <ProductFilter
-                filters={filters}
-                setFilters={setFilters}
-                handleFilter={handleFilter}
-              />
-            </div>
-
+        <div className="container mx-auto px-4 py-4">
+          <div className="grid grid-cols-1 gap-8">
             {/* Product Listing */}
             <div className="bg-white">
               <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
@@ -377,7 +387,17 @@ function ShoppingListing() {
                     Showing {filteredProducts.length} products
                   </p>
                 </div>
-                <div className="mt-4 md:mt-0">
+                <div className="mt-4 md:mt-0 flex items-center gap-3">
+                  {/* Filter Component for Desktop */}
+                  <div className="hidden md:block">
+                    <ProductFilter
+                      filters={filters}
+                      setFilters={setFilters}
+                      handleFilter={handleFilter}
+                    />
+                  </div>
+
+                  {/* Sort Dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
                       <ArrowUpDownIcon className="h-4 w-4" />
@@ -401,51 +421,50 @@ function ShoppingListing() {
               </div>
 
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b md:hidden">
-                <div className="w-full flex items-center justify-between">
-                  <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
-                    {currentCategory?.title || "All Products"}
-                  </h2>
-                
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                      <ArrowUpDownIcon className="h-4 w-4" />
-                      <span>{sortOptions.find(option => option.id === sort)?.label || 'Default'}</span>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="mt-2 bg-white p-2 rounded-md shadow-lg border border-gray-200">
-                      <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
-                        {sortOptions.map((sortItem) => (
-                          <DropdownMenuRadioItem
-                            className="hover:bg-gray-100 cursor-pointer px-4 py-2 rounded-md"
-                            value={sortItem.id}
-                            key={sortItem.id}
-                          >
-                            {sortItem.label}
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-           
-                 
-                </div>
-                <p className="text-gray-500">
+                <div className="w-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-2xl font-light uppercase tracking-wide">
+                      {currentCategory?.title || "All Products"}
+                    </h2>
+
+                    {/* Mobile Sort Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="w-1/4 h-8 flex items-center justify-center gap-1 px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                        <ArrowUpDownIcon className="h-3 w-3" />
+                        <span className="text-md">Sort</span>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="mt-2 bg-white p-2 rounded-md shadow-lg border border-gray-200">
+                        <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
+                          {sortOptions.map((sortItem) => (
+                            <DropdownMenuRadioItem
+                              className="hover:bg-gray-100 cursor-pointer px-4 py-2 rounded-md"
+                              value={sortItem.id}
+                              key={sortItem.id}
+                            >
+                              {sortItem.label}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <p className="text-gray-500 mb-3">
                     Showing {filteredProducts.length} products
                   </p>
-               
-              </div>
 
-              <div className="md:hidden">
-              
-              <ProductFilter
-                filters={filters}
-                setFilters={setFilters}
-                handleFilter={handleFilter}
-              />
-            </div>
+                  {/* Mobile Filter */}
+                  <ProductFilter
+                    filters={filters}
+                    setFilters={setFilters}
+                    handleFilter={handleFilter}
+                  />
+                </div>
+              </div>
 
 
               {/* Products Grid - Using Original ShoppingProductTile */}
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {filteredProducts.map((productItem) => (
                   <ShoppingProductTile
                     key={productItem._id}
