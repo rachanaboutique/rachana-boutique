@@ -11,6 +11,8 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  // Removed unused state: previousVideoIndex
+  const [videoProgress, setVideoProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [activeItem] = useState(0);
@@ -51,6 +53,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     if (showVideoModal) {
       setIsPlaying(true);
       setIsMuted(false);
+      setVideoProgress(0);
     }
   }, [showVideoModal, currentVideoIndex]);
 
@@ -69,11 +72,11 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
         </div>
 
         {/* Watch and Buy Slider - Both Mobile and Desktop */}
-        <div className="w-full mb-4 px-0">
+        <div className="w-full mb-4 -px-5">
           <div>
             <Slider {...sliderSettings} className="watch-buy-slider">
               {products.map((productItem, index) => (
-                <div key={productItem._id} className="pb-2">
+                <div key={productItem._id} className="pb-2 px-[2px]">
                   <div
                     onClick={() => {
                       setSelectedVideo(productItem);
@@ -91,16 +94,11 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                       }}
                       className="relative cursor-pointer shadow-md overflow-hidden watch-buy-mobile-card"
                       style={{
-                        aspectRatio: "9/16",
+                        aspectRatio: "9/14",
                         background: "#f8f8f8",
                       }}
                     >
-                      {/* Video thumbnail with play button overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center">
-                          <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-black border-b-[8px] border-b-transparent ml-1"></div>
-                        </div>
-                      </div>
+
 
 
 
@@ -114,20 +112,32 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     </motion.div>
 
                     {/* Product info below the card */}
-                    <div className="mt-0.5 px-0">
-                      <h3 className="text-sm font-medium line-clamp-1 mb-1">{productItem?.title}</h3>
+                    <div className="mt-3 px-1">
+                      <h3 className="text-base font-medium line-clamp-1 mb-2">{productItem?.title}</h3>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm font-bold">₹{productItem.price}</p>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddtoCart(productItem);
-                          }}
-                          className="text-xs bg-black text-white p-1.5 rounded-full"
-                          aria-label="Add to Cart"
-                        >
-                          <ShoppingBag className="h-4 w-4" />
-                        </button>
+                        <p className="text-base font-bold">₹{productItem.price}</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/shop/details/${productItem._id}`);
+                            }}
+                            className="w-9 h-9 bg-white border border-gray-300 text-black rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors shadow-sm"
+                            aria-label="View Details"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddtoCart(productItem);
+                            }}
+                            className="w-9 h-9 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-sm"
+                            aria-label="Add to Cart"
+                          >
+                            <ShoppingBag className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -138,77 +148,46 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
         </div>
       </div>
 
+
       {/* VideoStacker Modal - When a video is clicked */}
       {showVideoModal && selectedVideo && (
         <div
-          className="fixed inset-0 bg-black z-50 flex flex-col"
-          onClick={() => setShowVideoModal(false)}
+          className="fixed inset-0 bg-black z-50 flex flex-col modal-view"
+          onClick={(e) => e.stopPropagation()} /* Prevent closing when clicking outside */
         >
-          {/* Modal Header - Only Close Button */}
-          <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10">
+          {/* Modal Header - Only Close Button in Top Right */}
+          <div className="absolute top-0 left-0 right-0 p-4 flex justify-end items-center z-50">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowVideoModal(false);
               }}
-              className="text-white"
+              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/40 transition-colors"
             >
-              <div className="icon-container">
-                <X className="h-6 w-6" stroke="currentColor" />
-              </div>
+              <X className="h-5 w-5 text-white" stroke="currentColor" />
             </button>
-
-            {/* Video Controls in Top Right */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsPlaying(!isPlaying);
-                }}
-                className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/40 transition-colors"
-              >
-                {isPlaying ? (
-                  <Pause className="h-5 w-5 text-white" />
-                ) : (
-                  <Play className="h-5 w-5 text-white ml-0.5" />
-                )}
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMuted(!isMuted);
-                }}
-                className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/40 transition-colors"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-5 w-5 text-white" />
-                ) : (
-                  <Volume2 className="h-5 w-5 text-white" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Video Timeline at Top */}
-          <div className="absolute top-16 left-0 right-0 z-20 flex justify-center gap-2 py-4 px-4">
-            <div className="bg-black/30 backdrop-blur-sm rounded-full p-2 flex items-center gap-2 w-auto">
-              {products.map((_, index) => (
-                <div
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentVideoIndex(index);
-                    setSelectedVideo(products[index]);
-                  }}
-                  className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 ${index === currentVideoIndex ? 'w-10 bg-white' : 'w-5 bg-white/50'}`}
-                ></div>
-              ))}
-            </div>
           </div>
 
           {/* VideoStacker UI */}
-          <div className="flex-grow flex items-center justify-center">
-            <div className="video-stacker-container relative h-[80vh] w-full max-w-5xl overflow-hidden">
+          <div className="flex-grow flex flex-col items-center justify-center">
+            {/* Video Timeline at Top - Outside the video */}
+            <div className="z-20 flex justify-center gap-2 py-2">
+              <div className="bg-black/30 backdrop-blur-sm rounded-full p-2 flex items-center gap-2 w-auto">
+                {products.map((_, index) => (
+                  <div
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentVideoIndex(index);
+                      setSelectedVideo(products[index]);
+                    }}
+                    className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 timeline-dot ${index === currentVideoIndex ? 'w-10 bg-white' : 'w-5 bg-white/50'}`}
+                  ></div>
+                ))}
+              </div>
+            </div>
+
+            <div className="video-stacker-container relative h-[90vh] w-full max-w-6xl overflow-hidden">
               {/* Navigation Arrows */}
               <div className="absolute top-1/2 left-4 z-30 transform -translate-y-1/2">
                 <button
@@ -219,7 +198,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     setCurrentVideoIndex(newIndex);
                     setSelectedVideo(products[newIndex]);
                   }}
-                  className="bg-white/20 backdrop-blur-sm hover:bg-white/40 rounded-full p-2 transition-all duration-300"
+                  className="bg-white/20 backdrop-blur-sm hover:bg-white/40 rounded-full p-2 transition-all duration-300 nav-arrow"
                   aria-label="Previous video"
                 >
                   <ChevronLeft className="h-8 w-8 text-white" />
@@ -234,7 +213,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     setCurrentVideoIndex(newIndex);
                     setSelectedVideo(products[newIndex]);
                   }}
-                  className="bg-white/20 backdrop-blur-sm hover:bg-white/40 rounded-full p-2 transition-all duration-300"
+                  className="bg-white/20 backdrop-blur-sm hover:bg-white/40 rounded-full p-2 transition-all duration-300 nav-arrow"
                   aria-label="Next video"
                 >
                   <ChevronRight className="h-8 w-8 text-white" />
@@ -242,7 +221,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
               </div>
 
               {/* Stacked Videos */}
-              <div className="video-stack-wrapper relative h-full w-full flex items-center justify-center">
+              <div className="video-stack-wrapper relative h-full w-full flex items-center justify-center px-0">
                 {products.map((productItem, index) => {
                   // Calculate position: -1 = left, 0 = center, 1 = right
                   let position = 0;
@@ -262,93 +241,122 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                   return (
                     <div
                       key={productItem._id}
-                      className={`absolute transition-all duration-500 ease-in-out cursor-pointer ${position === 0 ? 'z-20 scale-100 opacity-100' : 'z-10 scale-90 opacity-70'}`}
+                      className={`absolute transition-all duration-500 ease-in-out cursor-pointer video-card-container ${position === 0 ? 'z-20 scale-100 opacity-100' : 'z-10 scale-90 opacity-70'}`}
                       style={{
-                        transform: `translateX(${position * 60}%) scale(${position === 0 ? 1 : 0.9})`,
+                        transform: `translateX(${position * 50}%) scale(${position === 0 ? 1 : 0.9})`,
                         filter: position !== 0 ? 'brightness(0.8)' : 'brightness(1)',
                         opacity: position !== 0 ? 0.8 : 1
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (position !== 0) {
+                          // Determine direction of transition
+                          const direction = position === -1 ? 'right' : 'left';
 
-                          setCurrentVideoIndex(index);
-                          setSelectedVideo(products[index]);
+                          // Add leaving class to current card
+                          const currentCard = document.querySelector('.video-card-container.z-20');
+                          if (currentCard) {
+                            currentCard.classList.add(`leaving-${direction}`);
+                          }
+
+                          // After current card starts leaving, update the index
+                          setTimeout(() => {
+                            setCurrentVideoIndex(index);
+                            setSelectedVideo(products[index]);
+
+                            // Add entering class to new center card
+                            setTimeout(() => {
+                              const newCards = document.querySelectorAll('.video-card-container');
+                              newCards.forEach(card => {
+                                card.classList.remove('leaving-left', 'leaving-right');
+                                if (card.classList.contains('z-20')) {
+                                  card.classList.add('entering');
+                                }
+                              });
+
+                              // Remove entering class after animation completes
+                              setTimeout(() => {
+                                newCards.forEach(card => {
+                                  card.classList.remove('entering');
+                                });
+                              }, 700);
+                            }, 100);
+                          }, 250);
                         }
                       }}
                     >
                       <div
                         className="video-card relative overflow-hidden shadow-xl"
-                        style={{ width: '400px', height: '550px' }}
+                        style={showVideoModal ? { width: '370px', height: '750px' } : { width: '320px', height: '600px' }}
                       >
                         {/* Video Player */}
                         {productItem.videoUrl || productItem.video ? (
                           <div className="w-full h-full">
-                            <ReactPlayer
-                              url={productItem.videoUrl || productItem.video}
-                              className="react-player"
-                              width="100%"
-                              height="100%"
-                              playing={position === 0 ? isPlaying : false}
-                              loop
-                              muted={position === 0 ? isMuted : true}
-                              controls={false}
-                              playsinline
-                              onProgress={undefined}
-                              config={{
-                                file: {
-                                  attributes: {
-                                    controlsList: 'nodownload'
+                            <div
+                              className="react-player-container"
+                              onContextMenu={(e) => e.preventDefault()}
+                            >
+                              <ReactPlayer
+                                url={productItem.videoUrl || productItem.video}
+                                className="react-player"
+                                width="100%"
+                                height="100%"
+                                playing={position === 0 ? isPlaying : false}
+                                loop
+                                muted={position === 0 ? isMuted : true}
+                                controls={false}
+                                playsinline
+                                onProgress={position === 0 ? (state) => setVideoProgress(state.played) : undefined}
+                                config={{
+                                  file: {
+                                    attributes: {
+                                      controlsList: 'nodownload',
+                                      disablePictureInPicture: true,
+                                      disableRemotePlayback: true,
+                                      onContextMenu: "return false;"
+                                    }
                                   }
-                                }
-                              }}
-                            />
-
-                            {/* Video Controls */}
-                            <div className="video-controls">
-                              <button
-                                className="video-control-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setIsPlaying(!isPlaying);
                                 }}
-                              >
-                                {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-                              </button>
-                              <button
-                                className="video-control-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setIsMuted(!isMuted);
-                                }}
-                              >
-                                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                              </button>
+                              />
                             </div>
+
+                            {/* Video Progress Bar - Only for active video */}
+                            {position === 0 && (
+                              <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 z-10">
+                                <div
+                                  className="h-full bg-white transition-all duration-100 ease-linear"
+                                  style={{ width: `${videoProgress * 100}%` }}
+                                ></div>
+                              </div>
+                            )}
+
+                            {/* Video Controls - Always visible in top right */}
+                            {position === 0 && (
+                              <div className="video-controls">
+                                <button
+                                  className="video-control-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsPlaying(!isPlaying);
+                                  }}
+                                >
+                                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                                </button>
+                                <button
+                                  className="video-control-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsMuted(!isMuted);
+                                  }}
+                                >
+                                  {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                                </button>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="w-full h-full bg-gray-800 flex items-center justify-center">
                             <p className="text-white">Video not available</p>
-                          </div>
-                        )}
-
-                        {/* Product Info Overlay - Only for side videos */}
-                        {position !== 0 && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-                            <h3 className="text-lg font-medium mb-1">{productItem?.title}</h3>
-                            <div className="flex justify-between items-center">
-                              <p className="text-lg font-bold">₹{productItem.price}</p>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAddtoCart(productItem);
-                                }}
-                                className="flex items-center gap-1 bg-white text-black px-4 py-1.5 text-sm font-medium hover:bg-gray-200 transition-colors"
-                              >
-                                <ShoppingBag className="h-4 w-4" />
-                                <span>Add</span>
-                              </button>
-                            </div>
                           </div>
                         )}
                       </div>
@@ -359,39 +367,48 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
             </div>
           </div>
 
-          {/* Product Info and Actions - Slide Up from Bottom */}
-          <div className="flex flex-col items-center bg-transparent backdrop-blur-xs p-4 rounded-t-3xl absolute bottom-0 w-full shadow-lg">
-            <div className="text-white flex justify-between items-start mb-3">
-              <div className="flex-1">
-                <h3 className="text-lg font-medium">{selectedVideo?.title}</h3>
+          {/* Product Info and Action Buttons - Contained within the width of the video */}
+          <div className="absolute bottom-6 left-0 right-0 flex justify-center z-40">
+            <div className="relative flex items-center justify-between" style={{ width: '370px' }}>
+         {/* Gradient background from bottom to top */}
+         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg"></div>
+
+              {/* Product Info */}
+              <div className="text-white p-2 z-10">
+                <h3 className="text-lg font-medium truncate">{selectedVideo?.title}</h3>
+                <p className="text-lg font-bold mt-1">₹{selectedVideo.price}</p>
               </div>
-              <div className="text-xl font-bold ml-2">₹{selectedVideo.price}</div>
-            </div>
 
-            <div className="w-full md:w-1/4 flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddtoCart(selectedVideo);
-                }}
-                className="flex items-center justify-center gap-2 border border-white flex-1 bg-black text-white py-3 font-medium"
-              >
-                <ShoppingBag className="h-5 w-5" />
-                <span>Add to Cart</span>
-              </button>
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2 p-2 z-10">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddtoCart(selectedVideo);
+                  }}
+                  className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shadow-md hover:bg-black/80 transition-colors border border-white/20"
+                  aria-label="Add to Cart"
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                </button>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/shop/details/${selectedVideo._id}`);
-                  setShowVideoModal(false);
-                }}
-                className="flex-1 bg-white border border-black text-black py-3 font-medium"
-              >
-                View Details
-              </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/shop/details/${selectedVideo._id}`);
+                    setShowVideoModal(false);
+                  }}
+                  className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors"
+                  aria-label="View Details"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Background gradient for better text visibility */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/70 to-transparent z-30"></div>
         </div>
       )}
     </section>

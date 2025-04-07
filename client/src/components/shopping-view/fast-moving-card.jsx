@@ -70,14 +70,20 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
           {/* Product Image or Video Thumbnail */}
           <div className="relative w-full h-full">
             {item?.video ? (
-              <video
-                className="w-full h-full object-cover"
-                src={item.video}
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
+              <div
+                className="w-full h-full"
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                <video
+                  className="w-full h-full object-cover"
+                  src={item.video}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controlsList="nodownload"
+                />
+              </div>
             ) : item?.images && item.images.length > 0 ? (
               <img
                 src={item.images[0]}
@@ -126,15 +132,21 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
           {item?.video && !isMobile && (
             <>
               <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent z-5 pointer-events-none"></div>
-              <video
-                className="absolute right-0 top-1/2 h-auto w-24 max-w-none -translate-y-1/2 object-cover md:left-1/2 md:h-[640px] md:w-[590px] md:-translate-x-1/2 transition-transform duration-700 group-hover:scale-105"
-                src={item.video}
-                autoPlay
-                loop
-                muted
-                playsInline
-                onLoadedData={() => setDesktopVideoLoading(false)}
-              />
+              <div
+                className="absolute right-0 top-1/2 h-auto w-24 max-w-none -translate-y-1/2 md:left-1/2 md:h-[640px] md:w-[590px] md:-translate-x-1/2 transition-transform duration-700 group-hover:scale-105"
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                <video
+                  className="w-full h-full object-cover"
+                  src={item.video}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controlsList="nodownload"
+                  onLoadedData={() => setDesktopVideoLoading(false)}
+                />
+              </div>
               {desktopVideoLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
                   <div className="relative">
@@ -152,14 +164,20 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
 
           {/* Video Preview for Mobile: each small div shows autoplay preview */}
           {item?.video && isMobile && !isMobileCard && (
-            <video
-              className="w-full h-32 object-cover"
-              src={item.video}
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
+            <div
+              className="w-full h-32"
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <video
+                className="w-full h-full object-cover"
+                src={item.video}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controlsList="nodownload"
+              />
+            </div>
           )}
 
           {/* Fallback to image if no video */}
@@ -248,7 +266,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                     onClick={(e) => handleAddToCartClick(e)}
                     className="w-full px-4 py-1.5 text-sm text-white rounded-md bg-black hover:bg-gray-800 border border-white/20 transform transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
                   >
-                     <ShoppingBag size={18} className={isAddingToCart ? "opacity-20" : ""} />
+                     <ShoppingBag size={18} />
                     Add to Cart
                   </button>
                 </div>
@@ -296,17 +314,23 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                 </div>
               )}
               {item?.video ? (
-                <video
-                  className="w-full max-h-[70vh] h-auto object-cover rounded-t-lg"
-                  src={item.video}
-                  preload="auto"
-                  poster={item?.poster || ""}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  onLoadedData={() => setVideoLoading(false)}
-                />
+                <div
+                  className="w-full max-h-[70vh] h-auto rounded-t-lg"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <video
+                    className="w-full h-full object-cover rounded-t-lg"
+                    src={item.video}
+                    preload="auto"
+                    poster={item?.poster || ""}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controlsList="nodownload"
+                    onLoadedData={() => setVideoLoading(false)}
+                  />
+                </div>
               ) : (
                 <div className="p-4">
                   <p className="text-white">Video not available</p>

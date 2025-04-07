@@ -54,6 +54,22 @@
   z-index: 100;
 }
 
+/* Prevent context menu and selection on video player */
+.react-player-container {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: auto;
+}
+
+.react-player-container video {
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 /* Floating action buttons animation */
 button[aria-label="Add to Cart"],
 button[aria-label="View Details"] {

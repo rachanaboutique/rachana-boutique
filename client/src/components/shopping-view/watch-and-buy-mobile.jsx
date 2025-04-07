@@ -439,25 +439,33 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                         {/* Video Player */}
                         {productItem.videoUrl || productItem.video ? (
                           <div className="w-full h-full">
-                            <ReactPlayer
-                              url={productItem.videoUrl || productItem.video}
-                              className="react-player"
-                              width="100%"
-                              height="100%"
-                              playing={index === currentVideoIndex ? isPlaying : false}
-                              loop
-                              muted={isMuted}
-                              controls={false}
-                              playsinline
-                              onProgress={(state) => index === currentVideoIndex && setVideoProgress(state.played)}
-                              config={{
-                                file: {
-                                  attributes: {
-                                    controlsList: 'nodownload'
+                            <div
+                              className="react-player-container"
+                              onContextMenu={(e) => e.preventDefault()}
+                            >
+                              <ReactPlayer
+                                url={productItem.videoUrl || productItem.video}
+                                className="react-player"
+                                width="100%"
+                                height="100%"
+                                playing={index === currentVideoIndex ? isPlaying : false}
+                                loop
+                                muted={isMuted}
+                                controls={false}
+                                playsinline
+                                onProgress={(state) => index === currentVideoIndex && setVideoProgress(state.played)}
+                                config={{
+                                  file: {
+                                    attributes: {
+                                      controlsList: 'nodownload',
+                                      disablePictureInPicture: true,
+                                      disableRemotePlayback: true,
+                                      onContextMenu: "return false;"
+                                    }
                                   }
-                                }
-                              }}
-                            />
+                                }}
+                              />
+                            </div>
                           </div>
                         ) : (
                           <div className="w-full h-full bg-gray-800 flex items-center justify-center">
