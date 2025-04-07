@@ -58,7 +58,7 @@ function NewArrivals() {
   }
 
   function handleGetProductDetails(getCurrentProductId) {
-    navigate(`/shop/product/${getCurrentProductId}`);
+    navigate(`/shop/details/${getCurrentProductId}`);
   }
     function handleAddtoCart(product) {
       const productId = product._id;
@@ -201,10 +201,60 @@ function NewArrivals() {
   return (
     <>
       <Helmet>
-        <title>New Arrivals | Rachana Boutique</title>
-        <meta name="description" content="Discover our latest arrivals - fresh designs and styles just added to our collection at Rachana Boutique." />
+        <title>New Arrivals | Latest Saree Collection | Rachana Boutique</title>
+        <meta name="description" content="Discover our latest arrivals - fresh designs and exclusive styles just added to our premium saree collection at Rachana Boutique. Shop the newest trends in ethnic wear today!" />
+        <meta name="keywords" content="new arrivals, latest sarees, new saree collection, fresh designs, Rachana Boutique, premium sarees, latest ethnic wear, new fashion, trending sarees" />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="Rachana Boutique" />
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="3 days" />
+
+        {/* Open Graph tags */}
+        <meta property="og:title" content="New Arrivals | Latest Saree Collection | Rachana Boutique" />
+        <meta property="og:description" content="Discover our latest arrivals - fresh designs and exclusive styles just added to our premium saree collection at Rachana Boutique." />
+        <meta property="og:image" content={newArrivalsBanner} />
+        <meta property="og:url" content="https://rachanaboutique.in/shop/new-arrivals" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Rachana Boutique" />
+
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="New Arrivals | Latest Saree Collection | Rachana Boutique" />
+        <meta name="twitter:description" content="Discover our latest arrivals - fresh designs and exclusive styles just added to our premium saree collection at Rachana Boutique." />
+        <meta name="twitter:image" content={newArrivalsBanner} />
+        <meta name="twitter:site" content="@rachanaboutique" />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://rachanaboutique.in/shop/new-arrivals" />
+
+        {/* JSON-LD structured data */}
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}
+        </script>
+
+        {/* Additional structured data for ItemList */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "itemListElement": newArrivalProducts.slice(0, 10).map((product, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "item": {
+                "@type": "Product",
+                "name": product.title,
+                "image": product.image && product.image.length > 0 ? product.image[0] : '',
+                "description": product.description,
+                "url": `https://rachanaboutique.in/shop/details/${product._id}`,
+                "offers": {
+                  "@type": "Offer",
+                  "price": product.salePrice > 0 ? product.salePrice : product.price,
+                  "priceCurrency": "INR",
+                  "availability": product.totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+                }
+              }
+            }))
+          })}
         </script>
       </Helmet>
 
@@ -243,7 +293,7 @@ function NewArrivals() {
                   New Arrivals
                 </h2>
                 <p className="text-gray-500">
-                  Showing {newArrivalProducts.length} products
+                  {isLoading ? "Loading..." : `Showing ${newArrivalProducts.length} products`}
                 </p>
               </div>
               <div className="mt-4 md:mt-0">
@@ -297,7 +347,7 @@ function NewArrivals() {
 
               </div>
               <p className="text-gray-500">
-                  Showing {newArrivalProducts.length} products
+                  {isLoading ? "Loading..." : `Showing ${newArrivalProducts.length} products`}
                 </p>
 
 

@@ -2,12 +2,22 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { categoryMapping } from "@/config";
 
 const CategoryCard = ({ categoryItem, index, variant = "default" }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/shop/collections?category=${categoryItem._id}`);
+    // Find the slug for this category ID from the mapping
+    const categoryInfo = categoryMapping.find(cat => cat.id === categoryItem._id);
+
+    if (categoryInfo) {
+      // Use the SEO-friendly URL format
+      navigate(`/shop/collections/${categoryInfo.slug}`);
+    } else {
+      // Fallback to the old format if mapping not found
+      navigate(`/shop/collections?category=${categoryItem._id}`);
+    }
   };
 
   // Different height variants for masonry layout with mobile responsiveness
@@ -15,15 +25,15 @@ const CategoryCard = ({ categoryItem, index, variant = "default" }) => {
     if (variant === "masonry") {
       // Create varying heights based on index - consistent height on mobile
       const desktopHeights = ["h-[300px]", "h-[400px]", "h-[500px]", "h-[350px]", "h-[450px]"];
-      
+
       // Use window.innerWidth to determine which set of heights to use
       const isMobile = window.innerWidth < 768;
-      
+
       // For mobile, use consistent 250px height for all cards
       if (isMobile) {
         return "h-[250px]";
       }
-      
+
       // For desktop, use the varying heights
       return desktopHeights[index % desktopHeights.length];
     }
@@ -53,7 +63,7 @@ const CategoryCard = ({ categoryItem, index, variant = "default" }) => {
       <div className="absolute inset-0 flex flex-col justify-between p-3 md:p-6 text-white">
         {/* Top section - can be empty or used for other elements */}
         <div></div>
-        
+
         {/* Bottom section with title, description and button */}
         <div>
           {/* Category name with modern typography */}

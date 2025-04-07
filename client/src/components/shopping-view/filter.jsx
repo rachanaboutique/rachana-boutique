@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { Separator } from "../ui/separator";
 import { ChevronDown } from "lucide-react";
 import { fetchCategories } from "@/store/shop/categories-slice";
+import { categoryMapping } from "@/config";
 
 function ProductFilter({ filters, setFilters, handleFilter }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to toggle dropdown visibility
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { categoriesList } = useSelector((state) => state.shopCategories);
 
   // Parse query parameters
@@ -34,7 +36,7 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
     setIsDropdownOpen((prevState) => !prevState);
   };
 
-  // Updated handleSingleCategoryFilter for proper removal of the key
+  // Updated handleSingleCategoryFilter to use SEO-friendly URLs
   const handleSingleCategoryFilter = (categoryId) => {
     const isSameCategorySelected =
       filters.category?.length === 1 && filters.category[0] === categoryId;
@@ -44,19 +46,28 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
       // Remove the category filter key if the same category is selected
       updatedFilters = { ...filters };
       delete updatedFilters.category;
+
+      // Navigate to the collections page without category
+      navigate('/shop/collections');
     } else {
       updatedFilters = { ...filters, category: [categoryId] };
-    }
-    setFilters(updatedFilters);
 
-    // Update query parameters
-    const newQueryParams = new URLSearchParams(searchParams);
-    if (isSameCategorySelected) {
-      newQueryParams.delete("category");
-    } else {
-      newQueryParams.set("category", categoryId);
+      // Find the slug for this category ID
+      const categoryInfo = categoryMapping.find(cat => cat.id === categoryId);
+
+      if (categoryInfo) {
+        // Navigate to the SEO-friendly URL
+        navigate(`/shop/collections/${categoryInfo.slug}`);
+      } else {
+        // Fallback to the old URL format if mapping not found
+        const newQueryParams = new URLSearchParams(searchParams);
+        newQueryParams.set("category", categoryId);
+        setSearchParams(newQueryParams);
+      }
     }
-    setSearchParams(newQueryParams);
+
+    // Update filters state
+    setFilters(updatedFilters);
   };
 
   return (
@@ -85,7 +96,7 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
         className="hidden md:flex items-center justify-between cursor-pointer px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
         onClick={toggleDropdown}
       >
-        <span className="text-sm">Filter</span>
+        <span className="text-md">Filter</span>
         <ChevronDown
           size={16}
           className={`ml-2 transition-transform duration-300 ${
@@ -98,7 +109,7 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
       <div
         className={`space-y-4 max-h-[70vh] overflow-y-auto pr-2 ${
           isDropdownOpen ? "block" : "hidden"
-        } md:absolute md:top-full md:left-0 md:mt-2 md:bg-white md:border md:border-gray-200 md:rounded-md md:shadow-lg md:p-4 md:w-64 md:max-h-[300px] md:z-50`}
+        } md:absolute md:top-full md:left-0 md:mt-2 md:bg-white md:border md:border-gray-200 md:rounded-md md:shadow-lg md:p-4 md:w-64 md:max-h-[500px] md:z-10`}
       >
         {/* Dynamic Category Filter */}
         <div className="mt-4 md:mt-0 border-t border-gray-200">

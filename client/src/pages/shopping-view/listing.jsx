@@ -9,13 +9,13 @@ import { ArrowUpDownIcon, ShoppingBag } from "lucide-react";
 import ProductFilter from "@/components/shopping-view/filter";
 import Breadcrumb from "@/components/shopping-view/breadcrumb";
 import { Loader } from "@/components/ui/loader";
-import { sortOptions } from "@/config";
+import { sortOptions, categoryMapping } from "@/config";
 import { Helmet } from "react-helmet-async";
 import { fetchCategories } from "@/store/shop/categories-slice";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import banner from '@/assets/allproducts.png';
 
-function ShoppingListing() {
+function ShoppingListing({ categorySlug }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { productList, isLoading } = useSelector((state) => state.shopProducts);
@@ -30,15 +30,30 @@ function ShoppingListing() {
   const [currentCategory, setCurrentCategory] = useState(null);
 
 
-  // Find current category details
+  // Use category mapping from config imported at the top
+
+  // Find current category details from either URL param or slug prop
   useEffect(() => {
-    if (categorySearchParam && categoriesList.length > 0) {
-      const category = categoriesList.find(cat => cat._id === categorySearchParam);
-      setCurrentCategory(category);
-    } else {
-      setCurrentCategory(null);
+    if (categoriesList.length > 0) {
+      // If we have a categorySlug prop (from the route), use that
+      if (categorySlug) {
+        const mappedCategory = categoryMapping.find(cat => cat.slug === categorySlug);
+        if (mappedCategory) {
+          const category = categoriesList.find(cat => cat._id === mappedCategory.id);
+          setCurrentCategory(category);
+        } else {
+          setCurrentCategory(null);
+        }
+      }
+      // Otherwise use the category from URL search params
+      else if (categorySearchParam) {
+        const category = categoriesList.find(cat => cat._id === categorySearchParam);
+        setCurrentCategory(category);
+      } else {
+        setCurrentCategory(null);
+      }
     }
-  }, [categorySearchParam, categoriesList]);
+  }, [categorySearchParam, categoriesList, categorySlug]);
 
   // Fetch categories
   useEffect(() => {
@@ -48,10 +63,10 @@ function ShoppingListing() {
   const filteredProducts = useMemo(() => {
     let updatedProducts = [...productList];
 
-    // Apply category filter from URL parameters
-    if (categorySearchParam) {
+    // Apply category filter from currentCategory (which can come from either URL parameters or categorySlug)
+    if (currentCategory) {
       updatedProducts = updatedProducts.filter(
-        (product) => product.category === categorySearchParam
+        (product) => product.category === currentCategory._id
       );
     }
 
@@ -128,7 +143,7 @@ function ShoppingListing() {
   }
 
   function handleGetProductDetails(getCurrentProductId) {
-    navigate(`/shop/product/${getCurrentProductId}`);
+    navigate(`/shop/details/${getCurrentProductId}`);
   }
 
     function handleAddtoCart(product) {
@@ -237,8 +252,9 @@ function ShoppingListing() {
   // Optimize fetching by using a single useEffect for filter/sort changes
   useEffect(() => {
     const filterParams = {};
-    if (categorySearchParam) {
-      filterParams.category = categorySearchParam;
+    // Use currentCategory instead of categorySearchParam
+    if (currentCategory) {
+      filterParams.category = currentCategory._id;
     }
     if (Object.keys(filters).length > 0) {
       Object.entries(filters).forEach(([key, values]) => {
@@ -251,7 +267,23 @@ function ShoppingListing() {
         sortParams: sort,
       })
     );
-  }, [dispatch, categorySearchParam, filters, sort]);
+  }, [dispatch, currentCategory, filters, sort]);
+
+  // Get category description from mapping
+  const getCategoryDescription = useMemo(() => {
+    if (!currentCategory) return "";
+
+    const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
+    return mappedCategory ? mappedCategory.description : "";
+  }, [currentCategory]);
+
+  // Get SEO-friendly URL for current category
+  const getCategoryUrl = useMemo(() => {
+    if (!currentCategory) return "/shop/collections";
+
+    const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
+    return mappedCategory ? `/shop/collections/${mappedCategory.slug}` : `/shop/collections?category=${currentCategory._id}`;
+  }, [currentCategory]);
 
   const structuredData = useMemo(() => {
     const baseUrl = 'https://rachanaboutique.in';
@@ -268,7 +300,7 @@ function ShoppingListing() {
             "@type": "ListItem",
             "position": 1,
             "name": "Home",
-            "item": baseUrl
+            "item": `${baseUrl}/shop/home`
           },
           {
             "@type": "ListItem",
@@ -281,18 +313,22 @@ function ShoppingListing() {
     };
 
     if (currentCategory) {
+      const categoryUrl = getCategoryUrl.startsWith('/') ?
+        `${baseUrl}${getCategoryUrl}` :
+        `${baseUrl}/shop/collections?category=${currentCategory._id}`;
+
       data.name = `${currentCategory.name} Collection`;
-      data.url = `${baseUrl}/shop/collections?category=${currentCategory._id}`;
+      data.url = categoryUrl;
       data.breadcrumb.itemListElement.push({
         "@type": "ListItem",
         "position": 3,
         "name": currentCategory.name,
-        "item": `${baseUrl}/shop/collections?category=${currentCategory._id}`
+        "item": categoryUrl
       });
 
       data = {
         ...data,
-        "description": `Explore our ${currentCategory.name} collection of premium sarees and ethnic wear at Rachana Boutique.`,
+        "description": getCategoryDescription || `Explore our ${currentCategory.name} collection of premium sarees and ethnic wear at Rachana Boutique.`,
         "image": currentCategory.image || banner,
         "offers": {
           "@type": "AggregateOffer",
@@ -304,7 +340,7 @@ function ShoppingListing() {
     }
 
     return data;
-  }, [currentCategory, location.pathname, location.search, filteredProducts?.length]);
+  }, [currentCategory, location.pathname, location.search, filteredProducts?.length, getCategoryDescription, getCategoryUrl]);
 
 
   // Show loader only when productList is initially loading (i.e. empty)
@@ -312,37 +348,69 @@ function ShoppingListing() {
 
   return (
     <>
-            <Helmet>
-        <title>{currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique</title>
+      <Helmet>
+        <title>{currentCategory ? `${currentCategory?.name} Collection` : 'Premium Sarees Collection'} | Rachana Boutique</title>
         <meta
           name="description"
-          content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`}
+          content={getCategoryDescription || `Explore our ${currentCategory ? currentCategory.name : 'exclusive'} collection of premium handcrafted sarees and ethnic wear. Find authentic ${currentCategory?.name || 'designer'} sarees with unique designs and premium quality at Rachana Boutique.`}
         />
         <meta
           name="keywords"
-          content={`${currentCategory?.name || 'ethnic wear'}, ${currentCategory?.title || 'sarees'}, boutique collection, Indian wear, Rachana Boutique`}
+          content={`${currentCategory?.name || 'premium'} sarees, ${currentCategory?.name || 'designer'} ethnic wear, ${currentCategory?.name || 'handcrafted'} sarees online, buy ${currentCategory?.name || 'authentic'} sarees, Rachana Boutique collection, Indian traditional wear, ${currentCategory?.name || 'exclusive'} saree designs`}
         />
         <meta name="robots" content="index, follow" />
+        <meta name="author" content="Rachana Boutique" />
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="7 days" />
 
         {/* Open Graph tags */}
-        <meta property="og:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique`} />
-        <meta property="og:description" content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} />
+        <meta property="og:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'Premium Sarees Collection'} | Rachana Boutique`} />
+        <meta property="og:description" content={`Explore our ${currentCategory ? currentCategory.name : 'exclusive'} collection of premium handcrafted sarees and ethnic wear. Find authentic designs at Rachana Boutique.`} />
         <meta property="og:image" content={currentCategory?.image || banner} />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Rachana Boutique" />
 
         {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'All Products'} | Rachana Boutique`} />
-        <meta name="twitter:description" content={`Explore our ${currentCategory ? currentCategory.title : 'exclusive'} collection of premium sarees and ethnic wear at Rachana Boutique.`} />
+        <meta name="twitter:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'Premium Sarees Collection'} | Rachana Boutique`} />
+        <meta name="twitter:description" content={`Explore our ${currentCategory ? currentCategory.name : 'exclusive'} collection of premium handcrafted sarees and ethnic wear. Find authentic designs at Rachana Boutique.`} />
         <meta name="twitter:image" content={currentCategory?.image || banner} />
+        <meta name="twitter:site" content="@rachanaboutique" />
 
-        {/* Canonical URL */}
-        <link rel="canonical" href={window.location.href} />
+        {/* Canonical URL - Use SEO-friendly URLs */}
+        <link rel="canonical" href={currentCategory ?
+          `https://rachanaboutique.in${getCategoryUrl}` :
+          "https://rachanaboutique.in/shop/collections"} />
 
         {/* JSON-LD structured data */}
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}
+        </script>
+
+        {/* Additional structured data for ItemList */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "itemListElement": filteredProducts.slice(0, 10).map((product, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "item": {
+                "@type": "Product",
+                "name": product.title,
+                "image": product.image && product.image.length > 0 ? product.image[0] : '',
+                "description": product.description,
+                "url": `https://rachanaboutique.in/shop/details/${product._id}`,
+                "offers": {
+                  "@type": "Offer",
+                  "price": product.salePrice > 0 ? product.salePrice : product.price,
+                  "priceCurrency": "INR",
+                  "availability": product.totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+                }
+              }
+            }))
+          })}
         </script>
       </Helmet>
 
@@ -369,7 +437,7 @@ function ShoppingListing() {
           items={[
             { label: "Home", path: "/shop/home" },
             { label: "Collections", path: "/shop/collections" },
-            ...currentCategory ? [{ label: currentCategory.name, path: `/shop/collections?category=${currentCategory._id}` }] : []
+            ...currentCategory ? [{ label: currentCategory.name, path: getCategoryUrl }] : []
           ]}
         />
 
@@ -384,7 +452,7 @@ function ShoppingListing() {
                     {currentCategory?.title || "All Products"}
                   </h2>
                   <p className="text-gray-500">
-                    Showing {filteredProducts.length} products
+                    {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
                   </p>
                 </div>
                 <div className="mt-4 md:mt-0 flex items-center gap-3">
@@ -450,7 +518,7 @@ function ShoppingListing() {
                   </div>
 
                   <p className="text-gray-500 mb-3">
-                    Showing {filteredProducts.length} products
+                    {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
                   </p>
 
                   {/* Mobile Filter */}

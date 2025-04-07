@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run generate-sitemap && vite build",
+    "build": "npm run generate-sitemap && vite build && npm run copy-sitemap",
+    "copy-sitemap": "node -e \"const fs = require('fs'); if (fs.existsSync('./public/sitemap.xml')) { fs.copyFileSync('./public/sitemap.xml', './dist/sitemap.xml'); console.log('Sitemap copied to dist directory'); } if (fs.existsSync('./public/robots.txt')) { fs.copyFileSync('./public/robots.txt', './dist/robots.txt'); console.log('Robots.txt copied to dist directory'); }\"",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-sitemap": "node scripts/generate-sitemap.js"
+    "generate-sitemap": "node scripts/generate-sitemap.cjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.0",

@@ -159,20 +159,72 @@ function ShoppingHome() {
     <>
 
       <Helmet>
-        <title>Best Sarees Online - Buy Now | Rachana Boutique</title>
-        <meta name="description" content="Discover the finest sarees with exclusive designs. Shop now for the best collections at Rachana Boutique!" />
-        <meta name="keywords" content="sarees, buy sarees online, silk sarees, wedding sarees, designer sarees, traditional sarees" />
-        <meta name="author" content="Mohan Raj A" />
+        <title>Rachana Boutique | Premium Sarees & Ethnic Wear Collection</title>
+        <meta name="description" content="Discover the finest handcrafted sarees and ethnic wear at Rachana Boutique. Exclusive designs, premium quality, and authentic craftsmanship for every occasion. Shop now!" />
+        <meta name="keywords" content="Rachana Boutique, sarees online, buy sarees, silk sarees, wedding sarees, designer sarees, traditional sarees, ethnic wear, Indian fashion, premium sarees, handcrafted sarees, Banarasi sarees, Tussar sarees, Cotton sarees, Organza sarees, Kora sarees" />
         <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="Best Sarees Online - Buy Now | Rachana Boutique" />
-        <meta property="og:description" content="Explore a wide range of premium sarees at Rachana Boutique. Perfect for every occasion!" />
-        <meta property="og:image" content="https://example.com/path-to-your-saree-image.jpg" />
-        <meta property="og:url" content="https://rachana-boutique.com" />
+
+        {/* Open Graph tags for better social media sharing */}
+        <meta property="og:title" content="Rachana Boutique | Premium Sarees & Ethnic Wear Collection" />
+        <meta property="og:description" content="Discover the finest handcrafted sarees and ethnic wear at Rachana Boutique. Exclusive designs, premium quality, and authentic craftsmanship for every occasion." />
+        <meta property="og:image" content={bannersList && bannersList.length > 0 ? bannersList[0].image : ''} />
+        <meta property="og:url" content="https://rachanaboutique.in" />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Rachana Boutique" />
+
+        {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Best Sarees Online - Buy Now | Rachana Boutique" />
-        <meta name="twitter:description" content="Shop the best sarees online with exclusive offers at Rachana Boutique!" />
-        <meta name="twitter:image" content="https://example.com/path-to-your-saree-image.jpg" />
+        <meta name="twitter:title" content="Rachana Boutique | Premium Sarees & Ethnic Wear Collection" />
+        <meta name="twitter:description" content="Discover the finest handcrafted sarees and ethnic wear at Rachana Boutique. Exclusive designs for every occasion." />
+        <meta name="twitter:image" content={bannersList && bannersList.length > 0 ? bannersList[0].image : ''} />
+        <meta name="twitter:site" content="@rachanaboutique" />
+
+        {/* Additional SEO meta tags */}
+        <meta name="author" content="Rachana Boutique" />
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="7 days" />
+        <meta name="distribution" content="global" />
+        <meta name="rating" content="general" />
+        <meta name="geo.region" content="IN" />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://rachanaboutique.in" />
+
+        {/* Structured data for organization */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Rachana Boutique",
+            "url": "https://rachanaboutique.in",
+            "logo": "https://rachanaboutique.in/logo.png",
+            "sameAs": [
+              "https://www.facebook.com/rachanaboutique",
+              "https://www.instagram.com/rachanaboutique"
+            ],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+91-XXXXXXXXXX",
+              "contactType": "customer service"
+            }
+          })}
+        </script>
+
+        {/* Structured data for website */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "url": "https://rachanaboutique.in",
+            "name": "Rachana Boutique",
+            "description": "Premium sarees and ethnic wear collection",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://rachanaboutique.in/shop/search?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          })}
+        </script>
       </Helmet>
 
 
@@ -180,63 +232,6 @@ function ShoppingHome() {
         <div className="relative w-full h-[400px] md:h-[700px] mb-0">
           <Carousel bannersList={bannersList} />
         </div>
-        {/* <section className="py-8 md:py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-2 md:mb-12">
-              <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Shop by Category</h2>
-              <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
-            <p className="text-gray-600">Discover our curated collections designed for every style and occasion</p>
-            </div>
-
-
-            <div
-              className="masonry-grid"
-              style={{
-                columnCount: screenWidth < 640 ? 1 : screenWidth < 1024 ? 2 : 3,
-                columnGap: '24px'
-              }}
-            >
-              {categoriesList.map((categoryItem, index) => (
-                <div
-                  key={categoryItem._id || index}
-                  className="masonry-item mb-4 md:mb-6 break-inside-avoid"
-                  style={{
-
-                    animationDelay: `${index * 0.1}s`
-                  }}
-                >
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.1 }}
-                    transition={{
-                      duration: 0.5,
-                      delay: index * 0.1,
-                      type: "spring",
-                      stiffness: 50,
-                    }}
-                  >
-                    <CategoryCard
-                      categoryItem={categoryItem}
-                      index={index}
-                      variant="masonry"
-                    />
-                  </motion.div>
-                </div>
-              ))}
-            </div>
-
-
-            <div className="text-center mt-12">
-              <button
-                onClick={() => navigate('/shop/collections')}
-                className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
-              >
-                View All Collections
-              </button>
-            </div>
-          </div>
-        </section> */}
 
         {/* Masonry layout desktop */}
         <section className="hidden md:block py-8 bg-white">
@@ -419,57 +414,7 @@ function ShoppingHome() {
           />
         )}
 
-        {/*       <section className="py-6 md:py-12">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Watch And Buy</h2>
-          </div>
-          <div className="flex h-full w-full items-center justify-center px-2">
-            <div className="container mx-auto px-4">
-              <ul
-                ref={wrapperRef}
-                className="group flex flex-col gap-3 md:h-[640px] md:flex-row md:gap-[1.5%]"
-              >
-                {productList &&
-                  productList.length > 0 &&
-                  productList
-                    .filter((productItem) => productItem?.isWatchAndBuy)
-                    .map((productItem, index) => (
-                      <motion.li
-                        key={productItem._id}
-                        ref={ref}
-                        onClick={() => setActiveItem(index)}
-                        aria-current={activeItem === index}
-                        initial={{ x: -100, opacity: 0 }}
-                        animate={{
-                          x: inView ? 0 : -100,
-                          opacity: inView ? 1 : 0,
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 50,
-                          damping: 25,
-                        }}
-                        className={classNames(
-                          "relative cursor-pointer md:w-[16%] md:first:w-[16%] md:last:w-[16%] md:[&[aria-current='true']]:w-[40%]",
-                          "md:[transition:width_var(--transition,200ms_ease-in)]",
-                          "md:before-block before:absolute before:bottom-0 before:left-[-10px] before:right-[-10px] before:top-0 before:hidden before:bg-white",
-                          "md:[&:not(:hover),&:not(:first),&:not(:last)]:group-hover:w-[14%] md:hover:w-[20%]",
-                          "first:pointer-events-auto last:pointer-events-auto",
-                          "md:[&_img]:opacity-100"
-                        )}
-                      >
-                        <FastMovingCard
-                          item={productItem}
-                          index={index}
-                          activeItem={activeItem}
-                          handleAddtoCart={handleAddtoCart}
-                        />
-                      </motion.li>
-                    ))}
-              </ul>
-            </div>
-          </div>
-        </section> */}
+
 
         {/* Watch and Buy Section - Desktop and Mobile versions */}
         {hasWatchAndBuyProducts && (

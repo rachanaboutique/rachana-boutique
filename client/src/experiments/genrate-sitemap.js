@@ -1,3 +1,4 @@
+
 import { writeFileSync } from "fs";
 import { SitemapStream, streamToPromise } from "sitemap";
 

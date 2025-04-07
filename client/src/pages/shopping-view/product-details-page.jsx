@@ -16,6 +16,8 @@ import { ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import ProductSlider from "@/components/shopping-view/product-slider";
 import { fetchAllProducts } from "@/store/admin/products-slice";
+import { Helmet } from "react-helmet-async";
+import { categoryMapping } from "@/config";
 
 function ProductDetailsPage({ open, setOpen }) {
   const [reviewMsg, setReviewMsg] = useState("");
@@ -82,6 +84,8 @@ function ProductDetailsPage({ open, setOpen }) {
         title: "Please log in to add items to the cart!",
         variant: "destructive",
       });
+      // Reset the adding to cart state when user is not authenticated
+      setIsAddingToCart(false);
       return;
     }
 
@@ -125,8 +129,21 @@ function ProductDetailsPage({ open, setOpen }) {
           // Reset quantity to 1 after adding to cart
           setQuantity(1);
         });
-
+      } else {
+        // Reset loading state if the operation was not successful
+        setIsAddingToCart(false);
+        toast({
+          title: data?.payload?.message || "Failed to add item to cart",
+          variant: "destructive",
+        });
       }
+    }).catch(() => {
+      // Reset loading state if there was an error
+      setIsAddingToCart(false);
+      toast({
+        title: "An error occurred while adding to cart",
+        variant: "destructive",
+      });
     });
   };
 
@@ -142,6 +159,7 @@ function ProductDetailsPage({ open, setOpen }) {
         title: "Please log in to add items to the cart!",
         variant: "destructive",
       });
+      // Return a rejected promise to signal the calling component to reset its loading state
       return Promise.reject("Not authenticated");
     }
 
@@ -194,13 +212,37 @@ function ProductDetailsPage({ open, setOpen }) {
           });
           return data;
         });
+      } else {
+        // Show error message if the operation was not successful
+        toast({
+          title: data?.payload?.message || "Failed to add item to cart",
+          variant: "destructive",
+        });
+        return Promise.reject("Operation failed");
       }
-      return data;
+    }).catch((error) => {
+      // Show error message if there was an exception
+      if (error !== "Not authenticated" && error !== "Out of stock" && error !== "Exceeds stock limit" && error !== "Operation failed") {
+        toast({
+          title: "An error occurred while adding to cart",
+          variant: "destructive",
+        });
+      }
+      return Promise.reject(error);
     });
   }
 
   // Handle adding a review for the product
   const handleAddReview = () => {
+    // Check authentication first before attempting to add a review
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in to add a review!",
+        variant: "destructive",
+      });
+      return;
+    }
+
     dispatch(
       addReview({
         productId: productDetails?._id,
@@ -210,14 +252,6 @@ function ProductDetailsPage({ open, setOpen }) {
         reviewValue: rating,
       })
     ).then((data) => {
-      if (!isAuthenticated) {
-        toast({
-          title: "Please log in to add a review!",
-          variant: "destructive",
-        });
-        return;
-      }
-
       if (data.payload?.success) {
         setRating(0);
         setReviewMsg("");
@@ -230,8 +264,14 @@ function ProductDetailsPage({ open, setOpen }) {
           data.payload?.message || "Failed to add review. Please try again.";
         toast({
           title: errorMessage,
+          variant: "destructive",
         });
       }
+    }).catch(() => {
+      toast({
+        title: "An error occurred while adding your review",
+        variant: "destructive",
+      });
     });
   };
 
@@ -384,9 +424,147 @@ function ProductDetailsPage({ open, setOpen }) {
       : 'animate-slide-right';
   };
 
+  // Create structured data for product
+  const structuredData = productDetails ? {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": productDetails.title,
+    "image": productDetails.image,
+    "description": productDetails.description,
+    "sku": productDetails.productCode || "",
+    "brand": {
+      "@type": "Brand",
+      "name": "Rachana Boutique"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": window.location.href,
+      "priceCurrency": "INR",
+      "price": productDetails.salePrice > 0 ? productDetails.salePrice : productDetails.price,
+      "availability": productDetails.totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    },
+    "aggregateRating": reviews && reviews.length > 0 ? {
+      "@type": "AggregateRating",
+      "ratingValue": averageReview.toFixed(1),
+      "reviewCount": reviews.length
+    } : undefined
+  } : null;
+
+  // Create breadcrumb structured data with SEO-friendly URLs
+  const breadcrumbData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://rachanaboutique.in/shop/home"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Collections",
+        "item": "https://rachanaboutique.in/shop/collections"
+      }
+    ]
+  };
+
+  // Add category to breadcrumb if available
+  if (productDetails?.category) {
+    const categoryInfo = categoryMapping.find(cat => cat.id === productDetails.category);
+    if (categoryInfo) {
+      breadcrumbData.itemListElement.push({
+        "@type": "ListItem",
+        "position": 3,
+        "name": categoryInfo.name,
+        "item": `https://rachanaboutique.in/shop/category/${categoryInfo.slug}`
+      });
+
+      // Add product as the last item
+      breadcrumbData.itemListElement.push({
+        "@type": "ListItem",
+        "position": 4,
+        "name": productDetails?.title || "Product",
+        "item": window.location.href
+      });
+    } else {
+      // If category mapping not found, add product as the last item
+      breadcrumbData.itemListElement.push({
+        "@type": "ListItem",
+        "position": 3,
+        "name": productDetails?.title || "Product",
+        "item": window.location.href
+      });
+    }
+  } else {
+    // If no category, add product as the last item
+    breadcrumbData.itemListElement.push({
+      "@type": "ListItem",
+      "position": 3,
+      "name": productDetails?.title || "Product",
+      "item": window.location.href
+    });
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 md:py-16">
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr] gap-12 md:gap-16">
+    <>
+      <Helmet>
+        <title>{productDetails?.title ? `${productDetails.title} | Rachana Boutique` : 'Product Details | Rachana Boutique'}</title>
+        <meta
+          name="description"
+          content={productDetails?.description ?
+            `${productDetails.description.substring(0, 150)}... Buy now at Rachana Boutique.` :
+            "Explore our exclusive collection of premium sarees and ethnic wear at Rachana Boutique."}
+        />
+        <meta
+          name="keywords"
+          content={`${productDetails?.title || 'saree'}, ${productDetails?.secondTitle || 'ethnic wear'}, ${productDetails?.productCode || ''}, Rachana Boutique, buy sarees online`}
+        />
+        <meta name="robots" content="index, follow" />
+
+        {/* Open Graph tags */}
+        <meta property="og:title" content={productDetails?.title ? `${productDetails.title} | Rachana Boutique` : 'Product Details | Rachana Boutique'} />
+        <meta
+          property="og:description"
+          content={productDetails?.description ?
+            `${productDetails.description.substring(0, 150)}... Shop now at Rachana Boutique.` :
+            "Discover premium sarees and ethnic wear at Rachana Boutique."}
+        />
+        <meta property="og:image" content={productDetails?.image && productDetails.image.length > 0 ? productDetails.image[0] : ''} />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:type" content="product" />
+        <meta property="product:price:amount" content={productDetails?.salePrice > 0 ? productDetails.salePrice : productDetails?.price} />
+        <meta property="product:price:currency" content="INR" />
+
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={productDetails?.title ? `${productDetails.title} | Rachana Boutique` : 'Product Details | Rachana Boutique'} />
+        <meta
+          name="twitter:description"
+          content={productDetails?.description ?
+            `${productDetails.description.substring(0, 150)}... Shop now at Rachana Boutique.` :
+            "Discover premium sarees and ethnic wear at Rachana Boutique."}
+        />
+        <meta name="twitter:image" content={productDetails?.image && productDetails.image.length > 0 ? productDetails.image[0] : ''} />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href={window.location.href} />
+
+        {/* JSON-LD structured data */}
+        {structuredData && (
+          <script type="application/ld+json">
+            {JSON.stringify(structuredData)}
+          </script>
+        )}
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbData)}
+        </script>
+      </Helmet>
+
+      <div className="container mx-auto px-4 py-8 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr] gap-12 md:gap-16">
 
         <div className="flex items-start gap-4">
           {/* Left Arrow - Desktop Only */}
@@ -636,7 +814,7 @@ function ProductDetailsPage({ open, setOpen }) {
                 <h1>No Reviews</h1>
               )}
             </div>
-     
+
             <div className="mt-10 flex-col flex gap-2">
               <Label>Write a review</Label>
               <div className="flex gap-1">
@@ -669,7 +847,7 @@ function ProductDetailsPage({ open, setOpen }) {
         {relatedProducts && relatedProducts.length > 0 && (
           <ProductSlider
             products={relatedProducts}
-            handleGetProductDetails={(productId) => navigate(`/shop/product/${productId}`)}
+            handleGetProductDetails={(productId) => navigate(`/shop/details/${productId}`)}
             handleAddtoCart={handleRelatedProductsAddToCart}
             title="You May Also Like"
             description="Discover more items that complement your style"
@@ -678,6 +856,7 @@ function ProductDetailsPage({ open, setOpen }) {
         )}
       </div>
     </div>
+    </>
   );
 }
 

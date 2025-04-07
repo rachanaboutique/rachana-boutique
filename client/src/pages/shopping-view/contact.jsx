@@ -60,8 +60,52 @@ const Contact = () => {
   return (
     <>
       <Helmet>
-        <title>Contact Us | Rachana Boutique</title>
-        <meta name="description" content="Get in touch with Rachana Boutique for any questions or inquiries about our saree collections." />
+        <title>Contact Us | Rachana Boutique - Customer Support</title>
+        <meta name="description" content="Get in touch with Rachana Boutique for any questions or inquiries about our premium saree collections. Our customer support team is ready to assist you with product information, orders, and more." />
+        <meta name="keywords" content="contact Rachana Boutique, Rachana Boutique customer service, saree shop contact, ethnic wear support, Rachana Boutique phone number, Rachana Boutique email" />
+        <meta name="robots" content="index, follow" />
+        <meta name="author" content="Rachana Boutique" />
+        <meta name="language" content="English" />
+
+        {/* Open Graph tags */}
+        <meta property="og:title" content="Contact Us | Rachana Boutique - Customer Support" />
+        <meta property="og:description" content="Get in touch with Rachana Boutique for any questions or inquiries about our premium saree collections." />
+        <meta property="og:image" content={banner} />
+        <meta property="og:url" content="https://rachanaboutique.in/shop/contact" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Rachana Boutique" />
+
+        {/* Twitter Card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Contact Us | Rachana Boutique - Customer Support" />
+        <meta name="twitter:description" content="Get in touch with Rachana Boutique for any questions or inquiries about our premium saree collections." />
+        <meta name="twitter:image" content={banner} />
+        <meta name="twitter:site" content="@rachanaboutique" />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://rachanaboutique.in/shop/contact" />
+
+        {/* Structured data for Organization */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Rachana Boutique",
+            "url": "https://rachanaboutique.in",
+            "logo": "https://rachanaboutique.in/logo.png",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+91 9944783389",
+              "contactType": "customer service",
+              "email": "contact@rachanaboutique.in",
+              "availableLanguage": ["English", "Hindi", "Tamil"]
+            },
+            "sameAs": [
+              "https://www.facebook.com/rachanaboutique",
+              "https://www.instagram.com/rachanaboutique"
+            ]
+          })}
+        </script>
       </Helmet>
 
       <div className="bg-white">
@@ -176,7 +220,7 @@ const Contact = () => {
                   <p className="text-gray-600 mb-6">Follow us on social media to stay updated with our latest collections and offers.</p>
 
                   <div className="flex flex-wrap gap-4">
-                   
+
                     <a
                       href="https://www.instagram.com/rachanas_boutique?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
                       target="_blank"

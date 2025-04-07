@@ -110,9 +110,26 @@ body {
   overflow-y: auto;
 }
 
+/* Prevent download option on videos */
+video {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent context menu on video elements */
+video::-webkit-media-controls-enclosure,
+video::-webkit-media-controls-panel,
+video::-webkit-media-controls {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  width: 12px; 
-  display: block; 
+  width: 12px;
+  display: block;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -126,7 +143,7 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #555; 
+  background: #555;
 }
 
 
@@ -206,6 +223,16 @@ body {
   right: 0rem;
 }
 
+.slick-dots {
+  bottom: -30px;
+  font-size: 14px !important;
+}
+
+.slick-dots li button:before {
+  font-size: 14px !important;
+}
+
+
 @media screen and (max-width: 768px) {
   .slick-icons--left {
     top: -4rem;
@@ -216,7 +243,7 @@ body {
     top: -4rem;
     right: 0rem;
   }
-  
+
 }
 
 /* Add the following custom animations in your global styles (Tailwind CSS config or a custom file) */

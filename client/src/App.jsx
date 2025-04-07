@@ -16,7 +16,7 @@ import ShoppingAccount from "./pages/shopping-view/account";
 import CheckAuth from "./components/common/check-auth";
 import UnauthPage from "./pages/unauth-page";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { checkAuth, refreshToken } from "./store/auth-slice";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
@@ -33,6 +33,7 @@ import AdminFeedback from "./pages/admin-view/feedback";
 import AuthForgotPassword from "./pages/auth/forgot-password";
 import AuthResetPassword from "./pages/auth/reset-password";
 import { Loader } from "./components/ui/loader";
+import { initPreventVideoDownload } from "./components/common/prevent-video-download";
 import AdminUsers from "./pages/admin-view/users";
 import AdminProductReview from "./pages/admin-view/review";
 import AdminContact from "./pages/admin-view/contact";
@@ -43,6 +44,33 @@ import AdminNewsLetter from "./pages/admin-view/newsletter";
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const videoObserverRef = useRef(null);
+
+  // Prevent context menu on all video elements
+  useLayoutEffect(() => {
+    const preventVideoContextMenu = (e) => {
+      if (e.target.tagName.toLowerCase() === 'video') {
+        e.preventDefault();
+        return false;
+      }
+    };
+
+    // Add global event listener
+    document.addEventListener('contextmenu', preventVideoContextMenu);
+
+    // Initialize the video download prevention utility
+    videoObserverRef.current = initPreventVideoDownload();
+
+    // Clean up
+    return () => {
+      document.removeEventListener('contextmenu', preventVideoContextMenu);
+
+      // Disconnect the observer when component unmounts
+      if (videoObserverRef.current) {
+        videoObserverRef.current.disconnect();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -137,6 +165,17 @@ function App() {
           <Route path="home" element={<ShoppingHome />} />
           <Route path="details/:id" element={<ProductDetailsPage />} />
           <Route path="collections" element={<ShoppingListing />} />
+
+          {/* SEO-friendly category routes */}
+          <Route path="collections/tussar-sarees" element={<ShoppingListing categorySlug="tussar-sarees" />} />
+          <Route path="collections/banaras-sarees" element={<ShoppingListing categorySlug="banaras-sarees" />} />
+          <Route path="collections/cotton-sarees" element={<ShoppingListing categorySlug="cotton-sarees" />} />
+          <Route path="collections/organza-sarees" element={<ShoppingListing categorySlug="organza-sarees" />} />
+          {/* Kora category removed as requested */}
+          {/* <Route path="collections/kora-sarees" element={<ShoppingListing categorySlug="kora-sarees" />} /> */}
+          <Route path="collections/georgette-sarees" element={<ShoppingListing categorySlug="georgette-sarees" />} />
+          <Route path="collections/celebrity-collection" element={<ShoppingListing categorySlug="celebrity-collection" />} />
+
           <Route path="new-arrivals" element={<NewArrivals />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />

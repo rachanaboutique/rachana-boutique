@@ -1,13 +1,36 @@
-# Global rules
+# Robots.txt for Rachana Boutique
+# This file controls how search engines crawl and index the website
+# It includes SEO-friendly URLs for all category pages
+
+# Global rules for all bots
 User-agent: *
+
+# Allow crawling of important pages
 Allow: /
 Allow: /shop/home
 Allow: /shop/collections
 Allow: /shop/new-arrivals
 Allow: /shop/contact
 Allow: /shop/search
+Allow: /shop/details/*
 
-# Prevent indexing of sensitive pages
+# Allow crawling of SEO-friendly category pages
+Allow: /shop/collections/tussar-sarees
+Allow: /shop/collections/banaras-sarees
+Allow: /shop/collections/cotton-sarees
+Allow: /shop/collections/organza-sarees
+Allow: /shop/collections/georgette-sarees
+Allow: /shop/collections/celebrity-collection
+
+# Allow crawling of specific category IDs for backward compatibility
+Allow: /shop/collections?category=67a4cedeb03c04a4eaa7d75d # Tussar
+Allow: /shop/collections?category=67a702e745c9ad11e043ca74 # Banaras
+Allow: /shop/collections?category=67a4e2b19baa2e6f977087a3 # Cotton
+Allow: /shop/collections?category=67ae15fcee205890c3cd5f98 # Organza
+Allow: /shop/collections?category=67ae17d5ee205890c3cd5faf # Georgette
+Allow: /shop/collections?category=67ae2128ee205890c3cd6251 # Celebrity Collection
+
+# Prevent indexing of sensitive and utility pages
 Disallow: /shop/checkout
 Disallow: /shop/account
 Disallow: /shop/payment-success
@@ -20,11 +43,22 @@ Disallow: /admin/*
 Disallow: /*?q=*
 Disallow: /*?search=*
 
-# Allow crawling of category pages
-Allow: /shop/collections?category=*
+# Prevent crawling of filter combinations to avoid duplicate content
+Disallow: /*?sort=*
+Disallow: /*?page=*
+Disallow: /*?filter=*
 
-# Crawl-delay for all bots (optional)
+# Exception for Google
+User-agent: Googlebot
+Allow: /
+
+# Exception for Bing
+User-agent: Bingbot
+Allow: /
+
+# Crawl-delay for all bots (helps with server load)
 Crawl-delay: 1
 
-# Sitemap location
+# Sitemap location - This helps search engines discover all pages on the website
+# The sitemap is generated with SEO-friendly URLs for better indexing
 Sitemap: https://rachanaboutique.in/sitemap.xml
