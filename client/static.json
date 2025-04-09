@@ -1,0 +1,26 @@
+{
+  "root": "dist",
+  "clean_urls": true,
+  "routes": {
+    "/**": "index.html"
+  },
+  "https_only": true,
+  "headers": {
+    "/sitemap.xml": {
+      "Cache-Control": "public, max-age=86400",
+      "Content-Type": "application/xml; charset=utf-8"
+    },
+    "/robots.txt": {
+      "Cache-Control": "public, max-age=86400",
+      "Content-Type": "text/plain; charset=utf-8"
+    }
+  },
+  "proxies": {
+    "/sitemap.xml": {
+      "origin": "${SITEMAP_URL}"
+    },
+    "/robots.txt": {
+      "origin": "${ROBOTS_URL}"
+    }
+  }
+}

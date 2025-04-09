@@ -62,7 +62,7 @@ const handleImageUpload = async (req, res) => {
     // Handle multiple file uploads
     if (req.files && req.files.length > 0) {
       results = await Promise.all(req.files.map(processImage));
-    } 
+    }
     // Handle single file upload
     else if (req.file) {
       results.push(await processImage(req.file));
@@ -87,10 +87,10 @@ const handleVideoUpload = async (req, res) => {
       // Convert the video file buffer to a base64 string
       const b64 = Buffer.from(req.file.buffer).toString("base64");
       const url = "data:" + req.file.mimetype + ";base64," + b64;
-      
+
       // Upload the video using the videoUploadUtil (internal organization util)
       const result = await videoUploadUtil(url);
-      
+
       return res.json({
         success: true,
         result: result
@@ -126,9 +126,9 @@ const addProduct = async (req, res) => {
       salePrice,
       totalStock,
       averageReview,
-      colors,      
-      isWatchAndBuy, 
-      video      
+      colors,
+      isWatchAndBuy,
+      video
     } = req.body;
 
     // Ensure that image is an array; if not, convert it to one.

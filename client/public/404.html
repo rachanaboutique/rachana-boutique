@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Page Not Found</title>
+  <script>
+    // Check if the URL is for sitemap.xml or robots.txt
+    const path = window.location.pathname;
+    if (path === '/sitemap.xml') {
+      // Create a fetch request to get the sitemap.xml file
+      fetch('/sitemap.xml', {
+        headers: {
+          'Accept': 'application/xml',
+          'Cache-Control': 'no-cache'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        }
+        throw new Error('Network response was not ok.');
+      })
+      .then(data => {
+        // Create a new document with the sitemap content
+        document.open();
+        document.write('<?xml version="1.0" encoding="UTF-8"?>\n');
+        document.write(data);
+        document.close();
+      })
+      .catch(error => {
+        console.error('Error fetching sitemap:', error);
+        // If there's an error, redirect to the home page
+        window.location.replace('/');
+      });
+    } else if (path === '/robots.txt') {
+      // Create a fetch request to get the robots.txt file
+      fetch('/robots.txt', {
+        headers: {
+          'Accept': 'text/plain',
+          'Cache-Control': 'no-cache'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        }
+        throw new Error('Network response was not ok.');
+      })
+      .then(data => {
+        // Create a new document with the robots.txt content
+        document.open();
+        document.write('<pre>' + data + '</pre>');
+        document.close();
+      })
+      .catch(error => {
+        console.error('Error fetching robots.txt:', error);
+        // If there's an error, redirect to the home page
+        window.location.replace('/');
+      });
+    } else {
+      // For all other 404s, redirect to the home page
+      window.location.replace('/');
+    }
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>

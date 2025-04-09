@@ -12,7 +12,7 @@ import { Separator } from "../../components/ui/separator";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import { ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Minus, ShoppingBag, CheckCircle, Star, Sparkles, Gem, Award, Heart, Scissors, Palette, Zap, Leaf } from "lucide-react";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import ProductSlider from "@/components/shopping-view/product-slider";
 import { fetchAllProducts } from "@/store/admin/products-slice";
@@ -315,23 +315,19 @@ function ProductDetailsPage({ open, setOpen }) {
       // Split on both literal "\n" and actual new lines
       .split(/\\n|\n/)
       .filter((point) => point.trim() !== "")
-      .map((point, index) => {
+      .map((point) => {
         const colonIndex = point.indexOf(":");
         if (colonIndex !== -1) {
           // Extract text before and after the colon, ensuring clean formatting
           const beforeColon = point.substring(0, colonIndex).trim();
           const afterColon = point.substring(colonIndex + 1).trim();
           return (
-            <li key={index} className="mb-1">
-              <span className="font-bold">{beforeColon}:</span> {afterColon}
-            </li>
+            <>
+              <span className="font-semibold">{beforeColon}:</span> {afterColon}
+            </>
           );
         }
-        return (
-          <li key={index} className="mb-1">
-            {point.trim()}
-          </li>
-        );
+        return point.trim();
       });
   };
 
@@ -641,62 +637,105 @@ function ProductDetailsPage({ open, setOpen }) {
 
 
 
-        <div className="flex flex-col  gap-4">
-          <div className="text-center flex flex-col items-center mb-4">
-            <h1 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-2">
+        <div className="flex flex-col gap-8 relative">
+          {/* Enhanced Product Title Section with elegant styling */}
+          <div className="text-center flex flex-col items-center relative">
+            {/* Subtle decorative element */}
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+
+            {/* Product code displayed above title for better hierarchy */}
+            {productDetails?.productCode && (
+              <div className="inline-block mb-4 tracking-widest">
+                <span className="text-sm text-gray-400 uppercase">Product Code</span>
+                <div className="text-base font-medium text-gray-600 mt-1">{productDetails?.productCode}</div>
+              </div>
+            )}
+
+            {/* Main title with refined styling */}
+            <h1 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-3 relative">
               {productDetails?.title}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 w-12 h-0.5 bg-black"></div>
             </h1>
-            <h2 className="text-lg md:text-xl text-gray-500">
+
+            {/* Subtitle with improved styling */}
+            <h2 className="text-lg md:text-xl text-gray-500 mt-4 max-w-lg">
               {productDetails?.secondTitle}
             </h2>
-            <div className="w-24 h-1 bg-black mx-auto my-4"></div>
-            {productDetails?.productCode && (
-              <div className="bg-gray-100 py-2 px-4 w-1/3 rounded-md text-lg md:text-xl text-gray-800">
-                Code: {productDetails?.productCode}
+          </div>
+
+          {/* Product Description with creative icons */}
+          <div className="text-center max-w-2xl mx-auto">
+            {productDetails?.description && (
+              <div className="space-y-5">
+                {renderDescriptionBulletPoints(productDetails.description).map((point, index) => {
+                  // Array of Lucide icons to use for description points
+                  const icons = [CheckCircle, Star, Sparkles, Gem, Award, Heart, Scissors, Palette, Zap, Leaf];
+                  // Select an icon based on the index (cycling through the array)
+                  const IconComponent = icons[index % icons.length];
+
+                  return (
+                    <div key={index} className="flex items-start gap-3 text-left transform transition-all duration-300 hover:translate-x-1">
+                      <div className="text-black mt-1 flex-shrink-0">
+                        <IconComponent className="h-5 w-5 text-gray-700" strokeWidth={1.5} />
+                      </div>
+                      <div className="text-gray-700 text-lg">{point}</div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          <div>
-            {productDetails?.description && (
-              <ul className="list-disc list-inside text-gray-600 text-lg mt-4 space-y-2">
-                {renderDescriptionBulletPoints(productDetails.description)}
-              </ul>
+          {/* Clean Price Display */}
+          <div className="flex items-center justify-center gap-8 mt-2">
+            {productDetails?.salePrice > 0 ? (
+              <>
+                <div className="flex flex-col items-center">
+                  <p className="text-2xl md:text-3xl font-medium line-through text-gray-400">
+                    ₹{productDetails?.price}
+                  </p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <p className="text-2xl md:text-3xl font-medium text-black">
+                    ₹{productDetails?.salePrice}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center">
+                <p className="text-2xl md:text-3xl font-medium">
+                  ₹{productDetails?.price}
+                </p>
+              </div>
             )}
           </div>
-          <div className="flex items-center justify-center gap-4 mt-6">
-            <p
-              className={`text-2xl md:text-3xl font-medium ${productDetails?.salePrice > 0 ? "line-through text-gray-500" : ""}`}
-            >
-              ₹{productDetails?.price}
-            </p>
-            {productDetails?.salePrice > 0 && (
-              <p className="text-2xl md:text-3xl font-medium">
-                ₹{productDetails?.salePrice}
-              </p>
-            )}
-          </div>
-          {/* Color Selection with Image Cards - 5 per row */}
+
+          {/* Color Selection with clean styling */}
           {productDetails?.colors && productDetails.colors.length > 0 && (
-            <div className="mt-6 w-full">
+            <div className="mt-2 w-full">
               <div className="w-full text-center">
-                <Label className="text-lg font-semibold uppercase tracking-wide mb-2 block">Colors</Label>
-                <div className="w-12 h-0.5 bg-black mb-4 mx-auto"></div>
-                <div className="flex justify-center gap-4 mx-auto">
+                <Label className="text-lg font-semibold uppercase tracking-wide mb-4 block relative inline-block">
+                  Colors
+                </Label>
+
+                <div className="flex justify-center gap-5 mx-auto">
                   {productDetails.colors.map((colorItem, index) => (
                     <div
                       key={index}
                       onClick={() => handleColorSelect(colorItem)}
-                      className={`cursor-pointer flex flex-col items-center p-2 rounded-lg transition-all duration-300 w-24 ${selectedColor && selectedColor._id === colorItem._id
-                        ? "border-2 border-black shadow-md"
-                        : "border border-gray-200 hover:border-gray-400"
-                        }`}
+                      className={`cursor-pointer flex flex-col items-center transition-all duration-300 w-20
+                        ${selectedColor && selectedColor._id === colorItem._id
+                          ? "transform scale-110"
+                          : "hover:scale-105"}
+                      `}
                     >
-                      <img
-                        src={colorItem.image}
-                        alt={colorItem.title}
-                        className="w-full h-16 object-cover rounded-md"
-                      />
+                      <div className={`w-full h-16 overflow-hidden ${selectedColor && selectedColor._id === colorItem._id ? "ring-2 ring-black ring-offset-2" : ""}`}>
+                        <img
+                          src={colorItem.image}
+                          alt={colorItem.title}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        />
+                      </div>
                       <p className="mt-2 text-sm font-medium text-center">
                         {colorItem.title}
                       </p>
@@ -706,55 +745,88 @@ function ProductDetailsPage({ open, setOpen }) {
               </div>
             </div>
           )}
-          {/* Quantity Control and Add to Cart Button */}
-          <div className="mt-8 flex flex-col gap-4">
 
-
-            {/* Add to Cart Button */}
+          {/* Creative Quantity Control and Add to Cart Button */}
+          <div className="mt-6 flex flex-col gap-6">
             <div className="flex justify-center">
               {productDetails?.totalStock === 0 ? (
-                <button className="w-full max-w-md px-8 py-3 opacity-60 cursor-not-allowed border-2 border-gray-300 text-gray-400 uppercase tracking-wider text-sm font-medium">
-                  Out of Stock
-                </button>
+                <div className="w-full max-w-md px-8 py-3 opacity-60 cursor-not-allowed text-gray-500 uppercase tracking-wider text-sm font-medium flex items-center justify-center gap-2 border-b-2 border-gray-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Out of Stock</span>
+                </div>
               ) : (
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center gap-6 w-full max-w-md">
+                  {/* Creative Quantity Controls */}
                   {productDetails?.totalStock > 0 && (
-                    <div className="flex justify-center items-center">
-                      <div className="flex items-center border-2 border-black">
+                    <div className="flex justify-center items-center w-full">
+                      <div className="relative flex items-center justify-center">
+                        {/* Circular quantity display with creative styling */}
+                        <div className="relative w-20 h-20 flex items-center justify-center">
+                          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="2" />
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#000" strokeWidth="2"
+                              strokeDasharray="283"
+                              strokeDashoffset={283 - (283 * (quantity / (productDetails.totalStock > 10 ? 10 : productDetails.totalStock)))}
+                              transform="rotate(-90 50 50)"
+                            />
+                          </svg>
+                          <span className="text-2xl font-medium">{quantity}</span>
+                        </div>
+
+                        {/* Decrease button positioned to the left with more spacing */}
                         <button
                           onClick={decreaseQuantity}
-                          className="px-4 py-3 border-r-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                          className="absolute -left-10 w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform duration-300 focus:outline-none"
                           aria-label="Decrease quantity"
+                          disabled={quantity <= 1}
                         >
-                          <Minus className="h-4 w-4" />
+                          <Minus className={`h-5 w-5 ${quantity <= 1 ? 'text-gray-300' : 'text-black'}`} />
                         </button>
-                        <div className="bg-gray-100 text-black px-6 py-2 font-medium text-center min-w-[60px]">
-                          {quantity}
-                        </div>
+
+                        {/* Increase button positioned to the right with more spacing */}
                         <button
                           onClick={increaseQuantity}
-                          className="px-4 py-3 border-l-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                          className="absolute -right-10 w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform duration-300 focus:outline-none"
                           aria-label="Increase quantity"
+                          disabled={quantity >= productDetails.totalStock}
                         >
-                          <Plus className="h-4 w-4" />
+                          <Plus className={`h-5 w-5 ${quantity >= productDetails.totalStock ? 'text-gray-300' : 'text-black'}`} />
                         </button>
                       </div>
                     </div>
                   )}
+
+                  {/* Clean Add to Cart Button */}
                   <button
-                    className="w-full max-w-md px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                    className="w-full px-8 py-3 bg-black text-white hover:bg-white hover:text-black border-2 border-black transition-all duration-300 uppercase tracking-wider text-sm font-medium flex items-center justify-center gap-2 group"
                     onClick={() =>
                       handleAddToCart(productDetails?._id, productDetails?.totalStock)
                     }
+                    disabled={isAddingToCart}
                   >
-                   {isAddingToCart ? (<p>Adding...</p>) : (<p> Add to Cart </p>)}
+                    {isAddingToCart ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white group-hover:text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Adding to Cart...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+                        <span>Add to Cart</span>
+                      </>
+                    )}
                   </button>
                 </div>
-
               )}
             </div>
-          </div>
 
+            {/* No stock information as requested */}
+          </div>
         </div>
 
 

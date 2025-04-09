@@ -1,23 +1,27 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Slider from "react-slick";
-import ReactPlayer from 'react-player';
+import ReactPlayer from "react-player";
 import { motion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, ShoppingBag } from "lucide-react";
 import FastMovingCard from "./fast-moving-card";
+import "../../styles/watch-and-buy-desktop.css";
 
 const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const navigate = useNavigate();
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  // Removed unused state: previousVideoIndex
   const [videoProgress, setVideoProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [activeItem] = useState(0);
-
-
+  const [videoDuration, setVideoDuration] = useState(0);
+  const playerRef = useRef(null);
+  
+  // Ref to store last progress value for throttling
+  const lastProgressRef = useRef(0);
 
   // Settings for the slider
   const sliderSettings = {
@@ -34,6 +38,8 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     swipeToSlide: true,
     variableWidth: false,
     draggable: true,
+    // Add spacing between slides
+    slidesSpacing: 10,
     responsive: [
       {
         breakpoint: 1024,
@@ -48,18 +54,44 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     ]
   };
 
+  // Function to go to the next video (infinite loop)
+  const goToNextVideo = () => {
+    const newIndex = (currentVideoIndex + 1) % products.length;
+    setCurrentVideoIndex(newIndex);
+    setSelectedVideo(products[newIndex]);
+  };
+
   // Reset video state when modal opens or video changes
   useEffect(() => {
     if (showVideoModal) {
       setIsPlaying(true);
       setIsMuted(false);
       setVideoProgress(0);
+      setVideoDuration(0);
+      lastProgressRef.current = 0;
     }
   }, [showVideoModal, currentVideoIndex]);
 
+  // Throttled onProgress handler
+  const handleProgress = useCallback((state) => {
+    // Update only if progress increased by more than 0.01
+    if (state.played - lastProgressRef.current > 0.01) {
+      lastProgressRef.current = state.played;
+      setVideoProgress(state.played);
+    }
+  }, []);
+
+  // Handle video end - auto slide to next video with a slight delay
+  const handleVideoEnd = () => {
+    if (videoDuration > 0) {
+      setTimeout(() => {
+        goToNextVideo();
+      }, 300);
+    }
+  };
+
   // Check if we have products to display
   const hasWatchAndBuyProducts = products && products.length > 0;
-
   if (!hasWatchAndBuyProducts) return null;
 
   return (
@@ -76,7 +108,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
           <div>
             <Slider {...sliderSettings} className="watch-buy-slider">
               {products.map((productItem, index) => (
-                <div key={productItem._id} className="pb-2 px-[2px]">
+                <div key={productItem._id} className="pb-2 px-2">
                   <div
                     onClick={() => {
                       setSelectedVideo(productItem);
@@ -94,14 +126,10 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                       }}
                       className="relative cursor-pointer shadow-md overflow-hidden watch-buy-mobile-card"
                       style={{
-                        aspectRatio: "9/14",
+                        aspectRatio: "9/16",
                         background: "#f8f8f8",
                       }}
                     >
-
-
-
-
                       <FastMovingCard
                         item={productItem}
                         index={index}
@@ -125,7 +153,20 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                             className="w-9 h-9 bg-white border border-gray-300 text-black rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors shadow-sm"
                             aria-label="View Details"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
                           </button>
                           <button
                             onClick={(e) => {
@@ -148,12 +189,11 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
         </div>
       </div>
 
-
       {/* VideoStacker Modal - When a video is clicked */}
       {showVideoModal && selectedVideo && (
         <div
           className="fixed inset-0 bg-black z-50 flex flex-col modal-view"
-          onClick={(e) => e.stopPropagation()} /* Prevent closing when clicking outside */
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header - Only Close Button in Top Right */}
           <div className="absolute top-0 left-0 right-0 p-4 flex justify-end items-center z-50">
@@ -170,7 +210,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
           {/* VideoStacker UI */}
           <div className="flex-grow flex flex-col items-center justify-center">
-            {/* Video Timeline at Top - Outside the video */}
+            {/* Video Timeline */}
             <div className="z-20 flex justify-center gap-2 py-2">
               <div className="bg-black/30 backdrop-blur-sm rounded-full p-2 flex items-center gap-2 w-auto">
                 {products.map((_, index) => (
@@ -181,7 +221,9 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                       setCurrentVideoIndex(index);
                       setSelectedVideo(products[index]);
                     }}
-                    className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 timeline-dot ${index === currentVideoIndex ? 'w-10 bg-white' : 'w-5 bg-white/50'}`}
+                    className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 timeline-dot ${
+                      index === currentVideoIndex ? "w-10 bg-white" : "w-5 bg-white/50"
+                    }`}
                   ></div>
                 ))}
               </div>
@@ -193,8 +235,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    const newIndex = currentVideoIndex === 0 ?
-                      products.length - 1 : currentVideoIndex - 1;
+                    const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
                     setCurrentVideoIndex(newIndex);
                     setSelectedVideo(products[newIndex]);
                   }}
@@ -225,59 +266,49 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                 {products.map((productItem, index) => {
                   // Calculate position: -1 = left, 0 = center, 1 = right
                   let position = 0;
-
                   if (index === currentVideoIndex) {
-                    position = 0; // center
-                  } else if (
-                    index === (currentVideoIndex - 1 + products.length) % products.length
-                  ) {
-                    position = -1; // left
+                    position = 0;
+                  } else if (index === (currentVideoIndex - 1 + products.length) % products.length) {
+                    position = -1;
                   } else if (index === (currentVideoIndex + 1) % products.length) {
-                    position = 1; // right
+                    position = 1;
                   } else {
-                    return null; // Don't render other videos
+                    return null;
                   }
 
                   return (
                     <div
                       key={productItem._id}
-                      className={`absolute transition-all duration-500 ease-in-out cursor-pointer video-card-container ${position === 0 ? 'z-20 scale-100 opacity-100' : 'z-10 scale-90 opacity-70'}`}
+                      className={`absolute transition-all duration-500 ease-in-out cursor-pointer video-card-container ${
+                        position === 0 ? "z-20 scale-100 opacity-100" : "z-10 scale-90 opacity-70"
+                      }`}
                       style={{
-                        transform: `translateX(${position * 50}%) scale(${position === 0 ? 1 : 0.9})`,
-                        filter: position !== 0 ? 'brightness(0.8)' : 'brightness(1)',
-                        opacity: position !== 0 ? 0.8 : 1
+                        transform: `translateX(${position * 50}%) scale(${position === 0 ? 1 : 0.7})`,
+                        filter: position !== 0 ? "brightness(0.7)" : "brightness(1)",
+                        opacity: position !== 0 ? 0.8 : 1,
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (position !== 0) {
-                          // Determine direction of transition
-                          const direction = position === -1 ? 'right' : 'left';
-
-                          // Add leaving class to current card
-                          const currentCard = document.querySelector('.video-card-container.z-20');
+                          const direction = position === -1 ? "right" : "left";
+                          const currentCard = document.querySelector(".video-card-container.z-20");
                           if (currentCard) {
                             currentCard.classList.add(`leaving-${direction}`);
                           }
-
-                          // After current card starts leaving, update the index
                           setTimeout(() => {
                             setCurrentVideoIndex(index);
                             setSelectedVideo(products[index]);
-
-                            // Add entering class to new center card
                             setTimeout(() => {
-                              const newCards = document.querySelectorAll('.video-card-container');
-                              newCards.forEach(card => {
-                                card.classList.remove('leaving-left', 'leaving-right');
-                                if (card.classList.contains('z-20')) {
-                                  card.classList.add('entering');
+                              const newCards = document.querySelectorAll(".video-card-container");
+                              newCards.forEach((card) => {
+                                card.classList.remove("leaving-left", "leaving-right");
+                                if (card.classList.contains("z-20")) {
+                                  card.classList.add("entering");
                                 }
                               });
-
-                              // Remove entering class after animation completes
                               setTimeout(() => {
-                                newCards.forEach(card => {
-                                  card.classList.remove('entering');
+                                newCards.forEach((card) => {
+                                  card.classList.remove("entering");
                                 });
                               }, 700);
                             }, 100);
@@ -287,70 +318,84 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     >
                       <div
                         className="video-card relative overflow-hidden shadow-xl"
-                        style={showVideoModal ? { width: '370px', height: '750px' } : { width: '320px', height: '600px' }}
+                        style={
+                          showVideoModal
+                            ? { width: "370px", height: "750px" }
+                            : { width: "320px", height: "600px" }
+                        }
                       >
                         {/* Video Player */}
                         {productItem.videoUrl || productItem.video ? (
                           <div className="w-full h-full">
-                            <div
-                              className="react-player-container"
-                              onContextMenu={(e) => e.preventDefault()}
-                            >
+                            <div className="react-player-container" onContextMenu={(e) => e.preventDefault()}>
                               <ReactPlayer
+                                ref={position === 0 ? playerRef : null}
                                 url={productItem.videoUrl || productItem.video}
                                 className="react-player"
                                 width="100%"
                                 height="100%"
                                 playing={position === 0 ? isPlaying : false}
-                                loop
+                                loop={false} /* Loop disabled to allow auto slide */
                                 muted={position === 0 ? isMuted : true}
                                 controls={false}
                                 playsinline
-                                onProgress={position === 0 ? (state) => setVideoProgress(state.played) : undefined}
+                                progressInterval={100}
+                                onProgress={position === 0 ? handleProgress : undefined}
+                                onDuration={position === 0 ? (duration) => setVideoDuration(duration) : undefined}
+                                onEnded={position === 0 ? handleVideoEnd : undefined}
                                 config={{
                                   file: {
                                     attributes: {
-                                      controlsList: 'nodownload',
+                                      controlsList: "nodownload",
                                       disablePictureInPicture: true,
                                       disableRemotePlayback: true,
-                                      onContextMenu: "return false;"
-                                    }
-                                  }
+                                      onContextMenu: "return false;",
+                                    },
+                                  },
                                 }}
                               />
                             </div>
 
-                            {/* Video Progress Bar - Only for active video */}
+                            {/* Video Progress Bar - repositioned below the top at 40px with smoother transition */}
                             {position === 0 && (
-                              <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 z-10">
+                              <div className="absolute top-[40px] left-0 right-0 h-2 bg-black/50 z-[9999]" style={{ width: "100%" }}>
                                 <div
-                                  className="h-full bg-white transition-all duration-100 ease-linear"
+                                  className="h-full bg-white transition-all duration-300 ease-out"
                                   style={{ width: `${videoProgress * 100}%` }}
                                 ></div>
                               </div>
                             )}
 
-                            {/* Video Controls - Always visible in top right */}
+                            {/* Video Controls - redesigned for better clickability */}
                             {position === 0 && (
-                              <div className="video-controls">
-                                <button
-                                  className="video-control-button"
+                              <div className="absolute top-4 right-4 flex gap-4 z-[9999]">
+                                <div
+                                  className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center cursor-pointer hover:bg-black/90 transition-all border border-white/30"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setIsPlaying(!isPlaying);
                                   }}
                                 >
-                                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-                                </button>
-                                <button
-                                  className="video-control-button"
+                                  {isPlaying ? (
+                                    <Pause size={24} className="text-white w-full h-full p-2" />
+                                  ) : (
+                                    <Play size={24} className="text-white w-full h-full p-2" />
+                                  )}
+                                </div>
+
+                                <div
+                                  className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center cursor-pointer hover:bg-black/90 transition-all border border-white/30"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setIsMuted(!isMuted);
                                   }}
                                 >
-                                  {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                                </button>
+                                  {isMuted ? (
+                                    <VolumeX size={24} className="text-white w-full h-full p-2" />
+                                  ) : (
+                                    <Volume2 size={24} className="text-white w-full h-full p-2" />
+                                  )}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -367,19 +412,14 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
             </div>
           </div>
 
-          {/* Product Info and Action Buttons - Contained within the width of the video */}
+          {/* Product Info and Action Buttons */}
           <div className="absolute bottom-6 left-0 right-0 flex justify-center z-40">
-            <div className="relative flex items-center justify-between" style={{ width: '370px' }}>
-         {/* Gradient background from bottom to top */}
-         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg"></div>
-
-              {/* Product Info */}
+            <div className="relative flex items-center justify-between" style={{ width: "370px" }}>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg"></div>
               <div className="text-white p-2 z-10">
                 <h3 className="text-lg font-medium truncate">{selectedVideo?.title}</h3>
                 <p className="text-lg font-bold mt-1">₹{selectedVideo.price}</p>
               </div>
-
-              {/* Action Buttons */}
               <div className="flex flex-col gap-2 p-2 z-10">
                 <button
                   onClick={(e) => {
@@ -401,13 +441,25 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                   className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors"
                   aria-label="View Details"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Background gradient for better text visibility */}
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/70 to-transparent z-30"></div>
         </div>
       )}
@@ -416,5 +468,3 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 };
 
 export default WatchAndBuy;
-
-

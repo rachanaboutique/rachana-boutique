@@ -18,7 +18,9 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
   const [passwordVisibility, setPasswordVisibility] = useState({});
   // Track upload status for color items (by index) and video upload status.
   const [colorsUploadStatus, setColorsUploadStatus] = useState({});
-  const [videoUploadStatus, setVideoUploadStatus] = useState("idle");
+  const [videoUploadStatus, setVideoUploadStatus] = useState("idle"); // idle, uploading, uploaded, error
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState("");
 
   // Helper function for uploading a color image to Cloudinary.
   const uploadColorImage = async (file, idx, controlItem) => {
@@ -71,41 +73,69 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
   };
  */
 
-// Updated uploadVideo function with fixed variable naming
+// Updated uploadVideo function with file size limit and progress tracking
 const uploadVideo = async (file) => {
+  // Check file size - limit to 99MB (99 * 1024 * 1024 bytes)
+  const MAX_FILE_SIZE = 99 * 1024 * 1024; // 99MB in bytes
+  if (file.size > MAX_FILE_SIZE) {
+    setVideoUploadStatus("error");
+    setUploadError(`File size exceeds 99MB limit. Please select a smaller file.`);
+    return;
+  }
+
   setVideoUploadStatus("uploading");
+  setUploadProgress(0);
+
   try {
     const cloudinaryFormData = new FormData();
     cloudinaryFormData.append("file", file);
-    cloudinaryFormData.append("upload_preset", "watch_any_buy"); 
+    cloudinaryFormData.append("upload_preset", "watch_any_buy");
     cloudinaryFormData.append("resource_type", "video");
-    
-    const response = await fetch(
-      "https://api.cloudinary.com/v1_1/dhkdsvdvr/video/upload",
-      {
-        method: "POST",
-        body: cloudinaryFormData,
-      }
-    );
 
-    if (!response.ok) {
-      throw new Error("Failed to upload video to Cloudinary");
-    }
+    // Use XMLHttpRequest to track upload progress
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
 
-    const data = await response.json();
-    
-    // Set the Cloudinary URL in the form data
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      video: data.secure_url,
-    }));
+      // Track upload progress
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percentComplete);
+        }
+      };
 
-    setVideoUploadStatus("uploaded");
-    
-    return { url: data.secure_url, public_id: data.public_id };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const data = JSON.parse(xhr.responseText);
+
+          // Set the Cloudinary URL in the form data
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            video: data.secure_url,
+          }));
+
+          setVideoUploadStatus("uploaded");
+          resolve({ url: data.secure_url, public_id: data.public_id });
+        } else {
+          setVideoUploadStatus("error");
+          setUploadError("Failed to upload video to Cloudinary. Please try again.");
+          reject(new Error("Failed to upload video to Cloudinary"));
+        }
+      };
+
+      xhr.onerror = () => {
+        setVideoUploadStatus("error");
+        setUploadError("Network error during upload. Please check your connection and try again.");
+        reject(new Error("Network error during upload"));
+      };
+
+      xhr.open("POST", "https://api.cloudinary.com/v1_1/dhkdsvdvr/video/upload", true);
+      xhr.send(cloudinaryFormData);
+    });
   } catch (err) {
     console.error("Error uploading video: ", err);
-    setVideoUploadStatus("idle");
+    setVideoUploadStatus("error");
+    setUploadError("An unexpected error occurred. Please try again.");
     throw err;
   }
 };
@@ -124,7 +154,7 @@ const uploadVideo = async (file) => {
     let element = null;
     // For colors, default to empty array; otherwise default to empty string.
     const value = formData[controlItem.name] || (controlItem.componentType === "colors" ? [] : "");
-    
+
     switch (controlItem.componentType) {
       case "input":
         element = (
@@ -171,7 +201,7 @@ const uploadVideo = async (file) => {
             </div>
           );
           break;
-    
+
       case "select":
         element = (
           <Select
@@ -323,7 +353,7 @@ const uploadVideo = async (file) => {
                     </button>
                   </div>
                 )}
-        
+
                 {!formData.video && (
                   <input
                     type="file"
@@ -332,15 +362,31 @@ const uploadVideo = async (file) => {
                       const file = event.target.files[0];
                       if (file) {
                         setVideoUploadStatus("uploading");
+                        setUploadError(""); // Clear any previous errors
                         await uploadVideo(file); // Upload function
                         // No need to set the blob URL here
                       }
                     }}
                   />
                 )}
-        
-                {videoUploadStatus === "uploading" && <p>Uploading...</p>}
-                {videoUploadStatus === "uploaded" && <p>Uploaded</p>}
+
+                {videoUploadStatus === "uploading" && (
+                  <div className="mt-2">
+                    <p>Processing... {uploadProgress}%</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+                {videoUploadStatus === "error" && (
+                  <div className="mt-2">
+                    <p className="text-red-600">{uploadError}</p>
+                  </div>
+                )}
+                {videoUploadStatus === "uploaded" && <p className="mt-2 text-green-600">Uploaded Successfully</p>}
               </div>
             );
           } else {
@@ -348,7 +394,7 @@ const uploadVideo = async (file) => {
           }
           break;
         }
-        
+
       default:
         element = null;
     }

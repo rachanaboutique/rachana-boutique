@@ -35,11 +35,29 @@
 /* Video stacker container */
 .video-stacker-container {
   margin: 0 auto;
+  overflow: visible !important;
+  position: relative;
+  perspective: 1000px !important;
 }
 
 /* Video stack wrapper */
 .video-stack-wrapper {
   padding: 0;
+  overflow: visible !important;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d !important;
+}
+
+/* Ensure all video cards in the stack are visible */
+.video-card-container {
+  position: absolute;
+  display: block !important;
+  visibility: visible !important;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 /* Timeline dots */
@@ -115,47 +133,67 @@
   display: block;
 }
 
-/* Video controls */
+/* Video controls - Completely redesigned for maximum clickability */
 .video-controls {
   position: absolute;
   top: 16px;
   right: 16px;
   display: flex;
   gap: 8px;
-  z-index: 20;
+  z-index: 9999;
   opacity: 1;
+  pointer-events: auto;
 }
 
-.video-control-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+/* Make the control buttons and icons fully clickable */
+.video-controls svg {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  cursor: pointer;
+  pointer-events: auto !important;
+  transition: all 0.2s ease;
 }
 
-.video-control-button:hover {
-  background-color: rgba(0, 0, 0, 0.8);
-  transform: scale(1.05);
-  border-color: rgba(255, 255, 255, 0.3);
+.video-controls svg:hover {
+  transform: scale(1.1);
+}
+
+.video-controls svg:active {
+  transform: scale(0.9);
+}
+
+/* Enhanced Video Progress Bar - White timeline moved down */
+.video-progress-container {
+  height: 6px !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  z-index: 9999 !important;
+  position: fixed !important;
+  top: 12px !important; /* Moved down from the very top */
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  pointer-events: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.video-progress-bar {
+  height: 100% !important;
+  background-color: white !important;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.9) !important;
 }
 
 /* Slider customization */
 .watch-buy-slider .slick-track {
   display: flex;
-  gap: 0;
+  gap: 10px;
   margin-left: 0;
   margin-right: 0;
 }
 
 .watch-buy-slider .slick-slide {
+  margin: 0 5px;
   padding: 0;
   height: auto;
 }
@@ -163,15 +201,33 @@
 /* Arrow styles removed as we're not using arrows */
 
 .watch-buy-slider .slick-dots {
-  bottom: -30px;
-  font-size: 20px !important;
+  bottom: -40px;
+  font-size: 14px !important;
 }
 
 .watch-buy-slider .slick-dots li button:before {
-  font-size: 20px !important;
+  font-size: 14px !important;
 }
 
 
 
 /* Modal view - no padding */
 /* Padding already removed from all video-stack-wrapper elements */
+
+/* Ensure 3D stacking works properly */
+.modal-view {
+  perspective: 1000px;
+}
+
+.modal-view .video-stacker-container {
+  transform-style: preserve-3d;
+}
+
+.modal-view .video-stack-wrapper {
+  transform-style: preserve-3d;
+}
+
+.modal-view .video-card-container {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}

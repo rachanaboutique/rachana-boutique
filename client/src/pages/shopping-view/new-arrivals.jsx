@@ -289,12 +289,12 @@ function NewArrivals() {
           <div className="bg-white">
             <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
               <div>
-                <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
+               {/*  <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
                   New Arrivals
                 </h2>
                 <p className="text-gray-500">
                   {isLoading ? "Loading..." : `Showing ${newArrivalProducts.length} products`}
-                </p>
+                </p> */}
               </div>
               <div className="mt-4 md:mt-0">
                 <DropdownMenu>

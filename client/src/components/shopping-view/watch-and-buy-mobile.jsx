@@ -319,10 +319,34 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                     </div>
 
                     {/* Product info below the card */}
-                    <div className="mt-0.5 px-0">
+                    <div className="mt-2 px-0">
                       <h3 className="text-sm font-medium line-clamp-1 mb-1">{productItem?.title}</h3>
                       <div className="flex justify-between items-center">
                         <p className="text-sm font-bold">₹{productItem.price}</p>
+                        <div className="flex gap-2">
+                        <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/shop/details/${productItem._id}`);
+                            }}
+                            className="w-8 h-8 bg-white border border-gray-300 text-black rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors shadow-sm"
+                            aria-label="View Details"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                          </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -331,8 +355,10 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                           className="text-xs bg-black text-white p-1.5 rounded-full"
                           aria-label="Add to Cart"
                         >
-                          <ShoppingBag className="h-4 w-4" />
+                          <ShoppingBag className="h-4 w-5" />
                         </button>
+                        </div>
+                       
                       </div>
                     </div>
                   </div>

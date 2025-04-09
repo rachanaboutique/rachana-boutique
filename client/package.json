@@ -6,12 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run generate-sitemap && vite build && npm run copy-sitemap",
-    "copy-sitemap": "node -e \"const fs = require('fs'); if (fs.existsSync('./public/sitemap.xml')) { fs.copyFileSync('./public/sitemap.xml', './dist/sitemap.xml'); console.log('Sitemap copied to dist directory'); } if (fs.existsSync('./public/robots.txt')) { fs.copyFileSync('./public/robots.txt', './dist/robots.txt'); console.log('Robots.txt copied to dist directory'); }\"",
+    "copy-sitemap": "node -e \"const fs = require('fs'); if (fs.existsSync('./public/sitemap.xml')) { fs.copyFileSync('./public/sitemap.xml', './dist/sitemap.xml'); console.log('Sitemap copied to dist directory'); } if (fs.existsSync('./public/robots.txt')) { fs.copyFileSync('./public/robots.txt', './dist/robots.txt'); console.log('Robots.txt copied to dist directory'); } if (fs.existsSync('./public/404.html')) { fs.copyFileSync('./public/404.html', './dist/404.html'); console.log('404.html copied to dist directory'); } if (fs.existsSync('./public/_redirects')) { fs.copyFileSync('./public/_redirects', './dist/_redirects'); console.log('_redirects copied to dist directory'); }\"",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-sitemap": "node scripts/generate-sitemap.cjs"
+    "generate-sitemap": "node scripts/generate-sitemap.cjs",
+    "check-sitemap": "node scripts/check-sitemap.cjs"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.1",
@@ -29,6 +33,7 @@
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.0.5",
+    "hls.js": "^1.6.1",
     "install": "^0.13.0",
     "lucide-react": "^0.429.0",
     "npm": "^11.0.0",

@@ -151,10 +151,10 @@ function SearchProducts() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-light mb-6 text-center">Search our store</h2>
-        <form onSubmit={handleSearch} className="flex items-center border-b border-gray-300 pb-2 mb-6 relative">
+    <div className="container mx-auto px-4 py-16">
+      <div className="max-w-lg mx-auto">
+        <h2 className="text-2xl font-light mb-6 text-center">Search our products</h2>
+        <form onSubmit={handleSearch} className="flex items-center border-b border-gray-300 pb-2 mb-12 relative">
           <input
             ref={inputRef}
             type="text"
