@@ -43,7 +43,7 @@ const handleImageUpload = async (req, res) => {
       let outputFormat = "avif"; // Default to AVIF
 
       // Check browser support (if applicable, or based on client request)
-      const supportedFormats = ["avif", "webp", "jpeg"];
+      const supportedFormats = ["avif", "webp", "jpeg", "png", "jpg"];
       if (!supportedFormats.includes(outputFormat)) {
         outputFormat = "webp"; // Fallback to WebP if AVIF is not widely supported
       }

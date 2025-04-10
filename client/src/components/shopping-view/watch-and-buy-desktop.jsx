@@ -22,7 +22,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   
   // Ref to store last progress value for throttling
   const lastProgressRef = useRef(0);
-
+  
   // Settings for the slider
   const sliderSettings = {
     dots: true,
@@ -55,11 +55,24 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   };
 
   // Function to go to the next video (infinite loop)
-  const goToNextVideo = () => {
+  const goToNextVideo = useCallback(() => {
     const newIndex = (currentVideoIndex + 1) % products.length;
     setCurrentVideoIndex(newIndex);
     setSelectedVideo(products[newIndex]);
-  };
+  }, [currentVideoIndex, products]);
+
+  // Function to go to the previous video (infinite loop)
+  const goToPrevVideo = useCallback(() => {
+    const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
+    setCurrentVideoIndex(newIndex);
+    setSelectedVideo(products[newIndex]);
+  }, [currentVideoIndex, products]);
+
+  // Function to go to a specific video
+  const goToVideo = useCallback((index) => {
+    setCurrentVideoIndex(index);
+    setSelectedVideo(products[index]);
+  }, [products]);
 
   // Reset video state when modal opens or video changes
   useEffect(() => {
@@ -67,7 +80,6 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
       setIsPlaying(true);
       setIsMuted(false);
       setVideoProgress(0);
-      setVideoDuration(0);
       lastProgressRef.current = 0;
     }
   }, [showVideoModal, currentVideoIndex]);
@@ -82,13 +94,12 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   }, []);
 
   // Handle video end - auto slide to next video with a slight delay
-  const handleVideoEnd = () => {
-    if (videoDuration > 0) {
-      setTimeout(() => {
-        goToNextVideo();
-      }, 300);
-    }
-  };
+  const handleVideoEnd = useCallback(() => {
+    // Simple delay before going to next video
+    setTimeout(() => {
+      goToNextVideo();
+    }, 300);
+  }, [goToNextVideo]);
 
   // Check if we have products to display
   const hasWatchAndBuyProducts = products && products.length > 0;
@@ -218,8 +229,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     key={index}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setCurrentVideoIndex(index);
-                      setSelectedVideo(products[index]);
+                      goToVideo(index);
                     }}
                     className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 timeline-dot ${
                       index === currentVideoIndex ? "w-10 bg-white" : "w-5 bg-white/50"
@@ -235,9 +245,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
-                    setCurrentVideoIndex(newIndex);
-                    setSelectedVideo(products[newIndex]);
+                    goToPrevVideo();
                   }}
                   className="bg-white/20 backdrop-blur-sm hover:bg-white/40 rounded-full p-2 transition-all duration-300 nav-arrow"
                   aria-label="Previous video"
@@ -250,9 +258,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    const newIndex = (currentVideoIndex + 1) % products.length;
-                    setCurrentVideoIndex(newIndex);
-                    setSelectedVideo(products[newIndex]);
+                    goToNextVideo();
                   }}
                   className="bg-white/20 backdrop-blur-sm hover:bg-white/40 rounded-full p-2 transition-all duration-300 nav-arrow"
                   aria-label="Next video"
@@ -296,8 +302,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                             currentCard.classList.add(`leaving-${direction}`);
                           }
                           setTimeout(() => {
-                            setCurrentVideoIndex(index);
-                            setSelectedVideo(products[index]);
+                            goToVideo(index);
                             setTimeout(() => {
                               const newCards = document.querySelectorAll(".video-card-container");
                               newCards.forEach((card) => {
@@ -335,23 +340,26 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                                 width="100%"
                                 height="100%"
                                 playing={position === 0 ? isPlaying : false}
-                                loop={false} /* Loop disabled to allow auto slide */
+                                loop={false}
                                 muted={position === 0 ? isMuted : true}
                                 controls={false}
                                 playsinline
-                                progressInterval={100}
+                                progressInterval={500}
                                 onProgress={position === 0 ? handleProgress : undefined}
                                 onDuration={position === 0 ? (duration) => setVideoDuration(duration) : undefined}
                                 onEnded={position === 0 ? handleVideoEnd : undefined}
+                                onError={(e) => console.log("Video error:", e)}
                                 config={{
                                   file: {
+                                    forceVideo: true,
                                     attributes: {
                                       controlsList: "nodownload",
                                       disablePictureInPicture: true,
                                       disableRemotePlayback: true,
                                       onContextMenu: "return false;",
-                                    },
-                                  },
+                                      preload: "auto"
+                                    }
+                                  }
                                 }}
                               />
                             </div>
@@ -387,6 +395,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                                   className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center cursor-pointer hover:bg-black/90 transition-all border border-white/30"
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    // Muting/unmuting doesn't affect auto-advance behavior
                                     setIsMuted(!isMuted);
                                   }}
                                 >
