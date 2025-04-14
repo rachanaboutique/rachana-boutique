@@ -15,7 +15,7 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
   const { categoriesList } = useSelector((state) => state.shopCategories);
 
   // Parse query parameters
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     // Fetch categories on mount
@@ -59,10 +59,10 @@ function ProductFilter({ filters, setFilters, handleFilter }) {
         // Navigate to the SEO-friendly URL
         navigate(`/shop/collections/${categoryInfo.slug}`);
       } else {
-        // Fallback to the old URL format if mapping not found
-        const newQueryParams = new URLSearchParams(searchParams);
-        newQueryParams.set("category", categoryId);
-        setSearchParams(newQueryParams);
+        // If no mapping is found, just go to the main collections page
+        // We no longer use the old URL format with query parameters
+        navigate('/shop/collections');
+        console.warn(`No SEO-friendly slug found for category ID: ${categoryId}`);
       }
     }
 

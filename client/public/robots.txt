@@ -15,20 +15,16 @@ Allow: /shop/search
 Allow: /shop/details/*
 
 # Allow crawling of SEO-friendly category pages
-Allow: /shop/collections/tussar-sarees
+Allow: /shop/collections/*
+Allow: /shop/collections/celebrity-collection
 Allow: /shop/collections/banaras-sarees
 Allow: /shop/collections/cotton-sarees
+Allow: /shop/collections/tussar-sarees
 Allow: /shop/collections/organza-sarees
 Allow: /shop/collections/georgette-sarees
-Allow: /shop/collections/celebrity-collection
 
-# Allow crawling of specific category IDs for backward compatibility
-Allow: /shop/collections?category=67a4cedeb03c04a4eaa7d75d # Tussar
-Allow: /shop/collections?category=67a702e745c9ad11e043ca74 # Banaras
-Allow: /shop/collections?category=67a4e2b19baa2e6f977087a3 # Cotton
-Allow: /shop/collections?category=67ae15fcee205890c3cd5f98 # Organza
-Allow: /shop/collections?category=67ae17d5ee205890c3cd5faf # Georgette
-Allow: /shop/collections?category=67ae2128ee205890c3cd6251 # Celebrity Collection
+# Block old category URL format to prevent duplicate content
+Disallow: /shop/collections?category=* # Block all old category URL formats
 
 # Prevent indexing of sensitive and utility pages
 Disallow: /shop/checkout

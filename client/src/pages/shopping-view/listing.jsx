@@ -33,6 +33,7 @@ function ShoppingListing({ categorySlug }) {
   // Use category mapping from config imported at the top
 
   // Find current category details from either URL param or slug prop
+  // Also handle redirects from old URL format to SEO-friendly URLs
   useEffect(() => {
     if (categoriesList.length > 0) {
       // If we have a categorySlug prop (from the route), use that
@@ -45,15 +46,22 @@ function ShoppingListing({ categorySlug }) {
           setCurrentCategory(null);
         }
       }
-      // Otherwise use the category from URL search params
+      // Otherwise use the category from URL search params and redirect to SEO-friendly URL
       else if (categorySearchParam) {
         const category = categoriesList.find(cat => cat._id === categorySearchParam);
         setCurrentCategory(category);
+
+        // Find the SEO-friendly slug for this category ID and redirect
+        const mappedCategory = categoryMapping.find(cat => cat.id === categorySearchParam);
+        if (mappedCategory) {
+          // Use replace instead of navigate to avoid adding to history
+          navigate(`/shop/collections/${mappedCategory.slug}`, { replace: true });
+        }
       } else {
         setCurrentCategory(null);
       }
     }
-  }, [categorySearchParam, categoriesList, categorySlug]);
+  }, [categorySearchParam, categoriesList, categorySlug, navigate]);
 
   // Fetch categories
   useEffect(() => {
@@ -269,30 +277,77 @@ function ShoppingListing({ categorySlug }) {
     );
   }, [dispatch, currentCategory, filters, sort]);
 
-  // Get category description from mapping
+  // Enhanced category descriptions with more detailed content
   const getCategoryDescription = useMemo(() => {
     if (!currentCategory) return "";
 
-    const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
-    return mappedCategory ? mappedCategory.description : "";
-  }, [currentCategory]);
+    // Return detailed description based on category ID
+    switch (currentCategory._id) {
+      case "67a4cedeb03c04a4eaa7d75d": // Tussar
+        return "Discover our exquisite Tussar saree collection featuring luxurious and lightweight designs with rich texture and natural sheen. Each Tussar saree is handcrafted with meticulous attention to detail, showcasing authentic craftsmanship and traditional techniques. Perfect for festive occasions, weddings, and elegant events, our Tussar sarees bring timeless charm and sophistication to your wardrobe. Browse our complete collection to find the perfect Tussar saree that reflects your personal style and elegance.";
+      case "67a702e745c9ad11e043ca74": // Banaras
+        return "Explore our premium Banaras saree collection featuring handwoven designs with intricate zari work that reflects royal heritage and tradition. Each Banaras saree in our collection is crafted by skilled artisans using time-honored techniques, resulting in exquisite drapes that showcase unparalleled craftsmanship. Perfect for weddings, grand celebrations, and special occasions, our Banaras sarees add a touch of regal elegance to your ensemble. Discover the rich cultural heritage embodied in every piece of our carefully curated Banaras collection.";
+      case "67a4e2b19baa2e6f977087a3": // Cotton
+        return "Browse our exclusive Cotton saree collection featuring soft, breathable, and effortlessly stylish designs that blend comfort with elegance. Each Cotton saree is carefully selected for its premium quality, beautiful patterns, and exquisite craftsmanship. Ideal for daily wear, office settings, casual outings, and formal occasions, our Cotton sarees keep you cool, comfortable, and graceful all day long. Discover the perfect balance of tradition and contemporary style in our diverse range of handpicked Cotton sarees suitable for every season and occasion.";
+      case "67ae15fcee205890c3cd5f98": // Organza
+        return "Indulge in our delicate and dreamy Organza saree collection that exudes sheer elegance with its lightweight flow and translucent beauty. Each Organza saree features intricate embroidery, delicate prints, or stunning embellishments that showcase exceptional craftsmanship and attention to detail. A perfect choice for modern women who love a blend of sophistication and charm, our Organza sarees are ideal for receptions, cocktail parties, and special celebrations. Explore our carefully curated collection to find the perfect Organza saree that makes a statement wherever you go.";
+      case "67ae17d5ee205890c3cd5faf": // Georgette
+        return "Discover our premium Georgette saree collection featuring flowy, stylish, and easy-to-drape designs created for all-day elegance and comfort. Each Georgette saree in our collection showcases beautiful prints, intricate embroidery, or delicate embellishments that highlight the fluid nature of this luxurious fabric. Whether for casual outings, office wear, or grand events, our Georgette sarees add a touch of effortless beauty and sophistication to your appearance. Browse our extensive range to find the perfect Georgette saree that complements your personal style and occasion.";
+      case "67ae2128ee205890c3cd6251": // Celebrity Collection
+        return "Experience the glamour of Bollywood with our exclusive Celebrity Collection featuring sarees inspired by your favorite icons and silver screen moments. Each saree in this collection is carefully designed to capture the essence of celebrity style while maintaining authentic craftsmanship and premium quality. Drape yourself in star-studded elegance and steal the spotlight at parties, events, and special occasions with these statement pieces. Our Celebrity Collection offers you the perfect opportunity to embrace the glamour and sophistication of celebrity fashion while expressing your unique personal style.";
+      default:
+        const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
+        return mappedCategory?.description || `Our ${currentCategory.name} collection features premium handcrafted sarees designed with exquisite attention to detail and authentic craftsmanship. Each piece is carefully selected to ensure the highest quality and most beautiful designs, perfect for special occasions and everyday elegance.`;
+    }
+  }, [currentCategory, categoryMapping]);
 
-  // Get SEO-friendly URL for current category
+  // Get SEO-friendly URL for current category - Always use SEO-friendly URLs
   const getCategoryUrl = useMemo(() => {
     if (!currentCategory) return "/shop/collections";
 
     const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
-    return mappedCategory ? `/shop/collections/${mappedCategory.slug}` : `/shop/collections?category=${currentCategory._id}`;
-  }, [currentCategory]);
+    return mappedCategory ?
+      `/shop/collections/${mappedCategory.slug}` :
+      `/shop/collections/${currentCategory.name.toLowerCase().replace(/\s+/g, '-')}`; // Fallback to a slug based on category name
+  }, [currentCategory, categoryMapping]);
 
   const structuredData = useMemo(() => {
     const baseUrl = 'https://rachanaboutique.in';
+    const currentDate = new Date().toISOString();
 
+    // Base structured data for all collection pages
     let data = {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
-      "name": "All Products",
-      "url": `${baseUrl}${location.pathname}${location.search}`,
+      "name": "Collections | Rachana Boutique",
+      "description": "Explore our exclusive collection of premium handcrafted sarees featuring the finest fabrics and authentic craftsmanship from across India.",
+      "url": `${baseUrl}${location.pathname}`,
+      "lastReviewed": currentDate,
+      "dateModified": currentDate,
+      "mainEntity": {
+        "@type": "ItemList",
+        "itemListElement": filteredProducts.slice(0, 10).map((product, index) => ({
+          "@type": "ListItem",
+          "position": index + 1,
+          "item": {
+            "@type": "Product",
+            "name": product.title,
+            "image": product.image && product.image.length > 0 ? product.image[0] : '',
+            "description": product.description,
+            "url": `${baseUrl}/shop/details/${product._id}`,
+            "brand": {
+              "@type": "Brand",
+              "name": "Rachana Boutique"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": product.salePrice > 0 ? product.salePrice : product.price,
+              "priceCurrency": "INR",
+              "availability": product.totalStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+            }
+          }
+        }))
+      },
       "breadcrumb": {
         "@type": "BreadcrumbList",
         "itemListElement": [
@@ -309,16 +364,29 @@ function ShoppingListing({ categorySlug }) {
             "item": `${baseUrl}/shop/collections`
           }
         ]
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Rachana Boutique",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://res.cloudinary.com/dhkdsvdvr/image/upload/v1740216697/logo2_wtwqkr.png"
+        }
       }
     };
 
+    // Add category-specific data if a category is selected
     if (currentCategory) {
       const categoryUrl = getCategoryUrl.startsWith('/') ?
         `${baseUrl}${getCategoryUrl}` :
-        `${baseUrl}/shop/collections?category=${currentCategory._id}`;
+        `${baseUrl}/shop/collections/${categoryMapping.find(cat => cat.id === currentCategory._id)?.slug || ''}`;
 
-      data.name = `${currentCategory.name} Collection`;
+      data.name = `${currentCategory.name} Collection | Premium Sarees | Rachana Boutique`;
       data.url = categoryUrl;
+      data.description = getCategoryDescription || `Explore our ${currentCategory.name} collection of premium handcrafted sarees featuring exquisite designs and authentic craftsmanship. Each piece is carefully selected to ensure the highest quality.`;
+      data.image = currentCategory.image || banner;
+
+      // Add this category to the breadcrumb
       data.breadcrumb.itemListElement.push({
         "@type": "ListItem",
         "position": 3,
@@ -326,15 +394,24 @@ function ShoppingListing({ categorySlug }) {
         "item": categoryUrl
       });
 
-      data = {
-        ...data,
-        "description": getCategoryDescription || `Explore our ${currentCategory.name} collection of premium sarees and ethnic wear at Rachana Boutique.`,
+      // Add specific category metadata
+      data.mainEntity = {
+        "@type": "Product",
+        "name": `${currentCategory.name} Saree Collection`,
+        "description": getCategoryDescription || `Our premium ${currentCategory.name} saree collection features exquisite designs and authentic craftsmanship.`,
         "image": currentCategory.image || banner,
+        "brand": {
+          "@type": "Brand",
+          "name": "Rachana Boutique"
+        },
         "offers": {
           "@type": "AggregateOffer",
           "offerCount": filteredProducts.length,
+          "lowPrice": filteredProducts.length > 0 ? Math.min(...filteredProducts.map(p => p.salePrice > 0 ? p.salePrice : p.price)) : 0,
+          "highPrice": filteredProducts.length > 0 ? Math.max(...filteredProducts.map(p => p.salePrice > 0 ? p.salePrice : p.price)) : 0,
+          "priceCurrency": "INR",
           "itemCondition": "https://schema.org/NewCondition",
-          "availability": "https://schema.org/InStock"
+          "availability": filteredProducts.length > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder"
         }
       };
     }
@@ -349,38 +426,63 @@ function ShoppingListing({ categorySlug }) {
   return (
     <>
       <Helmet>
-        <title>{currentCategory ? `${currentCategory?.name} Collection` : 'Premium Sarees Collection'} | Rachana Boutique</title>
+        <title>{currentCategory ? `${currentCategory?.name} Collection  | Rachana Boutique` : 'Collections  | Rachana Boutique'}</title>
         <meta
           name="description"
-          content={getCategoryDescription || `Explore our ${currentCategory ? currentCategory.name : 'exclusive'} collection of premium handcrafted sarees and ethnic wear. Find authentic ${currentCategory?.name || 'designer'} sarees with unique designs and premium quality at Rachana Boutique.`}
+          content={currentCategory ?
+            (getCategoryDescription || `Explore our exquisite ${currentCategory.name} saree collection featuring premium handcrafted designs with authentic craftsmanship. Each ${currentCategory.name} saree is carefully selected for quality and beauty. Shop now at Rachana Boutique.`) :
+            `Discover our premium saree collections at Rachana Boutique featuring exquisite handcrafted designs. Browse our Tussar, Banaras, Cotton, Celebrity-inspired, and other exclusive collections. Authentic craftsmanship for every occasion.`
+          }
         />
         <meta
           name="keywords"
-          content={`${currentCategory?.name || 'premium'} sarees, ${currentCategory?.name || 'designer'} ethnic wear, ${currentCategory?.name || 'handcrafted'} sarees online, buy ${currentCategory?.name || 'authentic'} sarees, Rachana Boutique collection, Indian traditional wear, ${currentCategory?.name || 'exclusive'} saree designs`}
+          content={currentCategory ?
+            `${currentCategory.name} sarees, buy ${currentCategory.name} sarees online, premium ${currentCategory.name} collection, handcrafted ${currentCategory.name} sarees, authentic ${currentCategory.name} designs, Rachana Boutique ${currentCategory.name}, exclusive ${currentCategory.name} sarees, traditional ${currentCategory.name} wear` :
+            `premium saree collections, handcrafted sarees, designer saree collections, Tussar sarees, Banaras sarees, Cotton sarees, Celebrity Collection, ethnic wear collections, Rachana Boutique collections, authentic saree designs`
+          }
         />
-        <meta name="robots" content="index, follow" />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
         <meta name="author" content="Rachana Boutique" />
         <meta name="language" content="English" />
-        <meta name="revisit-after" content="7 days" />
+        <meta name="revisit-after" content="3 days" />
+        <meta name="rating" content="general" />
+        <meta name="distribution" content="global" />
+        <meta name="geo.region" content="IN" />
+        <meta name="geo.placename" content="India" />
+        <meta name="format-detection" content="telephone=no" />
 
-        {/* Open Graph tags */}
-        <meta property="og:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'Premium Sarees Collection'} | Rachana Boutique`} />
-        <meta property="og:description" content={`Explore our ${currentCategory ? currentCategory.name : 'exclusive'} collection of premium handcrafted sarees and ethnic wear. Find authentic designs at Rachana Boutique.`} />
+        {/* Open Graph tags - Enhanced for better social sharing */}
+        <meta property="og:title" content={currentCategory ? `${currentCategory?.name} Collection | Premium Sarees | Rachana Boutique` : 'Premium Saree Collections | Handcrafted Ethnic Wear | Rachana Boutique'} />
+        <meta property="og:description" content={currentCategory ?
+          `Explore our exquisite ${currentCategory.name} saree collection featuring premium handcrafted designs with authentic craftsmanship. Each piece is carefully selected for quality and beauty.` :
+          `Discover our premium saree collections at Rachana Boutique featuring exquisite handcrafted designs. Browse our Tussar, Banaras, Cotton, Celebrity-inspired collections.`
+        } />
         <meta property="og:image" content={currentCategory?.image || banner} />
-        <meta property="og:url" content={window.location.href} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:url" content={currentCategory ?
+          `https://rachanaboutique.in${getCategoryUrl}` :
+          "https://rachanaboutique.in/shop/collections"} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Rachana Boutique" />
+        <meta property="og:locale" content="en_IN" />
 
-        {/* Twitter Card tags */}
+        {/* Twitter Card tags - Enhanced for better social sharing */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${currentCategory ? `${currentCategory?.name} Collection` : 'Premium Sarees Collection'} | Rachana Boutique`} />
-        <meta name="twitter:description" content={`Explore our ${currentCategory ? currentCategory.name : 'exclusive'} collection of premium handcrafted sarees and ethnic wear. Find authentic designs at Rachana Boutique.`} />
+        <meta name="twitter:title" content={currentCategory ? `${currentCategory?.name} Collection | Premium Sarees | Rachana Boutique` : 'Premium Saree Collections | Handcrafted Ethnic Wear | Rachana Boutique'} />
+        <meta name="twitter:description" content={currentCategory ?
+          `Explore our exquisite ${currentCategory.name} saree collection featuring premium handcrafted designs with authentic craftsmanship. Shop now at Rachana Boutique.` :
+          `Discover our premium saree collections at Rachana Boutique featuring exquisite handcrafted designs. Authentic craftsmanship for every occasion.`
+        } />
         <meta name="twitter:image" content={currentCategory?.image || banner} />
         <meta name="twitter:site" content="@rachanaboutique" />
+        <meta name="twitter:creator" content="@rachanaboutique" />
 
-        {/* Canonical URL - Use SEO-friendly URLs */}
+        {/* Canonical URL - Always use SEO-friendly URLs */}
         <link rel="canonical" href={currentCategory ?
-          `https://rachanaboutique.in${getCategoryUrl}` :
+          `https://rachanaboutique.in/shop/collections/${categoryMapping.find(cat => cat.id === currentCategory._id)?.slug || ''}` :
           "https://rachanaboutique.in/shop/collections"} />
 
         {/* JSON-LD structured data */}
@@ -543,23 +645,49 @@ function ShoppingListing({ categorySlug }) {
                 ))}
               </div>
 
-              {/* Empty State */}
+              {/* Collection Description Section - Always visible */}
+              <div className="mb-12 mt-8 p-6 bg-gray-50 rounded-lg">
+                <h2 className="text-2xl font-medium mb-4">{currentCategory ? `About Our ${currentCategory.name} Collection` : 'Our Premium Collections'}</h2>
+                <div className="prose max-w-none">
+                  {currentCategory ? (
+                    <>
+                      <p className="mb-4">{getCategoryDescription || `Our ${currentCategory.name} collection features premium handcrafted sarees designed with exquisite attention to detail and authentic craftsmanship.`}</p>
+                      <p>Each piece in our {currentCategory.name} collection is carefully selected to ensure the highest quality and most beautiful designs. Perfect for special occasions, festivals, and everyday elegance.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mb-4">Discover our exquisite range of premium handcrafted sarees at Rachana Boutique. Our collections feature the finest fabrics and craftsmanship from across India.</p>
+                      <p>From traditional Banarasi silk to comfortable Cotton, elegant Tussar, and glamorous Celebrity-inspired designs, we offer sarees for every occasion and preference.</p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Empty State - Improved with more content */}
               {filteredProducts.length === 0 && (
-                <div className="text-center py-16">
+                <div className="text-center py-12 border-t border-b my-8">
                   <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-100">
                     <ShoppingBag className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-xl font-medium mb-2">No Products Found</h3>
-                  <p className="text-gray-500 mb-6">Try adjusting your filters or browse our other collections</p>
-                  <button
-                    onClick={() => {
-                      setFilters({});
-                      setSort(null);
-                    }}
-                    className="px-6 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
-                  >
-                    Clear All Filters
-                  </button>
+                  <h3 className="text-xl font-medium mb-2">Currently Updating Our Collection</h3>
+                  <p className="text-gray-500 mb-6">We're adding new products to this collection. Please check back soon or explore our other beautiful collections.</p>
+                  <div className="flex flex-col md:flex-row gap-4 justify-center">
+                    <button
+                      onClick={() => {
+                        setFilters({});
+                        setSort(null);
+                      }}
+                      className="px-6 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                    >
+                      Clear All Filters
+                    </button>
+                    <button
+                      onClick={() => navigate('/shop/collections')}
+                      className="px-6 py-2 bg-primary text-white hover:bg-accent transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                    >
+                      Browse All Collections
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

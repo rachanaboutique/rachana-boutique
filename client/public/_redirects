@@ -2,5 +2,9 @@
 /sitemap.xml /sitemap.xml 200
 /robots.txt /robots.txt 200
 
+# Permanent redirects for canonical URLs
+/ /shop/home 301
+/index.html /shop/home 301
+
 # Redirect all other routes to index.html for client-side routing
 /* /index.html 200

@@ -1,7 +1,7 @@
 {
   "hosting": {
     "public": "dist",
-    "cleanUrls": true,
+    "cleanUrls": false,
     "trailingSlash": false,
     "headers": [
       {
@@ -35,6 +35,16 @@
       {
         "source": "/sitemap",
         "destination": "/sitemap.xml",
+        "type": 301
+      },
+      {
+        "source": "/",
+        "destination": "/shop/home",
+        "type": 301
+      },
+      {
+        "source": "/index.html",
+        "destination": "/shop/home",
         "type": 301
       }
     ],

@@ -80,7 +80,7 @@ function ShoppingHeader() {
     }
 
     return (
-      <nav className="flex flex-col mb-3 lg:mb-0 lg:items-center gap-6 lg:flex-row">
+      <nav className="pr-32 flex flex-col mb-3 lg:mb-0 lg:items-center gap-6 lg:flex-row">
         {shoppingViewHeaderMenuItems.map((menuItem) => (
           <div className="relative group" key={menuItem.id}>
             <Label

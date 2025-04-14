@@ -3,16 +3,8 @@ import { Navigate, useLocation } from "react-router-dom";
 function CheckAuth({ isAuthenticated, user, children }) {
   const location = useLocation();
 
-  if (location.pathname === "/") {
-    if (isAuthenticated) {
-      return user?.role === "admin" ? (
-        <Navigate to="/admin/dashboard" />
-      ) : (
-        <Navigate to="/shop/home" />
-      );
-    }
-    return <Navigate to="/shop/home" />;
-  }
+  // Root path is now handled directly in App.jsx by rendering ShoppingHome
+  // No need to redirect from root path anymore
 
   if (
     !isAuthenticated &&

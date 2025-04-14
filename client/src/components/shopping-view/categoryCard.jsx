@@ -15,8 +15,10 @@ const CategoryCard = ({ categoryItem, index, variant = "default" }) => {
       // Use the SEO-friendly URL format
       navigate(`/shop/collections/${categoryInfo.slug}`);
     } else {
-      // Fallback to the old format if mapping not found
-      navigate(`/shop/collections?category=${categoryItem._id}`);
+      // If no mapping is found, just go to the main collections page
+      // We no longer use the old URL format with query parameters
+      navigate('/shop/collections');
+      console.warn(`No SEO-friendly slug found for category ID: ${categoryItem._id}`);
     }
   };
 

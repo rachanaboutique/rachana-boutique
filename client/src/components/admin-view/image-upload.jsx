@@ -163,37 +163,36 @@ function ProductImageUpload({
   async function uploadImageToCloudinary(file, index) {
     // Mark file as being uploaded
     setImageLoadingStates((prevStates) => {
-      // Ensure prevStates is an array
       const states = Array.isArray(prevStates) ? prevStates : [];
       const updatedStates = [...states];
       updatedStates[index] = true;
       return updatedStates;
     });
     setIsUploading(true);
-
+  
     const data = new FormData();
     data.append("my_file", file);
-
+  
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/admin/products/upload-image`,
         data
       );
+  
       if (response?.data?.success) {
+        const secureUrl = response.data.result[0].secure_url; // Use secure_url for HTTPS
+  
         if (isSingleImage) {
-          setUploadedImageUrls([response.data.result[0].url]);
+          setUploadedImageUrls([secureUrl]);
         } else {
-          // Append new URL instead of replacing an existing image
           setUploadedImageUrls((prevUrls) => {
-            // Ensure prevUrls is an array
             const urls = Array.isArray(prevUrls) ? prevUrls : [];
-            return [...urls, response.data.result[0].url];
+            return [...urls, secureUrl];
           });
         }
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      // Remove the failed file from imageFiles
       setImageFiles((prev) => {
         if (!Array.isArray(prev)) return [];
         return prev.filter((_, i) => i !== index);
@@ -203,27 +202,24 @@ function ProductImageUpload({
         return prev.filter((_, i) => i !== index);
       });
     } finally {
-      // Mark file upload as complete
       setImageLoadingStates((prevStates) => {
-        // Ensure prevStates is an array
         const states = Array.isArray(prevStates) ? prevStates : [];
         const updatedStates = [...states];
         updatedStates[index] = false;
         return updatedStates;
       });
-
-      // Remove from pending uploads
-      setPendingUploads(prev => {
+  
+      setPendingUploads((prev) => {
         if (!Array.isArray(prev)) return [];
-        return prev.filter(item => item.index !== index);
+        return prev.filter((item) => item.index !== index);
       });
-
-      // Only set isUploading to false if no more pending uploads
+  
       if (!Array.isArray(pendingUploads) || pendingUploads.length <= 1) {
         setIsUploading(false);
       }
     }
   }
+  
 
   // Process pending uploads
   useEffect(() => {

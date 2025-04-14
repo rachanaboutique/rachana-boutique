@@ -32,6 +32,8 @@ import { Loader } from "../../components/ui/loader";
 
 function ShoppingHome() {
   const [, setIsMobile] = useState(false);
+  // Add a page loading state to handle transitions
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   useEffect(() => {
     const handleResize = () => {
@@ -48,6 +50,21 @@ function ShoppingHome() {
   const { categoriesList, isLoading: categoriesLoading } = useSelector((state) => state.shopCategories);
   const { instaFeedPosts, isLoading: instaFeedLoading } = useSelector((state) => state.shopInstaFeed);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+
+  // Handle page transitions
+  useEffect(() => {
+    // Set loading to false after data is loaded
+    const isAnyLoading = productsLoading || bannersLoading || categoriesLoading || instaFeedLoading;
+
+    if (!isAnyLoading) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setIsPageLoading(false);
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [productsLoading, bannersLoading, categoriesLoading, instaFeedLoading]);
   const cartItems = useSelector((state) => state.shopCart);
 
   const dispatch = useDispatch();
@@ -55,13 +72,28 @@ function ShoppingHome() {
 
 
 
-  // Fetch all required data once
+  // Fetch all required data
   useEffect(() => {
-    dispatch(fetchAllFilteredProducts({ filterParams: {}, sortParams: "price-lowtohigh" }));
-    dispatch(fetchBanners());
-    dispatch(fetchCategories());
-    dispatch(fetchInstaFeed());
-  }, [dispatch]);
+    // Set loading state to true when fetching data
+    setIsPageLoading(true);
+
+    // Fetch all required data
+    const fetchData = async () => {
+      try {
+        await Promise.all([
+          dispatch(fetchAllFilteredProducts({ filterParams: {}, sortParams: "price-lowtohigh" })),
+          dispatch(fetchBanners()),
+          dispatch(fetchCategories()),
+          dispatch(fetchInstaFeed()),
+          isAuthenticated ? dispatch(fetchCartItems(user?.id)) : Promise.resolve()
+        ]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [dispatch, isAuthenticated, user?.id]);
 
   function handleGetProductDetails(productId) {
     dispatch(fetchProductDetails(productId));
@@ -146,20 +178,32 @@ function ShoppingHome() {
     // Add a class to help with mobile slider styling
     document.body.classList.add('has-product-slider');
 
+    // Reset loading state when navigating back to this page
+    const handleNavigationEvent = () => {
+      // Check if we're on the home page
+      if (window.location.pathname === '/shop/home' || window.location.pathname === '/') {
+        setIsPageLoading(true);
+      }
+    };
+
+    // Listen for navigation events
+    window.addEventListener('popstate', handleNavigationEvent);
+
     return () => {
       document.body.classList.remove('has-product-slider');
+      window.removeEventListener('popstate', handleNavigationEvent);
     };
   }, []);
 
 
 
-  const isAnyLoading = productsLoading || bannersLoading || categoriesLoading || instaFeedLoading;
-  if (isAnyLoading) return <Loader />;
+  // Show loader during initial load or page transitions
+  if (isPageLoading) return <Loader />;
   return (
     <>
 
       <Helmet>
-        <title>Rachana Boutique | Premium Sarees & Ethnic Wear Collection</title>
+        <title>Rachana Boutique</title>
         <meta name="description" content="Discover the finest handcrafted sarees and ethnic wear at Rachana Boutique. Exclusive designs, premium quality, and authentic craftsmanship for every occasion. Shop now!" />
         <meta name="keywords" content="Rachana Boutique, sarees online, buy sarees, silk sarees, wedding sarees, designer sarees, traditional sarees, ethnic wear, Indian fashion, premium sarees, handcrafted sarees, Banarasi sarees, Tussar sarees, Cotton sarees, Organza sarees, Kora sarees" />
         <meta name="robots" content="index, follow" />
@@ -188,7 +232,7 @@ function ShoppingHome() {
         <meta name="geo.region" content="IN" />
 
         {/* Canonical URL */}
-        <link rel="canonical" href="https://rachanaboutique.in" />
+        <link rel="canonical" href="https://rachanaboutique.in/shop/home" />
 
         {/* Structured data for organization */}
         <script type="application/ld+json">
@@ -272,9 +316,13 @@ function ShoppingHome() {
               <button
                 onClick={() => navigate("/shop/collections")}
                 className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                aria-label="Browse all saree collections at Rachana Boutique"
               >
                 View All Collections
               </button>
+              <div className="mt-4 text-sm text-gray-600">
+                <p>Explore our <a href="/shop/collections" className="text-primary hover:underline font-medium">complete saree collection</a> featuring premium handcrafted designs</p>
+              </div>
             </div>
           </div>
         </section>
@@ -431,13 +479,14 @@ function ShoppingHome() {
           </>
         )}
 
-        <section>
+        <section className="py-8 ">
           <Banner
             imageUrl={bannerThree}
             altText="Banner 3"
             description="Exciting Offers & Discounts. Don't miss out! Shop now and save big. Best deals on your favorite products."
           />
         </section>
+
 
         <section className="py-8 md:py-16 bg-white">
           <div className="container mx-auto px-4">

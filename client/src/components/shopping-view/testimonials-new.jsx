@@ -119,7 +119,7 @@ const TestimonialCard = ({ testimonial, index }) => {
         </div>
 
         {/* Review text */}
-        <p className="text-gray-600 mb-8 flex-grow leading-relaxed">"{testimonial.review}"</p>
+        <p className="text-justify text-gray-600 mb-8 flex-grow leading-relaxed">"{testimonial.review}"</p>
 
         {/* Customer info */}
         <div className="flex items-center mt-auto pt-6 border-t border-gray-100">

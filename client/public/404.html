@@ -1,13 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Page Not Found</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found | Rachana Boutique</title>
+  <link rel="canonical" href="https://rachanaboutique.in/shop/home">
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      padding: 40px 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+      color: #d32f2f;
+    }
+    p {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #d32f2f;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.3s;
+    }
+    .btn:hover {
+      background-color: #b71c1c;
+    }
+    .logo {
+      max-width: 200px;
+      margin-bottom: 30px;
+    }
+  </style>
   <script>
-    // Check if the URL is for sitemap.xml or robots.txt
+    // Only handle sitemap.xml and robots.txt, don't redirect other 404s
     const path = window.location.pathname;
     if (path === '/sitemap.xml') {
-      // Create a fetch request to get the sitemap.xml file
       fetch('/sitemap.xml', {
         headers: {
           'Accept': 'application/xml',
@@ -21,7 +71,6 @@
         throw new Error('Network response was not ok.');
       })
       .then(data => {
-        // Create a new document with the sitemap content
         document.open();
         document.write('<?xml version="1.0" encoding="UTF-8"?>\n');
         document.write(data);
@@ -29,11 +78,10 @@
       })
       .catch(error => {
         console.error('Error fetching sitemap:', error);
-        // If there's an error, redirect to the home page
-        window.location.replace('/');
+        // Show error message instead of redirecting
+        document.getElementById('error-container').style.display = 'block';
       });
     } else if (path === '/robots.txt') {
-      // Create a fetch request to get the robots.txt file
       fetch('/robots.txt', {
         headers: {
           'Accept': 'text/plain',
@@ -47,23 +95,25 @@
         throw new Error('Network response was not ok.');
       })
       .then(data => {
-        // Create a new document with the robots.txt content
         document.open();
         document.write('<pre>' + data + '</pre>');
         document.close();
       })
       .catch(error => {
         console.error('Error fetching robots.txt:', error);
-        // If there's an error, redirect to the home page
-        window.location.replace('/');
+        // Show error message instead of redirecting
+        document.getElementById('error-container').style.display = 'block';
       });
-    } else {
-      // For all other 404s, redirect to the home page
-      window.location.replace('/');
     }
+    // For all other 404s, we'll show the 404 page content (no redirect)
   </script>
 </head>
 <body>
-  <p>Redirecting...</p>
+  <div class="container" id="error-container">
+    <img src="https://res.cloudinary.com/dhkdsvdvr/image/upload/v1740216697/logo2_wtwqkr.png" alt="Rachana Boutique Logo" class="logo">
+    <h1>Page Not Found</h1>
+    <p>We're sorry, but the page you were looking for doesn't exist. You may have mistyped the address or the page may have moved.</p>
+    <a href="/shop/home" class="btn">Go to Homepage</a>
+  </div>
 </body>
 </html>

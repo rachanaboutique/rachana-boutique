@@ -201,7 +201,7 @@ function NewArrivals() {
   return (
     <>
       <Helmet>
-        <title>New Arrivals | Latest Saree Collection | Rachana Boutique</title>
+        <title>New Arrivals | Rachana Boutique</title>
         <meta name="description" content="Discover our latest arrivals - fresh designs and exclusive styles just added to our premium saree collection at Rachana Boutique. Shop the newest trends in ethnic wear today!" />
         <meta name="keywords" content="new arrivals, latest sarees, new saree collection, fresh designs, Rachana Boutique, premium sarees, latest ethnic wear, new fashion, trending sarees" />
         <meta name="robots" content="index, follow" />

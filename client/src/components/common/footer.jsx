@@ -136,7 +136,7 @@ const Footer = () => {
               <Link to="/shop/home" className="flex items-center">
                 <img src={logo} alt="Logo" className="w-full" />
               </Link>
-              <p className="text-lg my-4">
+              <p className="text-justify text-lg my-4">
                 Welcome to our boutique, where tradition meets elegance. Explore our curated collection of exquisite sarees designed to make every occasion special.
               </p>
             </div>
