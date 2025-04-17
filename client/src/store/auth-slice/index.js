@@ -154,9 +154,51 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+// Fetch User Profile
+export const fetchUserProfile = createAsyncThunk(
+  "auth/fetchUserProfile",
+  async (_, { rejectWithValue, dispatch }) => {
+    const url = `${import.meta.env.VITE_BACKEND_URL}/auth/profile`;
+    let accessToken = localStorage.getItem("accessToken");
 
+    if (!accessToken) {
+      return rejectWithValue("No access token found");
+    }
 
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        // Attempt to refresh the token on expiration
+        try {
+          const refreshResponse = await dispatch(refreshToken()).unwrap();
+          accessToken = refreshResponse.accessToken;
+
+          if (accessToken) {
+            // Retry the request with the new access token
+            const retryResponse = await axios.get(url, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            });
+
+            return retryResponse.data;
+          }
+        } catch (refreshError) {
+          return rejectWithValue(refreshError.response?.data || refreshError.message);
+        }
+      }
+
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -250,12 +292,27 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-      
+
       // Logout User
       .addCase(logoutUser.fulfilled, (state) => {
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
+      })
+
+      // Fetch User Profile
+      .addCase(fetchUserProfile.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user || null;
+        state.isAuthenticated = true;
+      })
+      .addCase(fetchUserProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });

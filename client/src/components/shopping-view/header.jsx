@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { logoutUser } from "@/store/auth-slice";
+import { logoutUser, fetchUserProfile } from "@/store/auth-slice";
 import CustomCartDrawer from "./custom-cart-drawer";
 import { useState, useRef, useEffect } from "react";
 import RotatingMessages from "./rotating-messages";
@@ -100,10 +100,19 @@ function ShoppingHeader() {
 
 
   function HeaderRightContent() {
-    const { user } = useSelector((state) => state.auth);
+    // Get both isAuthenticated and user from the auth state
+    const { isAuthenticated, user } = useSelector((state) => state.auth);
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
+    // Fetch user profile when authenticated but no user data
+    useEffect(() => {
+      if (isAuthenticated && !user) {
+        console.log('Fetching user profile...');
+        dispatch(fetchUserProfile());
+      }
+    }, [isAuthenticated, user, dispatch]);
+ console.log('User:', user);
     function handleLogout() {
       // First explicitly reset the cart
       dispatch(resetCart());
@@ -190,14 +199,14 @@ function ShoppingHeader() {
               <div className="flex items-center gap-2 cursor-pointer">
                 <Avatar className="h-8 w-8 bg-gray-100 border border-gray-200">
                   <AvatarFallback className="bg-gray-100 text-gray-800 font-medium text-sm">
-                    {user?.userName && user.userName[0].toUpperCase()}
+                    {user?.userName ? user.userName[0].toUpperCase() : user?.name ? user.name[0].toUpperCase() : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm hidden md:block">My Account</span>
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2 bg-white shadow-lg rounded-md border border-gray-100">
-              <DropdownMenuLabel className="text-sm text-gray-500">Hello, {user.userName}</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-sm text-gray-500">Hello, {user?.userName || user?.name || 'User'}</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-200 my-1" />
               <DropdownMenuItem
                 className="flex items-center py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer"

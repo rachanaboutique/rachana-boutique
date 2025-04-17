@@ -1,7 +1,7 @@
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../../models/User"); 
+const User = require("../../models/User");
 const sendEmail = require("../../helpers/send-email");
 
 
@@ -142,7 +142,7 @@ const refreshAccessToken = async (req, res) => {
 
 
 const authMiddleware = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; 
+  const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({
@@ -153,7 +153,7 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, CLIENT_SECRET_KEY);
-    req.user = decoded; 
+    req.user = decoded;
     next();
   } catch (error) {
     console.error("Error verifying token:", error.message);
@@ -196,34 +196,34 @@ const forgotPassword = async (req, res) => {
         <h2 style="margin-bottom: 5px;">Reset Your Password</h2>
         <p style="font-size: 16px; margin-top: 0;">We received a request to reset your password.</p>
       </div>
-      
+
       <div style="padding: 20px;">
         <p style="font-size: 14px; color: #2c3315; text-align: center;">Click the button below to reset your password:</p>
-        
+
         <div style="text-align: center; margin-top: 20px;">
           <a href="${resetUrl}" style="display: inline-block; background-color: #fed1d6; color: #2c3315; padding: 14px 28px; font-size: 16px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
         </div>
-        
+
         <p style="font-size: 12px; color: #777; text-align: center; margin-top: 20px;">
           If the button above doesn't work, copy and paste the following link in your browser:
         </p>
-        
+
         <p style="word-wrap: break-word; font-size: 12px; text-align: center; color: #777; background-color: #f3f4f6; padding: 10px; border-radius: 5px; margin: 15px auto; display: inline-block;">
           ${resetUrl}
         </p>
-        
+
         <p style="font-size: 12px; color: #777; text-align: center; margin-top: 20px;">
           This link is valid for 1 hour. If you didn't request this, please ignore this email or contact our support team.
         </p>
       </div>
-      
+
       <div style="background-color: #f7f7f7; padding: 12px; text-align: center; font-size: 12px; color: #777;">
         <p>If you need help, please contact our support team.</p>
       </div>
     </div>
 `;
 
-  
+
 
     // Send the reset email using the internal email utility.
     await sendEmail({
@@ -284,4 +284,52 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, refreshAccessToken, logoutUser, authMiddleware, forgotPassword, resetPassword };
+/**
+ * @desc    Get user profile
+ * @route   GET /api/auth/profile
+ * @access  Private
+ */
+const getUserProfile = async (req, res) => {
+  try {
+    // req.user is set by the authMiddleware
+    const userId = req.user.id;
+
+    // Find the user by ID but exclude the password field
+    const user = await User.findById(userId).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Return the user profile data
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        userName: user.userName,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching user profile."
+    });
+  }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  refreshAccessToken,
+  logoutUser,
+  authMiddleware,
+  forgotPassword,
+  resetPassword,
+  getUserProfile
+};

@@ -17,7 +17,7 @@ import CheckAuth from "./components/common/check-auth";
 import UnauthPage from "./pages/unauth-page";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { checkAuth, refreshToken } from "./store/auth-slice";
+import { checkAuth, refreshToken, fetchUserProfile } from "./store/auth-slice";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import ProductDetailsPage from "./pages/shopping-view/product-details-page";
@@ -76,13 +76,23 @@ function App() {
     const validateToken = async () => {
       try {
         // Attempt to validate the token
-        await dispatch(checkAuth()).unwrap();
+        const authResult = await dispatch(checkAuth()).unwrap();
+
+        // If authenticated but no user data, fetch user profile
+        if (authResult.success && (!authResult.user || !authResult.user.userName)) {
+          await dispatch(fetchUserProfile()).unwrap();
+        }
       } catch (error) {
         if (error === "No access token found" || error?.status === 401) {
           // Attempt to refresh the token if expired or not found
           try {
             await dispatch(refreshToken()).unwrap();
-            await dispatch(checkAuth()).unwrap(); // Retry after refreshing
+            const retryResult = await dispatch(checkAuth()).unwrap(); // Retry after refreshing
+
+            // If authenticated after refresh but no user data, fetch user profile
+            if (retryResult.success && (!retryResult.user || !retryResult.user.userName)) {
+              await dispatch(fetchUserProfile()).unwrap();
+            }
           } catch (refreshError) {
             console.error("Failed to refresh token:", refreshError);
           }
