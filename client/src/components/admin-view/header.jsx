@@ -2,12 +2,35 @@ import { AlignJustify, LogOut } from "lucide-react";
 import { Button } from "../ui/button";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "@/store/auth-slice";
+import { resetCart } from "@/store/shop/cart-slice";
+import { useToast } from "../ui/use-toast";
 
 function AdminHeader({ setOpen }) {
   const dispatch = useDispatch();
+  const { toast } = useToast();
 
   function handleLogout() {
-    dispatch(logoutUser());
+    // First explicitly reset the cart
+    dispatch(resetCart());
+
+    // Then logout the user
+    dispatch(logoutUser())
+      .unwrap()
+      .then((result) => {
+        if (result.success) {
+          toast({
+            title: "Logged out successfully",
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+        toast({
+          title: "Logout failed",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+      });
   }
 
   return (

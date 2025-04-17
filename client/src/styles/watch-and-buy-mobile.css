@@ -1,10 +1,21 @@
 /* Custom styles for the watch-and-buy-mobile component */
 
+/* Mobile slider specific styles */
+.mobile-watch-buy-slider .slick-track {
+  display: flex;
+  gap: 12px;
+}
+
+.mobile-watch-buy-slider .slick-slide {
+  padding: 0 6px;
+}
+
 /* Ensure the video cards have proper styling */
 .watch-buy-mobile-card {
   margin: 0 auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
 }
 
 .watch-buy-mobile-card:hover {
@@ -20,8 +31,9 @@
   transition: transform 0.3s ease;
   display: flex;
   justify-content: center;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  /* Remove padding to allow full-height display */
+  padding: 0;
+  overflow: hidden;
 }
 
 .mobile-video-slide.active {
@@ -43,10 +55,14 @@
   transition: transform 0.3s ease;
 }
 
-/* Add rounded corners to video cards */
+/* Styling for video cards */
 .mobile-video-card {
-  border-radius: 12px;
   overflow: hidden;
+}
+
+/* Only add rounded corners to cards in the slider, not in the modal */
+.watch-buy-slider .mobile-video-card {
+  border-radius: 12px;
 }
 
 /* Ensure controls are always visible */
@@ -61,6 +77,11 @@
   -moz-user-select: none;
   -ms-user-select: none;
   pointer-events: auto;
+  position: relative;
+  background-color: #000;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .react-player-container video {
@@ -68,6 +89,38 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  object-fit: cover; /* Changed from contain to cover to fill the entire space */
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Ensure ReactPlayer fills the container properly */
+.react-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* VideoStacker wrapper styles for full height */
+.video-stacker-wrapper {
+  height: 100vh;
+  height: -webkit-fill-available;
+  height: -moz-available;
+  height: fill-available;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure product info text is always visible with good contrast */
+.mobile-video-slide h3,
+.mobile-video-slide p {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  letter-spacing: 0.01em;
 }
 
 /* Floating action buttons animation */

@@ -29,7 +29,7 @@ import { logoutUser } from "@/store/auth-slice";
 import CustomCartDrawer from "./custom-cart-drawer";
 import { useState, useRef, useEffect } from "react";
 import RotatingMessages from "./rotating-messages";
-import { fetchCartItems } from "@/store/shop/cart-slice";
+import { fetchCartItems, resetCart } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
 import { FaWhatsapp } from "react-icons/fa";
 import { useToast } from "../ui/use-toast";
@@ -105,10 +105,17 @@ function ShoppingHeader() {
     const dispatch = useDispatch();
 
     function handleLogout() {
+      // First explicitly reset the cart
+      dispatch(resetCart());
+
+      // Then logout the user
       dispatch(logoutUser())
         .unwrap()
         .then((result) => {
           if (result.success) {
+            // Reset hasInitiallyFetchedCart ref to ensure cart is refetched on next login
+            hasInitiallyFetchedCart.current = false;
+
             toast({
               title: "Logged out successfully",
             });
@@ -202,7 +209,7 @@ function ShoppingHeader() {
                 <UserCog className="mr-2 h-4 w-4" />
                 <span>My Account</span>
               </DropdownMenuItem>
-              
+
               <DropdownMenuSeparator className="bg-gray-200 my-1" />
               <DropdownMenuItem
                 className="flex items-center py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer"

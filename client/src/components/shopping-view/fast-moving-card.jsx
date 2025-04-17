@@ -1,15 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import classNames from "classnames";
-import { Heart, ExternalLink, X, ShoppingBag, Loader } from "lucide-react";
+import { Heart, ExternalLink, X, ShoppingBag, Loader, Play } from "lucide-react";
 import { useToast } from "../ui/use-toast";
+import { useInView } from "react-intersection-observer";
 
 const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard = false }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated } = useSelector((state) => state.auth);
   const videoRef = useRef(null);
+
+  // Use react-intersection-observer for better viewport detection
+  const [ref, inView] = useInView({
+    threshold: 0.3, // 30% of element must be visible
+    triggerOnce: false, // Keep observing for changes
+    rootMargin: '100px 0px', // Load videos 100px before they come into view
+  });
 
   // Determine if the card is currently active (desktop slider logic)
   const isStripeOpen = activeItem === index;
@@ -20,10 +28,11 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
   // State to track mobile modal visibility and mobile detection
   const [modalOpen, setModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  // Single state to manage video loading
+
+  // Video states
   const [videoLoading, setVideoLoading] = useState(true);
-  // State to track if video is visible/in viewport
-  const [isVideoVisible, setIsVideoVisible] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   // Listen for resize events to update mobile flag
   useEffect(() => {
@@ -32,39 +41,38 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Handle video visibility and loading
-  useEffect(() => {
-    // Create an intersection observer to detect when video is in viewport
-    if (videoRef.current && item?.video) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          const [entry] = entries;
-          setIsVideoVisible(entry.isIntersecting);
+  // Handle video playback based on visibility
+  const handleVideoPlayback = useCallback(() => {
+    if (!videoRef.current || !item?.video) return;
 
-          // If video is visible, make sure it's playing
-          if (entry.isIntersecting && videoRef.current) {
-            // Only play if video is loaded
-            if (videoRef.current.readyState >= 3) {
-              videoRef.current.play().catch(err => console.log('Video play error:', err));
-            }
-          } else if (videoRef.current) {
-            // Pause video when not visible to save resources
-            videoRef.current.pause();
+    if (inView && videoReady) {
+      // Play video when in view and ready
+      videoRef.current.play()
+        .catch(err => {
+          console.log('Video play error:', err);
+          // If autoplay is prevented, try muted autoplay
+          if (err.name === 'NotAllowedError') {
+            videoRef.current.muted = true;
+            videoRef.current.play().catch(e => console.log('Muted play error:', e));
           }
-        },
-        { threshold: 0.3 } // 30% of the video must be visible
-      );
-
-      observer.observe(videoRef.current);
-      return () => observer.disconnect();
+        });
+    } else if (videoRef.current) {
+      // Pause when not in view to save resources
+      videoRef.current.pause();
     }
-  }, [item?.video]);
+  }, [inView, item?.video, videoReady]);
+
+  // Apply video playback logic when visibility or readiness changes
+  useEffect(() => {
+    handleVideoPlayback();
+  }, [handleVideoPlayback, inView, videoReady]);
 
   // When opening modal, reset video loading state
   const handleCardClick = () => {
     if (isMobile && item?.video && !isMobileCard) {
       setModalOpen(true);
       setVideoLoading(true);
+      setVideoError(false);
     }
   };
 
@@ -95,10 +103,15 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
   // Handle video loaded data event
   const handleVideoLoaded = () => {
     setVideoLoading(false);
-    // If video is visible, play it
-    if (isVideoVisible && videoRef.current) {
-      videoRef.current.play().catch(err => console.log('Video play error:', err));
-    }
+    setVideoReady(true);
+    handleVideoPlayback();
+  };
+
+  // Handle video error
+  const handleVideoError = () => {
+    setVideoLoading(false);
+    setVideoError(true);
+    console.error('Video failed to load:', item?.video);
   };
   return (
     <>
@@ -113,7 +126,10 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                 onContextMenu={(e) => e.preventDefault()}
               >
                 <video
-                  ref={isMobileCard ? videoRef : null}
+                  ref={(el) => {
+                    videoRef.current = el;
+                    if (isMobileCard) ref(el);
+                  }}
                   className="w-full h-full object-cover"
                   src={item.video}
                   loop
@@ -121,7 +137,9 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                   playsInline
                   controlsList="nodownload"
                   onLoadedData={handleVideoLoaded}
-                  preload="auto"
+                  onError={handleVideoError}
+                  preload="metadata"
+                  poster={item.images && item.images.length > 0 ? item.images[0] : ''}
                 />
               </div>
             ) : item?.images && item.images.length > 0 ? (
@@ -177,7 +195,10 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                 onContextMenu={(e) => e.preventDefault()}
               >
                 <video
-                  ref={videoRef}
+                  ref={(el) => {
+                    videoRef.current = el;
+                    ref(el);
+                  }}
                   className="w-full h-full object-cover"
                   src={item.video}
                   loop
@@ -185,7 +206,9 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                   playsInline
                   controlsList="nodownload"
                   onLoadedData={handleVideoLoaded}
-                  preload="auto"
+                  onError={handleVideoError}
+                  preload="metadata"
+                  poster={item.image && item.image.length > 0 ? item.image[0] : ''}
                 />
               </div>
               {videoLoading && (
@@ -195,6 +218,20 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-xs text-white">Loading</span>
                     </div>
+                  </div>
+                </div>
+              )}
+              {videoError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10">
+                  <div className="text-center p-4">
+                    <p className="text-white text-sm mb-2">Video could not be loaded</p>
+                    {item.image && item.image.length > 0 && (
+                      <img
+                        src={item.image[0]}
+                        alt={item.name || "Product"}
+                        className="max-h-[200px] mx-auto object-contain"
+                      />
+                    )}
                   </div>
                 </div>
               )}
@@ -336,24 +373,21 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
             <div className="relative w-full">
               {videoLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
-                  <svg
-                    className="animate-spin h-10 w-10 text-[#EC003F] drop-shadow-lg"
-                    xmlns="https://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-20 stroke-current"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-90 fill-current"
-                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                    ></path>
-                  </svg>
+                  <Loader className="w-10 h-10 text-white animate-spin" />
+                </div>
+              )}
+              {videoError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10">
+                  <div className="text-center p-4">
+                    <p className="text-white text-sm mb-2">Video could not be loaded</p>
+                    {item.image && item.image.length > 0 && (
+                      <img
+                        src={item.image[0]}
+                        alt={item.name || "Product"}
+                        className="max-h-[200px] mx-auto object-contain"
+                      />
+                    )}
+                  </div>
                 </div>
               )}
               {item?.video ? (
@@ -362,15 +396,23 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   <video
+                    ref={(el) => {
+                      // Only set ref if modal is open to avoid conflicts
+                      if (modalOpen) {
+                        videoRef.current = el;
+                        ref(el);
+                      }
+                    }}
                     className="w-full h-full object-cover rounded-t-lg"
                     src={item.video}
-                    preload="auto"
-                    poster={item?.poster || ""}
+                    preload="metadata"
+                    poster={item?.poster || (item?.image && item.image.length > 0 ? item.image[0] : "")}
                     loop
                     muted
                     playsInline
                     controlsList="nodownload"
                     onLoadedData={handleVideoLoaded}
+                    onError={handleVideoError}
                   />
                 </div>
               ) : (

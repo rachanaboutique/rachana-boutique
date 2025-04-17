@@ -17,29 +17,44 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [activeItem] = useState(0);
-  const [videoDuration, setVideoDuration] = useState(0);
   const playerRef = useRef(null);
-  
+
   // Ref to store last progress value for throttling
   const lastProgressRef = useRef(0);
-  
+
+  // Reference to the slider
+  const sliderRef = useRef(null);
+
+  // Custom navigation functions
+  const goToNextSlide = () => {
+    if (sliderRef.current) {
+      sliderRef.current.slickNext();
+    }
+  };
+
+  const goToPrevSlide = () => {
+    if (sliderRef.current) {
+      sliderRef.current.slickPrev();
+    }
+  };
+
   // Settings for the slider
   const sliderSettings = {
     dots: true,
     infinite: true,
     speed: 500,
     slidesToShow: 5,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    arrows: false,
-    adaptiveHeight: true,
+    slidesToScroll: 1, // Scroll one card at a time
+    autoplay: false, // Disable autoplay for better control
+    arrows: false, // We'll use custom arrows
+    adaptiveHeight: false, // Set to false for consistent height
     centerMode: false,
-    swipeToSlide: true,
+    swipeToSlide: false, // Disable swipe to slide for precise movement
     variableWidth: false,
-    draggable: true,
-    // Add spacing between slides
-    slidesSpacing: 10,
+    draggable: false, // Disable dragging for precise control
+    cssEase: "ease-out",
+    // Ensure exact spacing between slides
+    slidesSpacing: 0,
     responsive: [
       {
         breakpoint: 1024,
@@ -115,11 +130,32 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
         </div>
 
         {/* Watch and Buy Slider - Both Mobile and Desktop */}
-        <div className="w-full mb-4 -px-5">
-          <div>
-            <Slider {...sliderSettings} className="watch-buy-slider">
+        <div className="w-full mb-4 px-4">
+          <div className="relative">
+            {/* Big arrow navigation buttons with three sides rounded */}
+            <button
+              onClick={goToPrevSlide}
+              className="custom-nav-arrow custom-nav-prev absolute -left-2 top-[250px] -translate-y-1/2 z-10"
+              aria-label="Previous slide"
+            >
+              <div className="big-arrow-left">
+                <ChevronLeft className="h-7 w-7 text-white" />
+              </div>
+            </button>
+
+            <button
+              onClick={goToNextSlide}
+              className="custom-nav-arrow custom-nav-next absolute -right-2 top-[250px] -translate-y-1/2 z-10"
+              aria-label="Next slide"
+            >
+              <div className="big-arrow-right">
+                <ChevronRight className="h-7 w-7 text-white" />
+              </div>
+            </button>
+
+            <Slider ref={sliderRef} {...sliderSettings} className="watch-buy-slider">
               {products.map((productItem, index) => (
-                <div key={productItem._id} className="pb-2 px-2">
+                <div key={productItem._id} className="pb-2 px-0">
                   <div
                     onClick={() => {
                       setSelectedVideo(productItem);
@@ -137,7 +173,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                       }}
                       className="relative cursor-pointer shadow-md overflow-hidden watch-buy-mobile-card"
                       style={{
-                        aspectRatio: "9/16",
+                        aspectRatio: "8/15",
                         background: "#f8f8f8",
                       }}
                     >
@@ -325,7 +361,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                         className="video-card relative overflow-hidden shadow-xl"
                         style={
                           showVideoModal
-                            ? { width: "370px", height: "750px" }
+                            ? { width: "370px", height: "650px", marginBottom: "10px" }
                             : { width: "320px", height: "600px" }
                         }
                       >
@@ -346,7 +382,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                                 playsinline
                                 progressInterval={500}
                                 onProgress={position === 0 ? handleProgress : undefined}
-                                onDuration={position === 0 ? (duration) => setVideoDuration(duration) : undefined}
+                                onDuration={position === 0 ? () => {} : undefined}
                                 onEnded={position === 0 ? handleVideoEnd : undefined}
                                 onError={(e) => console.log("Video error:", e)}
                                 config={{
@@ -366,7 +402,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
                             {/* Video Progress Bar - repositioned below the top at 40px with smoother transition */}
                             {position === 0 && (
-                              <div className="absolute top-[40px] left-0 right-0 h-2 bg-black/50 z-[9999]" style={{ width: "100%" }}>
+                              <div className="absolute top-[0px] left-0 right-0 h-2 bg-black/50 z-[9999]" style={{ width: "100%" }}>
                                 <div
                                   className="h-full bg-white transition-all duration-300 ease-out"
                                   style={{ width: `${videoProgress * 100}%` }}
@@ -376,7 +412,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
                             {/* Video Controls - redesigned for better clickability */}
                             {position === 0 && (
-                              <div className="absolute top-4 right-4 flex gap-4 z-[9999]">
+                              <div className="absolute top-2 right-4 flex gap-4 z-[9999]">
                                 <div
                                   className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center cursor-pointer hover:bg-black/90 transition-all border border-white/30"
                                   onClick={(e) => {
@@ -422,9 +458,10 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
           </div>
 
           {/* Product Info and Action Buttons */}
-          <div className="absolute bottom-6 left-0 right-0 flex justify-center z-40">
+          <div className="absolute bottom-[48px] left-0 right-0 flex justify-center z-40">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg"></div>
             <div className="relative flex items-center justify-between" style={{ width: "370px" }}>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg"></div>
+
               <div className="text-white p-2 z-10">
                 <h3 className="text-lg font-medium truncate">{selectedVideo?.title}</h3>
                 <p className="text-lg font-bold mt-1">₹{selectedVideo.price}</p>

@@ -1,31 +1,11 @@
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
-function Loader({ className, forceMinimumTime = true }) {
-  // State to ensure minimum display time
-  const [shouldRender, setShouldRender] = useState(true);
-
-  useEffect(() => {
-    // Ensure loader displays for at least 1.5 seconds for animations to complete
-    if (forceMinimumTime) {
-      const timer = setTimeout(() => {
-        setShouldRender(false);
-      }, 1500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [forceMinimumTime]);
-
+function Loader({ className }) {
   return (
-    <AnimatePresence>
-      {shouldRender && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className={`z-50 w-screen h-screen fixed inset-0 bg-white flex flex-col items-center justify-center overflow-hidden ${className}`}
-        >
+    <div
+      className={`z-50 w-screen h-screen fixed inset-0 bg-white flex flex-col items-center justify-center overflow-hidden ${className}`}
+    >
       {/* Elegant Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMwLTkuOTQtOC4wNi0xOC0xOC0xOHY2YzYuNjMgMCAxMiA1LjM3IDEyIDEyaC02YzAgNi42MyA1LjM3IDEyIDEyIDEyIDYuNjMgMCAxMi01LjM3IDEyLTEyaC02eiIgZmlsbD0iIzAwMCIvPjwvZz48L3N2Zz4=')] bg-repeat"></div>
@@ -156,9 +136,7 @@ function Loader({ className, forceMinimumTime = true }) {
           />
         ))}
       </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    </div>
   );
 }
 

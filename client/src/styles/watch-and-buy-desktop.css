@@ -187,18 +187,87 @@
 /* Slider customization */
 .watch-buy-slider .slick-track {
   display: flex;
-  gap: 10px;
   margin-left: 0;
   margin-right: 0;
 }
 
 .watch-buy-slider .slick-slide {
-  margin: 0 5px;
+  margin: 0 8px; /* Equal margin on both sides for consistent spacing */
   padding: 0;
   height: auto;
+  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  width: 20%; /* Exactly 5 cards (100% / 5) */
 }
 
-/* Arrow styles removed as we're not using arrows */
+/* Ensure the slider container has proper width */
+.watch-buy-slider {
+  width: calc(100% + 16px); /* Compensate for the margins */
+  margin-left: -8px; /* Offset the left margin of the first slide */
+  box-sizing: border-box;
+  overflow: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Fix for exact 5 cards display */
+.watch-buy-slider .slick-list {
+  overflow: hidden;
+  margin: 0 -8px; /* Match the slide margins */
+}
+
+/* Ensure each slide has equal width */
+.watch-buy-slider .slick-slide > div {
+  width: 100%;
+  height: 100%;
+}
+
+/* Big arrow navigation buttons with three sides rounded */
+.custom-nav-arrow {
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.custom-nav-prev {
+  left: -15px;
+}
+
+.custom-nav-next {
+  right: -15px;
+}
+
+@media (min-width: 768px) {
+  .custom-nav-prev {
+    left: -25px;
+  }
+
+  .custom-nav-next {
+    right: -25px;
+  }
+}
+
+.big-arrow-left,
+.big-arrow-right {
+  width: 60px;
+  height: 60px;
+  background: rgba(0, 0, 0, 0.35); /* Transparent black with 35% opacity */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.5); /* Black inset shadow */
+}
+
+/* Left arrow: round right side */
+.big-arrow-left {
+  border-radius: 0 30px 30px 0; /* semi-circle on the right */
+}
+
+/* Right arrow: round left side */
+.big-arrow-right {
+  border-radius: 30px 0 0 30px; /* semi-circle on the left */
+}
+
 
 .watch-buy-slider .slick-dots {
   bottom: -40px;

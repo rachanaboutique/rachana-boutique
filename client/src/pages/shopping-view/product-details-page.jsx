@@ -746,8 +746,8 @@ function ProductDetailsPage({ open, setOpen }) {
             </div>
           )}
 
-          {/* Creative Quantity Control and Add to Cart Button */}
-          <div className="mt-6 flex flex-col gap-6">
+          {/* Quantity Control and Add to Cart Button on the same line */}
+          <div className="mt-6">
             <div className="flex justify-center">
               {productDetails?.totalStock === 0 ? (
                 <div className="w-full max-w-md px-8 py-3 opacity-60 cursor-not-allowed text-gray-500 uppercase tracking-wider text-sm font-medium flex items-center justify-center gap-2 border-b-2 border-gray-300">
@@ -757,50 +757,37 @@ function ProductDetailsPage({ open, setOpen }) {
                   <span>Out of Stock</span>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-6 w-full max-w-md">
-                  {/* Creative Quantity Controls */}
+                <div className="flex items-center justify-center gap-4 w-full max-w-md">
+                  {/* Quantity Controls */}
                   {productDetails?.totalStock > 0 && (
-                    <div className="flex justify-center items-center w-full">
-                      <div className="relative flex items-center justify-center">
-                        {/* Circular quantity display with creative styling */}
-                        <div className="relative w-20 h-20 flex items-center justify-center">
-                          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="2" />
-                            <circle cx="50" cy="50" r="45" fill="none" stroke="#000" strokeWidth="2"
-                              strokeDasharray="283"
-                              strokeDashoffset={283 - (283 * (quantity / (productDetails.totalStock > 10 ? 10 : productDetails.totalStock)))}
-                              transform="rotate(-90 50 50)"
-                            />
-                          </svg>
-                          <span className="text-2xl font-medium">{quantity}</span>
-                        </div>
+                    <div className="flex items-center border border-gray-300 rounded-md">
+                      <button
+                        onClick={decreaseQuantity}
+                        className="px-3 py-2 flex items-center justify-center hover:bg-gray-100 transition-colors duration-200 focus:outline-none"
+                        aria-label="Decrease quantity"
+                        disabled={quantity <= 1}
+                      >
+                        <Minus className={`h-4 w-4 ${quantity <= 1 ? 'text-gray-300' : 'text-black'}`} />
+                      </button>
 
-                        {/* Decrease button positioned to the left with more spacing */}
-                        <button
-                          onClick={decreaseQuantity}
-                          className="absolute -left-10 w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform duration-300 focus:outline-none"
-                          aria-label="Decrease quantity"
-                          disabled={quantity <= 1}
-                        >
-                          <Minus className={`h-5 w-5 ${quantity <= 1 ? 'text-gray-300' : 'text-black'}`} />
-                        </button>
-
-                        {/* Increase button positioned to the right with more spacing */}
-                        <button
-                          onClick={increaseQuantity}
-                          className="absolute -right-10 w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform duration-300 focus:outline-none"
-                          aria-label="Increase quantity"
-                          disabled={quantity >= productDetails.totalStock}
-                        >
-                          <Plus className={`h-5 w-5 ${quantity >= productDetails.totalStock ? 'text-gray-300' : 'text-black'}`} />
-                        </button>
+                      <div className="px-3 py-2 min-w-[40px] text-center">
+                        <span className="text-lg font-medium">{quantity}</span>
                       </div>
+
+                      <button
+                        onClick={increaseQuantity}
+                        className="px-3 py-2 flex items-center justify-center hover:bg-gray-100 transition-colors duration-200 focus:outline-none"
+                        aria-label="Increase quantity"
+                        disabled={quantity >= productDetails.totalStock}
+                      >
+                        <Plus className={`h-4 w-4 ${quantity >= productDetails.totalStock ? 'text-gray-300' : 'text-black'}`} />
+                      </button>
                     </div>
                   )}
 
-                  {/* Clean Add to Cart Button */}
+                  {/* Add to Cart Button */}
                   <button
-                    className="w-full px-8 py-3 bg-black text-white hover:bg-white hover:text-black border-2 border-black transition-all duration-300 uppercase tracking-wider text-sm font-medium flex items-center justify-center gap-2 group"
+                    className="flex-1 px-6 py-2 bg-black text-white hover:bg-white hover:text-black border-2 border-black transition-all duration-300 uppercase tracking-wider text-sm font-medium flex items-center justify-center gap-2 group"
                     onClick={() =>
                       handleAddToCart(productDetails?._id, productDetails?.totalStock)
                     }
@@ -824,8 +811,6 @@ function ProductDetailsPage({ open, setOpen }) {
                 </div>
               )}
             </div>
-
-            {/* No stock information as requested */}
           </div>
         </div>
 

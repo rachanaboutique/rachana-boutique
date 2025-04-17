@@ -282,9 +282,9 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         </div>
 
         {/* Watch and Buy Slider - Both Mobile and Desktop */}
-        <div className="w-full mb-4 px-0">
+        <div className="w-full mb-4 px-4">
           <div>
-            <Slider {...sliderSettings} className="watch-buy-slider">
+            <Slider {...sliderSettings} className="watch-buy-slider mobile-watch-buy-slider">
               {products.map((productItem, index) => (
                 <div key={productItem._id} className="pb-2">
                   <div
@@ -358,7 +358,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                           <ShoppingBag className="h-4 w-5" />
                         </button>
                         </div>
-                       
+
                       </div>
                     </div>
                   </div>
@@ -376,7 +376,10 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
           onClick={() => setShowVideoModal(false)}
         >
           {/* Semi-transparent overlay at the top for better control visibility */}
-          <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/70 to-transparent z-40"></div>
+          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 to-transparent z-40 pointer-events-none"></div>
+
+          {/* Removed bottom overlay as it's now part of the product info section */}
+
           {/* Modal Header - Controls in Top Right */}
           <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50">
             <button
@@ -429,16 +432,16 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
             ></div>
           </div>
 
-          {/* VideoStacker UI */}
+          {/* VideoStacker UI - Full Height */}
           <div
-            className="flex-grow flex items-center justify-center"
+            className="h-full w-full video-stacker-wrapper"
             ref={videoContainerRef}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            style={{ touchAction: 'none' }} /* This prevents browser default touch actions */
+            style={{ touchAction: 'none', height: '100vh', maxHeight: '-webkit-fill-available' }} /* This prevents browser default touch actions */
           >
-            <div className="video-stacker-container relative h-full w-full max-w-5xl overflow-hidden">
+            <div className="video-stacker-container relative h-full w-full overflow-hidden">
               {/* Stacked Videos */}
               <div className="video-stack-wrapper relative h-full w-full flex flex-col">
                 {products.map((productItem, index) => {
@@ -459,14 +462,14 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                         }`}
                     >
                       <div
-                        className="video-card relative overflow-hidden shadow-xl mobile-video-card"
-                        style={{ width: '100vw', height: 'calc(100vh - 20px)' }}
+                        className="video-card relative overflow-hidden mobile-video-card"
+                        style={{ width: '100vw', height: '100vh', maxHeight: '-webkit-fill-available' }}
                       >
-                        {/* Video Player */}
+                        {/* Video Player - Full Height */}
                         {productItem.videoUrl || productItem.video ? (
                           <div className="w-full h-full">
                             <div
-                              className="react-player-container"
+                              className="react-player-container h-full w-full"
                               onContextMenu={(e) => e.preventDefault()}
                             >
                               <ReactPlayer
@@ -499,11 +502,11 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                           </div>
                         )}
 
-                        {/* Product Info Overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent pt-16 pb-6 px-4 text-white">
-                          <div className="flex flex-col">
-                            <h3 className="text-lg font-medium truncate">{productItem?.title}</h3>
-                            <p className="text-lg font-bold mt-1">₹{productItem.price}</p>
+                        {/* Product Info Overlay - Improved positioning and visibility */}
+                        <div className="absolute bottom-0 left-0 right-0 px-4 pb-8 z-40 bg-gradient-to-t from-black/90 via-black/70 to-transparent pt-16">
+                          <div className="flex flex-col text-white">
+                            <h3 className="text-xl font-medium truncate text-white drop-shadow-md">{productItem?.title}</h3>
+                            <p className="text-xl font-bold mt-2 text-white drop-shadow-md">₹{productItem.price}</p>
                           </div>
                         </div>
                       </div>
@@ -521,7 +524,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                 e.stopPropagation();
                 handleAddtoCart(selectedVideo);
               }}
-              className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-xl hover:bg-black/80 transition-colors"
+              className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-xl hover:bg-black/80 transition-colors border border-white/20"
               aria-label="Add to Cart"
             >
               <ShoppingBag className="h-5 w-5" />
