@@ -46,6 +46,11 @@ function ProductDetailsPage({ open, setOpen }) {
   const [slideDirection, setSlideDirection] = useState(null);
   const [isSliding, setIsSliding] = useState(false);
   const swipeThreshold = 50; // Minimum swipe distance to trigger navigation
+  
+  // Touch references for direct swipe handling
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
+  const mainImageRef = useRef(null);
 
   // Handle image navigation with animation
   const handleImageNavigation = (direction) => {
@@ -64,6 +69,33 @@ function ProductDetailsPage({ open, setOpen }) {
         setSlideDirection(null);
       }, 50);
     }, 150);
+  };
+  
+  // Direct touch handlers for the main container
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current !== null && touchEndX.current !== null) {
+      const distance = touchEndX.current - touchStartX.current;
+      
+      // Check if the swipe distance is significant enough
+      if (Math.abs(distance) > swipeThreshold && productDetails?.image && productDetails.image.length > 1) {
+        // Determine swipe direction and navigate
+        const direction = distance > 0 ? 'prev' : 'next';
+        handleImageNavigation(direction);
+      }
+    }
+    
+    // Reset touch positions
+    touchStartX.current = null;
+    touchEndX.current = null;
   };
 
   const handleZoomData = (data) => {
@@ -577,7 +609,13 @@ function ProductDetailsPage({ open, setOpen }) {
           <div className="flex flex-col gap-4">
 
             {/* Main Image Container */}
-            <div className="flex-1 relative">
+            <div 
+              className="flex-1 relative"
+              ref={mainImageRef}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <div className={`${getSlideAnimationClass()}`}>
                 <ZoomableImage
                   imageSrc={selectedImage}

@@ -620,8 +620,12 @@ function ShoppingListing({ categorySlug }) {
                   </div>
 
                   <p className="text-gray-500 mb-3">
-                    {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
+                   {isLoading && "Loading..."}
                   </p>
+
+                  {/* <p className="text-gray-500 mb-3">
+                    {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
+                  </p> */}
 
                   {/* Mobile Filter */}
                   <ProductFilter

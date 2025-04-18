@@ -284,11 +284,7 @@ const resetPassword = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get user profile
- * @route   GET /api/auth/profile
- * @access  Private
- */
+
 const getUserProfile = async (req, res) => {
   try {
     // req.user is set by the authMiddleware

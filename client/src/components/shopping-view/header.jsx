@@ -112,7 +112,7 @@ function ShoppingHeader() {
         dispatch(fetchUserProfile());
       }
     }, [isAuthenticated, user, dispatch]);
- console.log('User:', user);
+
     function handleLogout() {
       // First explicitly reset the cart
       dispatch(resetCart());

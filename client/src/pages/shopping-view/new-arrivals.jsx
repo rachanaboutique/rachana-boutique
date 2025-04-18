@@ -325,30 +325,34 @@ function NewArrivals() {
                 <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
                   New Arrivals
                 </h2>
-                <DropdownMenu >
-                  <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                    <ArrowUpDownIcon className="h-4 w-4" />
-                    <span>{sortOptions.find(option => option.id === sort)?.label || 'Default'}</span>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="mt-2 bg-white p-2 rounded-md shadow-lg border border-gray-200">
-                    <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
-                      {sortOptions.map((sortItem) => (
-                        <DropdownMenuRadioItem
-                          className="hover:bg-gray-100 cursor-pointer px-4 py-2 rounded-md"
-                          value={sortItem.id}
-                          key={sortItem.id}
-                        >
-                          {sortItem.label}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <DropdownMenu>
+                      <DropdownMenuTrigger className="w-1/4 h-8 flex items-center justify-center gap-1 px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                        <ArrowUpDownIcon className="h-3 w-3" />
+                        <span className="text-md">Sort</span>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="mt-2 bg-white p-2 rounded-md shadow-lg border border-gray-200">
+                        <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
+                          {sortOptions.map((sortItem) => (
+                            <DropdownMenuRadioItem
+                              className="hover:bg-gray-100 cursor-pointer px-4 py-2 rounded-md"
+                              value={sortItem.id}
+                              key={sortItem.id}
+                            >
+                              {sortItem.label}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
               </div>
-              <p className="text-gray-500">
+
+              <p className="text-gray-500 mt-2 md:mt-0">
+                {isLoading && "Loading..."}
+              </p>
+              {/* <p className="text-gray-500">
                   {isLoading ? "Loading..." : `Showing ${newArrivalProducts.length} products`}
-                </p>
+                </p> */}
 
 
             </div>

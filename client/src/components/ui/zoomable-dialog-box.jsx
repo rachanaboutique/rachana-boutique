@@ -1,29 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
 
-function ZoomableImage({ imageSrc, imageAlt, onZoomData }) {
+function ZoomableImage({ imageSrc, imageAlt, onZoomData, onNavigate, images }) {
   const [isHovering, setIsHovering] = useState(false);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const [lastTap, setLastTap] = useState(0); // Track double tap
-  const [touchStart, setTouchStart] = useState({ x: 0, y: 0 });
-  const [isSwiping, setIsSwiping] = useState(false);
+  
+  // Simpler swipe implementation
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
+  const minSwipeDistance = 50; // Minimum distance required for a swipe
+  
   const zoomRef = useRef();
   const imageRef = useRef();
-
-  // Add smooth transition effect when not actively swiping
-  useEffect(() => {
-    const img = imageRef.current;
-    if (!img) return;
-    
-    if (isSwiping) {
-      img.style.transition = "none"; // No transition during active swipe
-    } else {
-      img.style.transition = "transform 0.3s ease-out"; // Smooth transition when releasing
-    }
-  }, [isSwiping]);
+  const containerRef = useRef();
 
   const handleMouseMove = (e) => {
     if (window.innerWidth < 768) return;
@@ -78,10 +71,10 @@ function ZoomableImage({ imageSrc, imageAlt, onZoomData }) {
     }
   };
 
-  const handleTouchStart = (event) => {
-    const touch = event.touches[0];
-    setTouchStart({ x: touch.clientX, y: touch.clientY });
-    setIsSwiping(true);
+  // Simplified touch handlers for more reliable swipe detection
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
     
     // Double tap detection
     const currentTime = new Date().getTime();
@@ -95,37 +88,59 @@ function ZoomableImage({ imageSrc, imageAlt, onZoomData }) {
     setLastTap(currentTime);
   };
 
-  const handleTouchMove = (event) => {
-    if (!isSwiping) return;
+  const handleTouchMove = (e) => {
+    // Update the end position as the finger moves
+    touchEndX.current = e.touches[0].clientX;
     
-    const touch = event.touches[0];
-    const deltaX = touch.clientX - touchStart.x;
-    const deltaY = touch.clientY - touchStart.y;
-    
+    // If zoomed in, handle panning
     if (zoomScale > 1) {
-      // When zoomed in, allow panning within boundaries
+      const deltaX = touchEndX.current - touchStartX.current;
+      const deltaY = e.touches[0].clientY - e.touches[0].clientY;
+      
       setPanPosition((prev) => ({
         x: Math.max(Math.min(prev.x + deltaX * 0.05, (zoomScale - 1) * 50), -(zoomScale - 1) * 50),
         y: Math.max(Math.min(prev.y + deltaY * 0.05, (zoomScale - 1) * 50), -(zoomScale - 1) * 50),
       }));
+      
+      // Reset start position for continuous movement
+      touchStartX.current = touchEndX.current;
+      
+      // Prevent default to avoid page scrolling when zoomed in
+      e.preventDefault();
     }
-    
-    // Update touch start for continuous movement
-    setTouchStart({ x: touch.clientX, y: touch.clientY });
   };
 
-  const handleTouchEnd = () => {
-    setIsSwiping(false);
+  const handleTouchEnd = (e) => {
+    // Only process swipe if we're not zoomed in
+    if (zoomScale === 1 && touchStartX.current !== null && touchEndX.current !== null) {
+      const distance = touchEndX.current - touchStartX.current;
+      
+      // Check if the swipe distance is significant enough
+      if (Math.abs(distance) > minSwipeDistance && images && images.length > 1) {
+        // Determine swipe direction and navigate
+        const direction = distance > 0 ? 'prev' : 'next';
+        if (onNavigate) {
+          onNavigate(direction);
+        }
+      }
+    }
+    
+    // Reset touch positions
+    touchStartX.current = null;
+    touchEndX.current = null;
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" ref={containerRef}>
       <div
         className="w-full h-[550px] md:h-[900px] relative overflow-hidden border shadow-md cursor-pointer"
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onClick={handleImageClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         ref={zoomRef}
       >
         <img
@@ -169,12 +184,13 @@ function ZoomableImage({ imageSrc, imageAlt, onZoomData }) {
             </button>
 
             <img
-              ref={imageRef}
               src={imageSrc}
               alt={imageAlt}
               className="max-w-full max-h-full object-contain"
               style={{
-                transform: `scale(${zoomScale}) translate(${panPosition.x}%, ${panPosition.y}%)`,
+                transform: zoomScale > 1 
+                  ? `scale(${zoomScale}) translate(${panPosition.x}%, ${panPosition.y}%)`
+                  : 'none'
               }}
             />
           </div>

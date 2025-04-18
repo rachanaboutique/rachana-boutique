@@ -282,7 +282,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         </div>
 
         {/* Watch and Buy Slider - Both Mobile and Desktop */}
-        <div className="w-full mb-4 px-4">
+        <div className="w-full mb-4 px-1">
           <div>
             <Slider {...sliderSettings} className="watch-buy-slider mobile-watch-buy-slider">
               {products.map((productItem, index) => (
@@ -298,7 +298,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                     <div
                       className="relative cursor-pointer shadow-md overflow-hidden watch-buy-mobile-card"
                       style={{
-                        aspectRatio: "9/16",
+                        aspectRatio: "8/16",
                         background: "#f8f8f8",
                       }}
                     >
