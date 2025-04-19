@@ -18,6 +18,9 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [activeItem] = useState(0);
   const playerRef = useRef(null);
+  const [videoCardHeight, setVideoCardHeight] = useState(600);
+  const [videoCardWidth, setVideoCardWidth] = useState(320);
+  const [modalArrowOffset, setModalArrowOffset] = useState(0);
 
   // Ref to store last progress value for throttling
   const lastProgressRef = useRef(0);
@@ -45,7 +48,8 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     speed: 500,
     slidesToShow: 5,
     slidesToScroll: 1, // Scroll one card at a time
-    autoplay: false, // Disable autoplay for better control
+    autoplay: true, // Enable autoplay
+    autoplaySpeed: 3000, // 2 seconds delay between slides
     arrows: false, // We'll use custom arrows
     adaptiveHeight: false, // Set to false for consistent height
     centerMode: false,
@@ -53,9 +57,20 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     variableWidth: false,
     draggable: false, // Disable dragging for precise control
     cssEase: "ease-out",
-    // Ensure exact spacing between slides
-    slidesSpacing: 0,
+    slidesPerRow: 1,
     responsive: [
+      {
+        breakpoint: 1440,
+        settings: {
+          slidesToShow: 5,
+          slidesToScroll: 1,
+          dots: true,
+          centerMode: false,
+          infinite: true,
+          autoplay: true,
+          autoplaySpeed: 3000,
+        }
+      },
       {
         breakpoint: 1024,
         settings: {
@@ -64,6 +79,8 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
           dots: true,
           centerMode: false,
           infinite: true,
+          autoplay: true,
+          autoplaySpeed: 3000,
         }
       }
     ]
@@ -99,6 +116,68 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     }
   }, [showVideoModal, currentVideoIndex]);
 
+  // Calculate and update video card dimensions based on viewport size
+  useEffect(() => {
+    const calculateDimensions = () => {
+      // Get viewport dimensions
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+
+      // For regular view, use a responsive approach
+      // Base height is 60% of viewport height, with min/max constraints
+      const regularHeight = Math.max(
+        Math.min(Math.floor(viewportHeight * 0.6), 600), // Max 600px
+        400 // Min 400px
+      );
+
+      // Calculate width based on the aspect ratio of 9:16
+      // This maintains the proper video aspect ratio
+      const aspectRatio = 9/16; // width:height
+      const calculatedWidth = Math.floor(regularHeight * aspectRatio);
+
+      // Apply min/max constraints to width
+      const regularWidth = Math.max(
+        Math.min(calculatedWidth, 350), // Max 350px
+        225 // Min 225px
+      );
+
+      // For larger screens, scale up the width more aggressively
+      const finalWidth = viewportWidth > 1440 ?
+        Math.min(regularWidth * 1.2, 400) : regularWidth;
+
+      // Calculate modal video dimensions
+      const modalHeight = Math.floor(viewportHeight * 0.8);
+      const modalWidth = Math.floor(modalHeight * aspectRatio);
+
+      // Calculate the offset for arrows in modal view
+      // This positions arrows outside the three-card stacker
+      // The multiplier adjusts based on screen size to ensure arrows are always outside
+      let multiplier = 1.7; // Default multiplier
+
+      // Adjust multiplier based on screen width
+      if (viewportWidth < 768) {
+        multiplier = 1.5; // Smaller screens need less space
+      } else if (viewportWidth > 1440) {
+        multiplier = 2.0; // Larger screens need more space
+      }
+
+      // Calculate the final offset
+      const offset = Math.floor(modalWidth * multiplier / 2);
+
+      // Update state with calculated dimensions
+      setVideoCardHeight(regularHeight);
+      setVideoCardWidth(finalWidth);
+      setModalArrowOffset(offset);
+    };
+
+    // Calculate on mount and window resize
+    calculateDimensions();
+    window.addEventListener('resize', calculateDimensions);
+
+    // Clean up event listener
+    return () => window.removeEventListener('resize', calculateDimensions);
+  }, []);
+
   // Throttled onProgress handler
   const handleProgress = useCallback((state) => {
     // Update only if progress increased by more than 0.01
@@ -130,12 +209,12 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
         </div>
 
         {/* Watch and Buy Slider - Both Mobile and Desktop */}
-        <div className="w-full mb-4 px-4">
+        <div className="w-full mb-4 px-1">
           <div className="relative">
             {/* Big arrow navigation buttons with three sides rounded */}
             <button
               onClick={goToPrevSlide}
-              className="custom-nav-arrow custom-nav-prev absolute -left-2 top-[250px] -translate-y-1/2 z-10"
+              className="custom-nav-arrow custom-nav-prev absolute left-2 top-[250px] -translate-y-1/2 z-10"
               aria-label="Previous slide"
             >
               <div className="big-arrow-left">
@@ -145,7 +224,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
             <button
               onClick={goToNextSlide}
-              className="custom-nav-arrow custom-nav-next absolute -right-2 top-[250px] -translate-y-1/2 z-10"
+              className="custom-nav-arrow custom-nav-next absolute right-1 top-[250px] -translate-y-1/2 z-10"
               aria-label="Next slide"
             >
               <div className="big-arrow-right">
@@ -277,29 +356,39 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
             <div className="video-stacker-container relative h-[90vh] w-full max-w-6xl overflow-hidden">
               {/* Navigation Arrows */}
-              <div className="absolute top-1/2 left-4 z-30 transform -translate-y-1/2">
+              <div
+                className="absolute top-1/2 z-30 transform -translate-y-1/2"
+                style={{ left: `calc(50% - ${modalArrowOffset}px - 40px)` }}
+              >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     goToPrevVideo();
                   }}
-                  className="bg-white/20 backdrop-blur-sm hover:bg-white/40 rounded-full p-2 transition-all duration-300 nav-arrow"
+                  className="nav-arrow transition-all duration-300"
                   aria-label="Previous video"
                 >
-                  <ChevronLeft className="h-8 w-8 text-white" />
+                  <div className="big-arrow-left">
+                    <ChevronLeft className="h-8 w-8 text-white" />
+                  </div>
                 </button>
               </div>
 
-              <div className="absolute top-1/2 right-4 z-30 transform -translate-y-1/2">
+              <div
+                className="absolute top-1/2 z-30 transform -translate-y-1/2"
+                style={{ right: `calc(50% - ${modalArrowOffset}px - 40px)` }}
+              >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     goToNextVideo();
                   }}
-                  className="bg-white/20 backdrop-blur-sm hover:bg-white/40 rounded-full p-2 transition-all duration-300 nav-arrow"
+                  className="nav-arrow transition-all duration-300"
                   aria-label="Next video"
                 >
-                  <ChevronRight className="h-8 w-8 text-white" />
+                  <div className="big-arrow-right">
+                    <ChevronRight className="h-8 w-8 text-white" />
+                  </div>
                 </button>
               </div>
 
@@ -361,8 +450,17 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                         className="video-card relative overflow-hidden shadow-xl"
                         style={
                           showVideoModal
-                            ? { width: "370px", height: "650px", marginBottom: "10px" }
-                            : { width: "320px", height: "600px" }
+                            ? {
+                                width: `${Math.floor(Math.floor(window.innerHeight * 0.8) * (9/16))}px`,
+                                height: `${Math.floor(window.innerHeight * 0.8)}px`,
+                                marginBottom: "10px",
+                                aspectRatio: "9/16"
+                              }
+                            : {
+                                width: `${videoCardWidth}px`,
+                                height: `${videoCardHeight}px`,
+                                aspectRatio: "9/16"
+                              }
                         }
                       >
                         {/* Video Player */}
@@ -414,31 +512,51 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                             {position === 0 && (
                               <div className="absolute top-2 right-4 flex gap-4 z-[9999]">
                                 <div
-                                  className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center cursor-pointer hover:bg-black/90 transition-all border border-white/30"
+                                  className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center cursor-pointer hover:bg-black/90 transition-all border border-white/30 video-control-button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setIsPlaying(!isPlaying);
                                   }}
+                                  style={{
+                                    width: window.innerWidth >= 2000 ? '60px' : window.innerWidth >= 1440 ? '50px' : '48px',
+                                    height: window.innerWidth >= 2000 ? '60px' : window.innerWidth >= 1440 ? '50px' : '48px'
+                                  }}
                                 >
                                   {isPlaying ? (
-                                    <Pause size={24} className="text-white w-full h-full p-2" />
+                                    <Pause
+                                      size={window.innerWidth >= 2000 ? 32 : window.innerWidth >= 1440 ? 28 : 24}
+                                      className="text-white w-full h-full p-2"
+                                    />
                                   ) : (
-                                    <Play size={24} className="text-white w-full h-full p-2" />
+                                    <Play
+                                      size={window.innerWidth >= 2000 ? 32 : window.innerWidth >= 1440 ? 28 : 24}
+                                      className="text-white w-full h-full p-2"
+                                    />
                                   )}
                                 </div>
 
                                 <div
-                                  className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center cursor-pointer hover:bg-black/90 transition-all border border-white/30"
+                                  className="w-12 h-12 rounded-full bg-black/70 flex items-center justify-center cursor-pointer hover:bg-black/90 transition-all border border-white/30 video-control-button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     // Muting/unmuting doesn't affect auto-advance behavior
                                     setIsMuted(!isMuted);
                                   }}
+                                  style={{
+                                    width: window.innerWidth >= 2000 ? '60px' : window.innerWidth >= 1440 ? '50px' : '48px',
+                                    height: window.innerWidth >= 2000 ? '60px' : window.innerWidth >= 1440 ? '50px' : '48px'
+                                  }}
                                 >
                                   {isMuted ? (
-                                    <VolumeX size={24} className="text-white w-full h-full p-2" />
+                                    <VolumeX
+                                      size={window.innerWidth >= 2000 ? 32 : window.innerWidth >= 1440 ? 28 : 24}
+                                      className="text-white w-full h-full p-2"
+                                    />
                                   ) : (
-                                    <Volume2 size={24} className="text-white w-full h-full p-2" />
+                                    <Volume2
+                                      size={window.innerWidth >= 2000 ? 32 : window.innerWidth >= 1440 ? 28 : 24}
+                                      className="text-white w-full h-full p-2"
+                                    />
                                   )}
                                 </div>
                               </div>
@@ -460,11 +578,11 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
           {/* Product Info and Action Buttons */}
           <div className="absolute bottom-[48px] left-0 right-0 flex justify-center z-40">
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg"></div>
-            <div className="relative flex items-center justify-between" style={{ width: "370px" }}>
+            <div className="relative flex items-center justify-between" style={{ width: `${Math.floor(Math.floor(window.innerHeight * 0.8) * (9/16))}px` }}>
 
               <div className="text-white p-2 z-10">
-                <h3 className="text-lg font-medium truncate">{selectedVideo?.title}</h3>
-                <p className="text-lg font-bold mt-1">₹{selectedVideo.price}</p>
+                <h3 className="text-lg font-medium truncate product-info-title">{selectedVideo?.title}</h3>
+                <p className="text-lg font-bold mt-1 product-info-price">₹{selectedVideo.price}</p>
               </div>
               <div className="flex flex-col gap-2 p-2 z-10">
                 <button
@@ -472,10 +590,16 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     e.stopPropagation();
                     handleAddtoCart(selectedVideo);
                   }}
-                  className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shadow-md hover:bg-black/80 transition-colors border border-white/20"
+                  className="rounded-full bg-black text-white flex items-center justify-center shadow-md hover:bg-black/80 transition-colors border border-white/20 modal-control-button"
+                  style={{
+                    width: window.innerWidth >= 2000 ? '50px' : window.innerWidth >= 1440 ? '45px' : '40px',
+                    height: window.innerWidth >= 2000 ? '50px' : window.innerWidth >= 1440 ? '45px' : '40px'
+                  }}
                   aria-label="Add to Cart"
                 >
-                  <ShoppingBag className="h-5 w-5" />
+                  <ShoppingBag
+                    size={window.innerWidth >= 2000 ? 24 : window.innerWidth >= 1440 ? 20 : 18}
+                  />
                 </button>
 
                 <button
@@ -484,13 +608,17 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     navigate(`/shop/details/${selectedVideo._id}`);
                     setShowVideoModal(false);
                   }}
-                  className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors"
+                  className="rounded-full bg-white text-black flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors modal-control-button"
+                  style={{
+                    width: window.innerWidth >= 2000 ? '50px' : window.innerWidth >= 1440 ? '45px' : '40px',
+                    height: window.innerWidth >= 2000 ? '50px' : window.innerWidth >= 1440 ? '45px' : '40px'
+                  }}
                   aria-label="View Details"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
+                    width={window.innerWidth >= 2000 ? "24" : window.innerWidth >= 1440 ? "20" : "18"}
+                    height={window.innerWidth >= 2000 ? "24" : window.innerWidth >= 1440 ? "20" : "18"}
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"

@@ -381,7 +381,7 @@ function ShoppingListing({ categorySlug }) {
         `${baseUrl}${getCategoryUrl}` :
         `${baseUrl}/shop/collections/${categoryMapping.find(cat => cat.id === currentCategory._id)?.slug || ''}`;
 
-      data.name = `${currentCategory.name} Collection | Premium Sarees | Rachana Boutique`;
+      data.name = `${currentCategory.name} Collection | Rachana Boutique`;
       data.url = categoryUrl;
       data.description = getCategoryDescription || `Explore our ${currentCategory.name} collection of premium handcrafted sarees featuring exquisite designs and authentic craftsmanship. Each piece is carefully selected to ensure the highest quality.`;
       data.image = currentCategory.image || banner;
@@ -454,7 +454,7 @@ function ShoppingListing({ categorySlug }) {
         <meta name="format-detection" content="telephone=no" />
 
         {/* Open Graph tags - Enhanced for better social sharing */}
-        <meta property="og:title" content={currentCategory ? `${currentCategory?.name} Collection | Premium Sarees | Rachana Boutique` : 'Premium Saree Collections | Handcrafted Ethnic Wear | Rachana Boutique'} />
+        <meta property="og:title" content={currentCategory ? `${currentCategory?.name} Collection | Rachana Boutique` : 'Premium Saree Collections | Handcrafted Ethnic Wear | Rachana Boutique'} />
         <meta property="og:description" content={currentCategory ?
           `Explore our exquisite ${currentCategory.name} saree collection featuring premium handcrafted designs with authentic craftsmanship. Each piece is carefully selected for quality and beauty.` :
           `Discover our premium saree collections at Rachana Boutique featuring exquisite handcrafted designs. Browse our Tussar, Banaras, Cotton, Celebrity-inspired collections.`
@@ -471,7 +471,7 @@ function ShoppingListing({ categorySlug }) {
 
         {/* Twitter Card tags - Enhanced for better social sharing */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={currentCategory ? `${currentCategory?.name} Collection | Premium Sarees | Rachana Boutique` : 'Premium Saree Collections | Handcrafted Ethnic Wear | Rachana Boutique'} />
+        <meta name="twitter:title" content={currentCategory ? `${currentCategory?.name} Collection | Rachana Boutique` : 'Premium Saree Collections | Handcrafted Ethnic Wear | Rachana Boutique'} />
         <meta name="twitter:description" content={currentCategory ?
           `Explore our exquisite ${currentCategory.name} saree collection featuring premium handcrafted designs with authentic craftsmanship. Shop now at Rachana Boutique.` :
           `Discover our premium saree collections at Rachana Boutique featuring exquisite handcrafted designs. Authentic craftsmanship for every occasion.`

@@ -159,13 +159,13 @@ function ShoppingHome() {
     <>
 
       <Helmet>
-        <title>Rachana Boutique | Premium Sarees & Ethnic Wear Collection</title>
+        <title>Rachana Boutique</title>
         <meta name="description" content="Discover the finest handcrafted sarees and ethnic wear at Rachana Boutique. Exclusive designs, premium quality, and authentic craftsmanship for every occasion. Shop now!" />
         <meta name="keywords" content="Rachana Boutique, sarees online, buy sarees, silk sarees, wedding sarees, designer sarees, traditional sarees, ethnic wear, Indian fashion, premium sarees, handcrafted sarees, Banarasi sarees, Tussar sarees, Cotton sarees, Organza sarees, Kora sarees" />
         <meta name="robots" content="index, follow" />
 
         {/* Open Graph tags for better social media sharing */}
-        <meta property="og:title" content="Rachana Boutique | Premium Sarees & Ethnic Wear Collection" />
+        <meta property="og:title" content="Rachana Boutique" />
         <meta property="og:description" content="Discover the finest handcrafted sarees and ethnic wear at Rachana Boutique. Exclusive designs, premium quality, and authentic craftsmanship for every occasion." />
         <meta property="og:image" content={bannersList && bannersList.length > 0 ? bannersList[0].image : ''} />
         <meta property="og:url" content="https://rachanaboutique.in" />
@@ -174,7 +174,7 @@ function ShoppingHome() {
 
         {/* Twitter Card tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Rachana Boutique | Premium Sarees & Ethnic Wear Collection" />
+        <meta name="twitter:title" content="Rachana Boutique" />
         <meta name="twitter:description" content="Discover the finest handcrafted sarees and ethnic wear at Rachana Boutique. Exclusive designs for every occasion." />
         <meta name="twitter:image" content={bannersList && bannersList.length > 0 ? bannersList[0].image : ''} />
         <meta name="twitter:site" content="@rachanaboutique" />

@@ -679,7 +679,7 @@ function ProductDetailsPage({ open, setOpen }) {
           {/* Enhanced Product Title Section with elegant styling */}
           <div className="text-center flex flex-col items-center relative">
             {/* Subtle decorative element */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+            {/* <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div> */}
 
             {/* Product code displayed above title for better hierarchy */}
             {productDetails?.productCode && (
@@ -690,7 +690,7 @@ function ProductDetailsPage({ open, setOpen }) {
             )}
 
             {/* Main title with refined styling */}
-            <h1 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-3 relative">
+            <h1 className="text-3xl text-black/80 md:text-4xl font-light uppercase tracking-wide mb-3 relative">
               {productDetails?.title}
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 w-12 h-0.5 bg-black"></div>
             </h1>
