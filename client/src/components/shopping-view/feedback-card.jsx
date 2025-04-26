@@ -51,8 +51,8 @@ const FeedbackCard = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Dialog  open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild >
         <button className="px-6 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium flex items-center gap-2">
           <MessageSquare className="h-4 w-4" />
           <span>Share Your Experience</span>

@@ -154,108 +154,108 @@ function ShoppingListing({ categorySlug }) {
     navigate(`/shop/details/${getCurrentProductId}`);
   }
 
-    function handleAddtoCart(product) {
-      const productId = product._id;
-      const totalStock = product.totalStock;
+  function handleAddtoCart(product) {
+    const productId = product._id;
+    const totalStock = product.totalStock;
 
-      // Check if user is authenticated
-      if (!isAuthenticated) {
-        toast({
-          title: "Please log in to add items to the cart!",
-          variant: "destructive",
-        });
-        return Promise.reject("Not authenticated");
-      }
-
-      // Check if product is in stock
-      if (totalStock <= 0) {
-        toast({
-          title: "This product is out of stock",
-          variant: "destructive",
-        });
-        return Promise.reject("Out of stock");
-      }
-
-      // Check if adding one more would exceed stock limit
-      let currentCartItems = cartItems.items || [];
-      if (currentCartItems.length) {
-        const itemIndex = currentCartItems.findIndex(
-          (item) => item.productId === productId
-        );
-        if (itemIndex > -1) {
-          const currentQuantity = currentCartItems[itemIndex].quantity;
-          if (currentQuantity + 1 > totalStock) {
-            toast({
-              title: `Only ${totalStock} quantity available for this item`,
-              variant: "destructive",
-            });
-            return Promise.reject("Exceeds stock limit");
-          }
-        }
-      }
-
-      // Get the first color if available
-      const colorId = product?.colors && product.colors.length > 0
-        ? product.colors[0]._id
-        : undefined;
-
-      // Add to cart
-      return dispatch(
-        addToCart({
-          userId: user?.id,
-          productId: productId,
-          quantity: 1,
-          colorId: colorId,
-        })
-      ).then((data) => {
-        if (data?.payload?.success) {
-          // Force a refresh of the cart items to ensure we have the latest data
-          return dispatch(fetchCartItems(user?.id)).then(() => {
-            toast({
-              title: "Product added to cart",
-            });
-            return data;
-          });
-        }
-        return data;
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in to add items to the cart!",
+        variant: "destructive",
       });
+      return Promise.reject("Not authenticated");
     }
 
-/*   function handleAddtoCart(getCurrentProductId, getTotalStock) {
-    const getCartItems = cartItems.items || [];
+    // Check if product is in stock
+    if (totalStock <= 0) {
+      toast({
+        title: "This product is out of stock",
+        variant: "destructive",
+      });
+      return Promise.reject("Out of stock");
+    }
 
-    if (getCartItems.length) {
-      const indexOfCurrentItem = getCartItems.findIndex(
-        (item) => item.productId === getCurrentProductId
+    // Check if adding one more would exceed stock limit
+    let currentCartItems = cartItems.items || [];
+    if (currentCartItems.length) {
+      const itemIndex = currentCartItems.findIndex(
+        (item) => item.productId === productId
       );
-      if (indexOfCurrentItem > -1) {
-        const getQuantity = getCartItems[indexOfCurrentItem].quantity;
-        if (getQuantity + 1 > getTotalStock) {
+      if (itemIndex > -1) {
+        const currentQuantity = currentCartItems[itemIndex].quantity;
+        if (currentQuantity + 1 > totalStock) {
           toast({
-            title: `Only ${getQuantity} quantity can be added for this item`,
+            title: `Only ${totalStock} quantity available for this item`,
             variant: "destructive",
           });
-          return;
+          return Promise.reject("Exceeds stock limit");
         }
       }
     }
 
-    dispatch(
+    // Get the first color if available
+    const colorId = product?.colors && product.colors.length > 0
+      ? product.colors[0]._id
+      : undefined;
+
+    // Add to cart
+    return dispatch(
       addToCart({
         userId: user?.id,
-        productId: getCurrentProductId,
+        productId: productId,
         quantity: 1,
-        colorId: productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id,
+        colorId: colorId,
       })
     ).then((data) => {
       if (data?.payload?.success) {
-        dispatch(fetchCartItems(user?.id));
-        toast({
-          title: "Product is added to cart",
+        // Force a refresh of the cart items to ensure we have the latest data
+        return dispatch(fetchCartItems(user?.id)).then(() => {
+          toast({
+            title: "Product added to cart",
+          });
+          return data;
         });
       }
+      return data;
     });
-  } */
+  }
+
+  /*   function handleAddtoCart(getCurrentProductId, getTotalStock) {
+      const getCartItems = cartItems.items || [];
+  
+      if (getCartItems.length) {
+        const indexOfCurrentItem = getCartItems.findIndex(
+          (item) => item.productId === getCurrentProductId
+        );
+        if (indexOfCurrentItem > -1) {
+          const getQuantity = getCartItems[indexOfCurrentItem].quantity;
+          if (getQuantity + 1 > getTotalStock) {
+            toast({
+              title: `Only ${getQuantity} quantity can be added for this item`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      }
+  
+      dispatch(
+        addToCart({
+          userId: user?.id,
+          productId: getCurrentProductId,
+          quantity: 1,
+          colorId: productList.find((product) => product._id === getCurrentProductId)?.colors[0]?._id,
+        })
+      ).then((data) => {
+        if (data?.payload?.success) {
+          dispatch(fetchCartItems(user?.id));
+          toast({
+            title: "Product is added to cart",
+          });
+        }
+      });
+    } */
 
   // Optimize fetching by using a single useEffect for filter/sort changes
   useEffect(() => {
@@ -281,24 +281,9 @@ function ShoppingListing({ categorySlug }) {
   const getCategoryDescription = useMemo(() => {
     if (!currentCategory) return "";
 
-    // Return detailed description based on category ID
-    switch (currentCategory._id) {
-      case "67a4cedeb03c04a4eaa7d75d": // Tussar
-        return "Discover our exquisite Tussar saree collection featuring luxurious and lightweight designs with rich texture and natural sheen. Each Tussar saree is handcrafted with meticulous attention to detail, showcasing authentic craftsmanship and traditional techniques. Perfect for festive occasions, weddings, and elegant events, our Tussar sarees bring timeless charm and sophistication to your wardrobe. Browse our complete collection to find the perfect Tussar saree that reflects your personal style and elegance.";
-      case "67a702e745c9ad11e043ca74": // Banaras
-        return "Explore our premium Banaras saree collection featuring handwoven designs with intricate zari work that reflects royal heritage and tradition. Each Banaras saree in our collection is crafted by skilled artisans using time-honored techniques, resulting in exquisite drapes that showcase unparalleled craftsmanship. Perfect for weddings, grand celebrations, and special occasions, our Banaras sarees add a touch of regal elegance to your ensemble. Discover the rich cultural heritage embodied in every piece of our carefully curated Banaras collection.";
-      case "67a4e2b19baa2e6f977087a3": // Cotton
-        return "Browse our exclusive Cotton saree collection featuring soft, breathable, and effortlessly stylish designs that blend comfort with elegance. Each Cotton saree is carefully selected for its premium quality, beautiful patterns, and exquisite craftsmanship. Ideal for daily wear, office settings, casual outings, and formal occasions, our Cotton sarees keep you cool, comfortable, and graceful all day long. Discover the perfect balance of tradition and contemporary style in our diverse range of handpicked Cotton sarees suitable for every season and occasion.";
-      case "67ae15fcee205890c3cd5f98": // Organza
-        return "Indulge in our delicate and dreamy Organza saree collection that exudes sheer elegance with its lightweight flow and translucent beauty. Each Organza saree features intricate embroidery, delicate prints, or stunning embellishments that showcase exceptional craftsmanship and attention to detail. A perfect choice for modern women who love a blend of sophistication and charm, our Organza sarees are ideal for receptions, cocktail parties, and special celebrations. Explore our carefully curated collection to find the perfect Organza saree that makes a statement wherever you go.";
-      case "67ae17d5ee205890c3cd5faf": // Georgette
-        return "Discover our premium Georgette saree collection featuring flowy, stylish, and easy-to-drape designs created for all-day elegance and comfort. Each Georgette saree in our collection showcases beautiful prints, intricate embroidery, or delicate embellishments that highlight the fluid nature of this luxurious fabric. Whether for casual outings, office wear, or grand events, our Georgette sarees add a touch of effortless beauty and sophistication to your appearance. Browse our extensive range to find the perfect Georgette saree that complements your personal style and occasion.";
-      case "67ae2128ee205890c3cd6251": // Celebrity Collection
-        return "Experience the glamour of Bollywood with our exclusive Celebrity Collection featuring sarees inspired by your favorite icons and silver screen moments. Each saree in this collection is carefully designed to capture the essence of celebrity style while maintaining authentic craftsmanship and premium quality. Drape yourself in star-studded elegance and steal the spotlight at parties, events, and special occasions with these statement pieces. Our Celebrity Collection offers you the perfect opportunity to embrace the glamour and sophistication of celebrity fashion while expressing your unique personal style.";
-      default:
-        const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
-        return mappedCategory?.description || `Our ${currentCategory.name} collection features premium handcrafted sarees designed with exquisite attention to detail and authentic craftsmanship. Each piece is carefully selected to ensure the highest quality and most beautiful designs, perfect for special occasions and everyday elegance.`;
-    }
+
+    const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
+    return mappedCategory?.description || "";
   }, [currentCategory, categoryMapping]);
 
   // Get SEO-friendly URL for current category - Always use SEO-friendly URLs
@@ -383,7 +368,7 @@ function ShoppingListing({ categorySlug }) {
 
       data.name = `${currentCategory.name} Collection | Rachana Boutique`;
       data.url = categoryUrl;
-      data.description = getCategoryDescription || `Explore our ${currentCategory.name} collection of premium handcrafted sarees featuring exquisite designs and authentic craftsmanship. Each piece is carefully selected to ensure the highest quality.`;
+      data.description = getCategoryDescription || "";
       data.image = currentCategory.image || banner;
 
       // Add this category to the breadcrumb
@@ -430,7 +415,7 @@ function ShoppingListing({ categorySlug }) {
         <meta
           name="description"
           content={currentCategory ?
-            (getCategoryDescription || `Explore our exquisite ${currentCategory.name} saree collection featuring premium handcrafted designs with authentic craftsmanship. Each ${currentCategory.name} saree is carefully selected for quality and beauty. Shop now at Rachana Boutique.`) :
+            (getCategoryDescription || "") :
             `Discover our premium saree collections at Rachana Boutique featuring exquisite handcrafted designs. Browse our Tussar, Banaras, Cotton, Celebrity-inspired, and other exclusive collections. Authentic craftsmanship for every occasion.`
           }
         />
@@ -550,7 +535,7 @@ function ShoppingListing({ categorySlug }) {
             <div className="bg-white">
               <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
                 <div>
-                 {/*  <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
+                  {/*  <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
                     {currentCategory?.title || "All Products"}
                   </h2>
                   <p className="text-gray-500">
@@ -596,12 +581,26 @@ function ShoppingListing({ categorySlug }) {
                     <h2 className="text-2xl font-light uppercase tracking-wide">
                       {currentCategory?.title || "All Products"}
                     </h2>
+                  </div>
+
+                  <p className="text-gray-500 mb-3">
+                    {isLoading && "Loading..."}
+                  </p>
+
+                  {/* Mobile Filter and Sort Controls */}
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    {/* Mobile Filter */}
+                    <ProductFilter
+                      filters={filters}
+                      setFilters={setFilters}
+                      handleFilter={handleFilter}
+                    />
 
                     {/* Mobile Sort Dropdown */}
                     <DropdownMenu>
-                      <DropdownMenuTrigger className="w-1/4 h-8 flex items-center justify-center gap-1 px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                        <ArrowUpDownIcon className="h-3 w-3" />
-                        <span className="text-md">Sort</span>
+                      <DropdownMenuTrigger className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-gray-50 transition-colors">
+                        <ArrowUpDownIcon className="h-4 w-4" />
+                        <span className="text-sm font-medium">Sort</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="mt-2 bg-white p-2 rounded-md shadow-lg border border-gray-200">
                         <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
@@ -618,21 +617,6 @@ function ShoppingListing({ categorySlug }) {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-
-                  <p className="text-gray-500 mb-3">
-                   {isLoading && "Loading..."}
-                  </p>
-
-                  {/* <p className="text-gray-500 mb-3">
-                    {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
-                  </p> */}
-
-                  {/* Mobile Filter */}
-                  <ProductFilter
-                    filters={filters}
-                    setFilters={setFilters}
-                    handleFilter={handleFilter}
-                  />
                 </div>
               </div>
 
@@ -653,17 +637,9 @@ function ShoppingListing({ categorySlug }) {
               <div className="mb-12 mt-8 p-6 bg-gray-50 rounded-lg">
                 <h2 className="text-2xl font-medium mb-4">{currentCategory ? `About Our ${currentCategory.name} Collection` : 'Our Premium Collections'}</h2>
                 <div className="prose max-w-none">
-                  {currentCategory ? (
-                    <>
-                      <p className="mb-4">{getCategoryDescription || `Our ${currentCategory.name} collection features premium handcrafted sarees designed with exquisite attention to detail and authentic craftsmanship.`}</p>
-                      <p>Each piece in our {currentCategory.name} collection is carefully selected to ensure the highest quality and most beautiful designs. Perfect for special occasions, festivals, and everyday elegance.</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mb-4">Discover our exquisite range of premium handcrafted sarees at Rachana Boutique. Our collections feature the finest fabrics and craftsmanship from across India.</p>
-                      <p>From traditional Banarasi silk to comfortable Cotton, elegant Tussar, and glamorous Celebrity-inspired designs, we offer sarees for every occasion and preference.</p>
-                    </>
-                  )}
+                  {currentCategory  &&
+                      <p className="mb-4">{getCategoryDescription || ""}</p>
+                     }
                 </div>
               </div>
 

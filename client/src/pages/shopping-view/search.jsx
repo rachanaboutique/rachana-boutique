@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { useToast } from "@/components/ui/use-toast";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
+import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -40,7 +41,8 @@ function SearchProducts() {
   // Update search results with a small delay to prevent UI flicker
   const [suggestions, setSuggestions] = useState([]);
 
- /*  useEffect(() => {
+
+  useEffect(() => {
     if (keyword.trim().length > 0) {
       setIsLoading(true);
       // Update URL query parameter
@@ -49,11 +51,18 @@ function SearchProducts() {
       // Small timeout to simulate loading and prevent UI flicker
       const timer = setTimeout(() => {
         const lowerCaseKeyword = keyword.toLowerCase();
-        const filteredProducts = productList.filter((product) =>
-          product.title.toLowerCase().includes(lowerCaseKeyword) ||
-          (product.productCode && product.productCode.toLowerCase().includes(lowerCaseKeyword))
+        // First get exact matches (starts with the keyword)
+        const exactMatches = productList.filter((product) =>
+          product.title.toLowerCase().startsWith(lowerCaseKeyword)
         );
-        setSuggestions(filteredProducts);
+        // Then get partial matches (includes the keyword but doesn't start with it)
+        const partialMatches = productList.filter((product) =>
+          product.title.toLowerCase().includes(lowerCaseKeyword) &&
+          !product.title.toLowerCase().startsWith(lowerCaseKeyword)
+        );
+        // Combine both for complete results
+        const suggestions = [...exactMatches, ...partialMatches];
+        setSuggestions(suggestions);
         setIsLoading(false);
       }, 300);
 
@@ -62,23 +71,18 @@ function SearchProducts() {
       setSuggestions([]);
       setSearchParams({});
     }
-  }, [keyword, productList, setSearchParams]); */
+  }, [keyword, productList, setSearchParams]);
+  // Fetch all products when component mounts
   useEffect(() => {
-    if (keyword.trim().length > 0) {
-      setIsLoading(true);
-      const lowerCaseKeyword = keyword.toLowerCase();
-      const exactMatches = productList.filter((product) =>
-        product.title.toLowerCase().startsWith(lowerCaseKeyword)
-      );
-      const partialMatches = productList.filter((product) =>
-        product.title.toLowerCase().includes(lowerCaseKeyword) &&
-        !product.title.toLowerCase().startsWith(lowerCaseKeyword)
-      );
-      const suggestions = [...exactMatches, ...partialMatches];
-      setSuggestions(suggestions);
-      setIsLoading(false);
-    }
-  }, [keyword, productList]);
+    // Fetch all products with no filters
+    dispatch(
+      fetchAllFilteredProducts({
+        filterParams: null,
+        sortParams: "price-lowtohigh",
+      })
+    );
+  }, [dispatch]);
+
   // Focus input on page load
   useEffect(() => {
     if (inputRef.current) {

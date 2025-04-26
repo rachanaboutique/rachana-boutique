@@ -372,8 +372,8 @@ function ShoppingHeader() {
             </div>
 
             {/* Logo */}
-            <Link to="/shop/home" className="ml-0 md:-ml-8 flex items-center">
-              <img src={logo} alt="Fashion Store Logo" className="mt-1 md:mt-0 h-10 md:h-12" />
+            <Link to="/shop/home" className="ml-4  md:-ml-8 flex items-center">
+              <img src={logo} alt="Fashion Store Logo" className="mt-1 md:mt-0 h-[36px] md:h-12" />
             </Link>
 
             {/* Desktop navigation */}

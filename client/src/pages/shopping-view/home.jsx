@@ -442,7 +442,7 @@ function ShoppingHome() {
         <section className="py-8 md:py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Follow Our Style</h2>
+              <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">THE RACHANA LOOKBOOK</h2>
               <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
               <p className="text-gray-600">Get inspired by our Instagram feed and share your looks with #OurFashionStyle</p>
             </div>

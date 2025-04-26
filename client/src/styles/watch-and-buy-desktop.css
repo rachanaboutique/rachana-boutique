@@ -80,9 +80,8 @@
 }
 
 .nav-arrow:hover {
-  transform: scale(1.1);
+  transform: translateY(-50%) scale(1.1) !important;
 }
-
 .nav-arrow:hover .big-arrow-left,
 .nav-arrow:hover .big-arrow-right {
   background: rgba(0, 0, 0, 0.7);
@@ -354,12 +353,62 @@
 
 
 .watch-buy-slider .slick-dots {
-  bottom: -40px;
+  bottom: -30px;
   font-size: 14px !important;
+  position: absolute;
+  display: block !important;
+  width: 100%;
+  padding: 5px 0;
+  margin: 0;
+  list-style: none;
+  text-align: center;
+  z-index: 20;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+}
+
+.watch-buy-slider .slick-dots li {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin: 0 5px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.watch-buy-slider .slick-dots li button {
+  font-size: 0;
+  line-height: 0;
+  display: block;
+  width: 20px;
+  height: 20px;
+  padding: 5px;
+  cursor: pointer;
+  color: transparent;
+  border: 0;
+  outline: none;
+  background: transparent;
 }
 
 .watch-buy-slider .slick-dots li button:before {
   font-size: 14px !important;
+  line-height: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  content: '•';
+  text-align: center;
+  opacity: .25;
+  color: black;
+}
+
+.watch-buy-slider .slick-dots li.slick-active button:before {
+  opacity: 1;
+  color: black;
+  transform: scale(1.5);
 }
 
 

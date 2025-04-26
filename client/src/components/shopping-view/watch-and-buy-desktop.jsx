@@ -17,6 +17,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [activeItem] = useState(0);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const playerRef = useRef(null);
   const [videoCardHeight, setVideoCardHeight] = useState(600);
   const [videoCardWidth, setVideoCardWidth] = useState(320);
@@ -58,6 +59,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     draggable: false, // Disable dragging for precise control
     cssEase: "ease-out",
     slidesPerRow: 1,
+    afterChange: (current) => setCurrentSlideIndex(current),
     responsive: [
       {
         breakpoint: 1440,
@@ -211,8 +213,8 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
         {/* Watch and Buy Slider - Both Mobile and Desktop */}
         <div className="w-full mb-4 px-1">
           <div className="relative">
-            {/* Big arrow navigation buttons with three sides rounded */}
-            <button
+
+            {/* <button
               onClick={goToPrevSlide}
               className="custom-nav-arrow custom-nav-prev absolute left-2 top-[250px] -translate-y-1/2 z-10"
               aria-label="Previous slide"
@@ -230,7 +232,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
               <div className="big-arrow-right">
                 <ChevronRight className="h-7 w-7 text-white" />
               </div>
-            </button>
+            </button> */}
 
             <Slider ref={sliderRef} {...sliderSettings} className="watch-buy-slider">
               {products.map((productItem, index) => (
@@ -313,6 +315,25 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
             </Slider>
           </div>
         </div>
+
+        {/* Custom Dots Indicator - Absolutely positioned at the bottom */}
+        <div className="flex justify-center mt-8 space-x-2">
+            {Array.from({ length: products.length }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  // When using dots navigation, go directly to the selected slide
+                  if (sliderRef.current) {
+                    sliderRef.current.slickGoTo(index);
+                  }
+                }}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentSlideIndex ? "bg-black border-2 border-gray-300 scale-125" : "bg-gray-400"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              ></button>
+            ))}
+          </div>
       </div>
 
       {/* VideoStacker Modal - When a video is clicked */}
