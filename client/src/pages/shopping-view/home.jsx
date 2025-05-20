@@ -465,9 +465,9 @@ function ShoppingHome() {
         <section className="py-8 md:py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Customer Stories</h2>
+              <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">CUSTOMER STORIES</h2>
               <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
-              <p className="text-gray-600">Discover the heartfelt experiences of our customers, woven with the beauty of our sarees</p>
+              <p className="text-gray-600">Saree Stories: Where Every Thread Weaves a Tale of Confidence</p>
             </div>
             <Testimonials />
           </div>

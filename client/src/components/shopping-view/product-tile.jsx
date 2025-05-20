@@ -95,11 +95,11 @@ const ShoppingProductTile = ({
       >
         {/* Main product image */}
         {image && image.length > 0 ? (
-          <div className="h-[270px] md:h-full aspect-[3/4] overflow-hidden">
+          <div className="h-[270px] md:h-[420px] overflow-hidden">
             <img
               src={image[0]}
               alt={name}
-              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-fit object-center transition-transform duration-500 group-hover:scale-105"
             />
 
             {/* Second image on hover (if available) */}

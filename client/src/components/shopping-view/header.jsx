@@ -148,7 +148,7 @@ function ShoppingHeader() {
           {/* Search icon */}
           <button
             onClick={() => navigate('/shop/search')}
-            className="relative group"
+            className="hidden md:block relative group"
           >
             <Search className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
             <span className="sr-only">Search</span>
@@ -156,7 +156,7 @@ function ShoppingHeader() {
 
           {/* Cart icon */}
           <button
-            className="relative group flex items-center"
+            className="hidden md:block relative group flex items-center"
             onClick={(e) => {
               // Prevent multiple rapid clicks or clicks while already fetching
               if (isFetchingCart.current || cartIsLoading) {
@@ -196,7 +196,7 @@ function ShoppingHeader() {
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-2 cursor-pointer">
+              <div className="-mt-6 md:mt-0 flex items-center gap-2 cursor-pointer">
                 <Avatar className="h-8 w-8 bg-gray-100 border border-gray-200">
                   <AvatarFallback className="bg-gray-100 text-gray-800 font-medium text-sm">
                     {user?.userName ? user.userName[0].toUpperCase() : user?.name ? user.name[0].toUpperCase() : 'U'}
@@ -312,13 +312,16 @@ function ShoppingHeader() {
         <div className="bg-black text-white py-2 px-4">
           <div className="max-w-[1440px] mx-auto flex justify-between items-center">
             <div className="hidden md:flex items-center space-x-4">
-              <a href="tel:+919944783389" className="text-xs flex items-center hover:text-gray-300 transition-colors">
+              <a href="tel:+919944796697" className="text-xs flex items-center hover:text-gray-300 transition-colors">
                 <Phone className="h-3 w-3 mr-1" />
-                +91 9944783389
+                +91 9944796697
               </a>
               <div className="text-xs">|</div>
-              <a href="mailto:rachanaboutique@gmail.com" className="text-xs hover:text-gray-300 transition-colors">
-                rachanaboutique@gmail.com
+              <a href="mailto:rachanaboutiquechennai@gmail.com" className="text-xs hover:text-gray-300 transition-colors md:hidden">
+                rachanaboutiquechennai@gmail.com
+              </a>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=rachanaboutiquechennai@gmail.com" target="_blank" className="hidden md:block text-xs hover:text-gray-300 transition-colors">
+                rachanaboutiquechennai@gmail.com
               </a>
             </div>
 
@@ -337,7 +340,7 @@ function ShoppingHeader() {
               <a href="https://www.facebook.com/profile.php?id=61570600405333" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
                 <Facebook className="h-4 w-4" />
               </a>
-              <a href="https://wa.me/9944783389" className="hover:text-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/9944796697" className="hover:text-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">
                 <FaWhatsapp size={17} />
               </a>
             </div>

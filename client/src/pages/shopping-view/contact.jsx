@@ -95,7 +95,7 @@ const Contact = () => {
             "logo": "https://rachanaboutique.in/logo.png",
             "contactPoint": {
               "@type": "ContactPoint",
-              "telephone": "+91 9944783389",
+              "telephone": "+91 9944796697",
               "contactType": "customer service",
               "email": "contact@rachanaboutique.in",
               "availableLanguage": ["English", "Hindi", "Tamil"]
@@ -139,7 +139,7 @@ const Contact = () => {
                   <Phone className="h-8 w-8 text-gray-700" />
                 </div>
                 <h3 className="text-xl font-medium mb-2">Phone Number</h3>
-                <p className="text-gray-600">+91 9944783389</p>
+                <p className="text-gray-600">+91 9944796697</p>
               </div>
             </div>
           </div>
@@ -240,7 +240,7 @@ const Contact = () => {
                       <span>Facebook</span>
                     </a>
                     <a
-                      href="https://wa.me/9944783389"
+                      href="https://wa.me/9944796697"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
@@ -249,12 +249,21 @@ const Contact = () => {
                       <span>WhatsApp</span>
                     </a>
                     <a
-                      href="mailto:rachanaboutique@gmail.com"
-                      className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
+                     href="https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=rachanaboutiquechennai@gmail.com" target="_blank"
+                      className="hidden md:flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
                     >
                       <Mail size={20} className="text-red-500" />
                       <span>Email</span>
                     </a>
+
+                    <a
+                      href="mailto:rachanaboutiquechennai@gmail.com"
+                      className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors md:hidden"
+                    >
+                      <Mail size={20} className="text-red-500" />
+                      <span>Email</span>
+                    </a>
+                   
                   </div>
                 </div>
               </div>

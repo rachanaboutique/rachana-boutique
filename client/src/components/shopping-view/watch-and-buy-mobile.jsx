@@ -11,12 +11,14 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const videoContainerRef = useRef(null);
   const progressBarRef = useRef(null);
+  const sliderRef = useRef(null);
 
   // Check if device is mobile
   useEffect(() => {
@@ -216,7 +218,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
   // Settings for the slider
   const sliderSettings = {
-    dots: true,
+    dots: false, // We're using custom dots
     infinite: true,
     speed: 500,
     slidesToShow: 5,
@@ -225,6 +227,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     autoplay: true,
     autoplaySpeed: 3000,
     swipeToSlide: true,
+    beforeChange: (_, next) => setCurrentSlideIndex(next),
     responsive: [
       {
         breakpoint: 1280,
@@ -284,7 +287,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         {/* Watch and Buy Slider - Both Mobile and Desktop */}
         <div className="w-full mb-4 px-1">
           <div>
-            <Slider {...sliderSettings} className="watch-buy-slider mobile-watch-buy-slider">
+            <Slider ref={sliderRef} {...sliderSettings} className="watch-buy-slider mobile-watch-buy-slider">
               {products.map((productItem, index) => (
                 <div key={productItem._id} className="pb-2">
                   <div
@@ -366,6 +369,23 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
               ))}
             </Slider>
           </div>
+        </div>
+
+        {/* Custom Dots Indicator */}
+        <div className="custom-dots">
+          {products.slice(0, Math.min(products.length, 10)).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                // When using dots navigation, go directly to the selected slide
+                if (sliderRef.current) {
+                  sliderRef.current.slickGoTo(index);
+                }
+              }}
+              className={`custom-dot ${index === currentSlideIndex ? 'active' : ''}`}
+              aria-label={`Go to slide ${index + 1}`}
+            ></button>
+          ))}
         </div>
       </div>
 

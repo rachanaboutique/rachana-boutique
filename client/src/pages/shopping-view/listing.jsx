@@ -283,6 +283,7 @@ function ShoppingListing({ categorySlug }) {
 
 
     const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
+    console.log(mappedCategory);
     return mappedCategory?.description || "";
   }, [currentCategory, categoryMapping]);
 

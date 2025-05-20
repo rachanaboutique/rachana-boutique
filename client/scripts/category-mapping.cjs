@@ -12,13 +12,13 @@ const categoryMapping = [
   },
   {
     id: "67a702e745c9ad11e043ca74",
-    slug: "cotton-sarees",
+    slug: "banaras-sarees",
     name: "Banaras",
     description: "Handwoven with intricate zari work, our Banaras sarees reflect royal heritage and tradition. These exquisite drapes are perfect for weddings and grand celebrations."
   },
   {
     id: "67a4e2b19baa2e6f977087a3",
-    slug: "banaras-sarees",
+    slug: "cotton-sarees",
     name: "Cotton",
     description: "Soft, breathable, and effortlessly stylish, our Cotton sarees blend comfort with elegance. Ideal for daily wear and formal occasions, they keep you cool and graceful all day."
   },

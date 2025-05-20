@@ -240,23 +240,34 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
             </>
           )}
 
-          {/* Video Preview for Mobile: thumbnail image instead of video */}
+          {/* Video Preview for Mobile: actual video with play button overlay */}
           {item?.video && isMobile && !isMobileCard && (
             <div
-              className="w-full h-32 bg-gray-100"
+              className="w-full h-full bg-gray-100 relative overflow-hidden"
               onContextMenu={(e) => e.preventDefault()}
             >
-              {item?.image && item.image.length > 0 ? (
-                <img
-                  src={item.image[0]}
-                  alt={item.name || "Video thumbnail"}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Play className="w-8 h-8 text-gray-400" />
+              <video
+                ref={(el) => {
+                  videoRef.current = el;
+                  ref(el);
+                }}
+                className="w-full h-full object-cover"
+                src={item.video}
+                loop
+                muted
+                playsInline
+                controlsList="nodownload"
+                onLoadedData={handleVideoLoaded}
+                onError={handleVideoError}
+                preload="metadata"
+                poster={item.image && item.image.length > 0 ? item.image[0] : ''}
+              />
+              {/* Play button overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center">
+                  <Play className="w-6 h-6 text-black" />
                 </div>
-              )}
+              </div>
             </div>
           )}
 
@@ -356,7 +367,50 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
         </div>
       )}
 
-    
+
+      {/* Video Modal for Mobile */}
+      {modalOpen && item?.video && (
+        <div className="fast-moving-video-modal">
+          {/* Close button */}
+          <div className="absolute top-4 right-4 z-50">
+            <button
+              onClick={handleCloseModal}
+              className="p-2 rounded-full bg-black/50 text-white"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Full screen video player */}
+          <div className="w-full h-full flex items-center justify-center">
+            <video
+              className="w-full h-full object-cover"
+              src={item.video}
+              autoPlay
+              loop
+              playsInline
+              controls
+              controlsList="nodownload"
+              onContextMenu={(e) => e.preventDefault()}
+            />
+          </div>
+
+          {/* Product info overlay at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+            <h3 className="text-white text-lg font-semibold mb-2">{item?.name || item?.title}</h3>
+            <div className="flex justify-between items-center">
+              <p className="text-white font-bold">₹{item?.price || item?.salePrice}</p>
+              <button
+                onClick={(e) => handleAddToCartClick(e)}
+                className="px-4 py-2 bg-white text-black rounded-full flex items-center gap-2 text-sm font-medium"
+              >
+                <ShoppingBag size={16} />
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

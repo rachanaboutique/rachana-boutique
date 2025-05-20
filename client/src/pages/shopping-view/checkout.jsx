@@ -2,13 +2,13 @@ import Address from "@/components/shopping-view/address";
 import img from "../../assets/jamandi.png";
 import { useDispatch, useSelector } from "react-redux";
 import UserCartItemsContent from "@/components/shopping-view/cart-items-content";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createNewOrder, capturePayment } from "@/store/shop/order-slice";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader } from "../../components/ui/loader";
 import { Helmet } from "react-helmet-async";
-import { ChevronRight, ShoppingBag, MapPin, CreditCard } from "lucide-react";
+import { ShoppingBag, MapPin, CreditCard } from "lucide-react";
 
 function ShoppingCheckout() {
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -16,6 +16,7 @@ function ShoppingCheckout() {
   const { approvalURL } = useSelector((state) => state.shopOrder);
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymentStart] = useState(false);
+  const [razorpayInstance, setRazorpayInstance] = useState(null);
   const { isPaymentLoading } = useSelector((state) => state.shopOrder);
   const dispatch = useDispatch();
   const { toast } = useToast();
@@ -45,6 +46,15 @@ function ShoppingCheckout() {
 
   // Format the total to 2 decimal places for display
   const formattedTotal = totalCartAmount.toFixed(2);
+
+  // Function to reset payment state
+  const resetPaymentState = () => {
+    setIsPaymentStart(false);
+    setRazorpayInstance(null);
+  };
+
+  // Handle window beforeunload event to reset payment state
+  window.addEventListener('beforeunload', resetPaymentState);
 
   function handleInitiateRazorpayPayment() {
     if (cartItems.length === 0) {
@@ -96,7 +106,8 @@ function ShoppingCheckout() {
       if (data?.payload?.success) {
         const { razorpayOrderId, amount, currency } = data.payload;
 
-        if (typeof Razorpay === "undefined") {
+        // Check if Razorpay is available in the global scope
+        if (typeof window.Razorpay === "undefined") {
           toast({
             title: "Razorpay SDK is not loaded. Please refresh the page.",
             variant: "destructive",
@@ -130,7 +141,7 @@ function ShoppingCheckout() {
                   title: "Payment was successful, but order confirmation failed. Please contact support.",
                   variant: "destructive",
                 });
-                setIsPaymentStart(false);
+                resetPaymentState();
               }
             });
           },
@@ -144,17 +155,55 @@ function ShoppingCheckout() {
           },
         };
 
-        const razorpay = new Razorpay(options);
-        razorpay.open();
+        try {
+          // Create and store the Razorpay instance
+          const razorpay = new window.Razorpay(options);
+          setRazorpayInstance(razorpay);
 
-        razorpay.on("payment.failed", function (response) {
+          // Open the payment modal
+          razorpay.open();
+
+          // Handle payment failure
+          razorpay.on("payment.failed", function (response) {
+            toast({
+              title: "Payment failed. Please try again.",
+              description: response.error.description,
+              variant: "destructive",
+            });
+            resetPaymentState();
+          });
+
+          // Handle modal close event
+          razorpay.on("modal.close", function () {
+            // Reset payment state when modal is closed without completing payment
+            resetPaymentState();
+            toast({
+              title: "Payment process was cancelled.",
+              variant: "warning",
+            });
+          });
+
+          // Set a safety timeout to reset the state if other handlers fail
+          setTimeout(() => {
+            // Check if payment is still in progress after 5 minutes
+            if (isPaymentStart) {
+              resetPaymentState();
+              toast({
+                title: "Payment process timed out.",
+                description: "Please try again.",
+                variant: "warning",
+              });
+            }
+          }, 5 * 60 * 1000); // 5 minutes timeout
+        } catch (error) {
+          console.error("Razorpay error:", error);
+          resetPaymentState();
           toast({
-            title: "Payment failed. Please try again.",
-            description: response.error.description,
+            title: "Payment initialization failed.",
+            description: "Please try again later.",
             variant: "destructive",
           });
-          setIsPaymentStart(false);
-        });
+        }
       } else {
         toast({
           title: "Order creation failed. Please try again.",
@@ -164,6 +213,22 @@ function ShoppingCheckout() {
       }
     });
   }
+
+  // Cleanup effect to reset payment state when component unmounts
+  useEffect(() => {
+    return () => {
+      if (razorpayInstance) {
+        // Try to close the Razorpay modal if it's open
+        try {
+          razorpayInstance.close();
+        } catch (error) {
+          console.error("Error closing Razorpay instance:", error);
+        }
+      }
+      resetPaymentState();
+      window.removeEventListener('beforeunload', resetPaymentState);
+    };
+  }, [razorpayInstance]);
 
   if (isPaymentLoading) return <Loader />;
 

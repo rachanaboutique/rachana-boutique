@@ -106,6 +106,38 @@
   height: 100% !important;
 }
 
+/* Custom dots styling */
+.custom-dots {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.custom-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin: 0 4px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.custom-dot.active {
+  background-color: #000;
+  border: 1px solid #ccc;
+  transform: scale(1.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.custom-dot:not(.active) {
+  background-color: #aaa;
+}
+
+.custom-dot:not(.active):hover {
+  background-color: #666;
+}
+
 /* VideoStacker wrapper styles for full height */
 .video-stacker-wrapper {
   height: 100vh;

@@ -6,7 +6,7 @@ import { fetchProductDetails } from "@/store/shop/products-slice";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { addReview, getReviews } from "@/store/shop/review-slice";
 import StarRatingComponent from "../../components/common/star-rating";
-import ZoomableImage from "../../components/ui/zoomable-dialog-box";
+import ZoomableImage from "../../components/ui/zoomable-image";
 import { Button } from "../../components/ui/button";
 import { Separator } from "../../components/ui/separator";
 import { Textarea } from "../../components/ui/textarea";
@@ -46,7 +46,7 @@ function ProductDetailsPage({ open, setOpen }) {
   const [slideDirection, setSlideDirection] = useState(null);
   const [isSliding, setIsSliding] = useState(false);
   const swipeThreshold = 50; // Minimum swipe distance to trigger navigation
-  
+
   // Touch references for direct swipe handling
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
@@ -70,7 +70,7 @@ function ProductDetailsPage({ open, setOpen }) {
       }, 50);
     }, 150);
   };
-  
+
   // Direct touch handlers for the main container
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -84,7 +84,7 @@ function ProductDetailsPage({ open, setOpen }) {
   const handleTouchEnd = () => {
     if (touchStartX.current !== null && touchEndX.current !== null) {
       const distance = touchEndX.current - touchStartX.current;
-      
+
       // Check if the swipe distance is significant enough
       if (Math.abs(distance) > swipeThreshold && productDetails?.image && productDetails.image.length > 1) {
         // Determine swipe direction and navigate
@@ -92,7 +92,7 @@ function ProductDetailsPage({ open, setOpen }) {
         handleImageNavigation(direction);
       }
     }
-    
+
     // Reset touch positions
     touchStartX.current = null;
     touchEndX.current = null;
@@ -609,7 +609,7 @@ function ProductDetailsPage({ open, setOpen }) {
           <div className="flex flex-col gap-4">
 
             {/* Main Image Container */}
-            <div 
+            <div
               className="flex-1 relative"
               ref={mainImageRef}
               onTouchStart={handleTouchStart}
@@ -702,7 +702,7 @@ function ProductDetailsPage({ open, setOpen }) {
           </div>
 
           {/* Product Description with creative icons */}
-          <div className="text-center max-w-2xl mx-auto">
+          <div className="hidden md:block text-center max-w-2xl mx-auto">
             {productDetails?.description && (
               <div className="space-y-5">
                 {renderDescriptionBulletPoints(productDetails.description).map((point, index) => {
@@ -851,6 +851,28 @@ function ProductDetailsPage({ open, setOpen }) {
             </div>
           </div>
         </div>
+
+        <div className="text-center max-w-2xl mx-auto md:hidden">
+            {productDetails?.description && (
+              <div className="space-y-5">
+                {renderDescriptionBulletPoints(productDetails.description).map((point, index) => {
+                  // Array of Lucide icons to use for description points
+                  const icons = [CheckCircle, Star, Sparkles, Gem, Award, Heart, Scissors, Palette, Zap, Leaf];
+                  // Select an icon based on the index (cycling through the array)
+                  const IconComponent = icons[index % icons.length];
+
+                  return (
+                    <div key={index} className="flex items-start gap-3 text-left transform transition-all duration-300 hover:translate-x-1">
+                      <div className="text-black mt-1 flex-shrink-0">
+                        <IconComponent className="h-5 w-5 text-gray-700" strokeWidth={1.5} />
+                      </div>
+                      <div className="text-gray-700 text-lg">{point}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
 
 

@@ -81,11 +81,11 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
 
 // Updated uploadVideo function with file size limit and progress tracking
 const uploadVideo = async (file) => {
-  // Check file size - limit to 99MB (99 * 1024 * 1024 bytes)
-  const MAX_FILE_SIZE = 99 * 1024 * 1024; // 99MB in bytes
+  // Check file size - limit to 25MB (25 * 1024 * 1024 bytes)
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB in bytes
   if (file.size > MAX_FILE_SIZE) {
     setVideoUploadStatus("error");
-    setUploadError(`File size exceeds 99MB limit. Please select a smaller file.`);
+    setUploadError(`File size exceeds 25MB limit. Please select a smaller file.`);
     return;
   }
 
