@@ -22,7 +22,7 @@
 
 
 body {
-font-family: aptos, sans-serif;
+ font-family: 'Lato', serif;
 }
 @layer base {
   :root {

@@ -18,8 +18,8 @@ import banner from '@/assets/allproducts.png';
 function ShoppingListing({ categorySlug }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { productList, isLoading } = useSelector((state) => state.shopProducts);
-  const { categoriesList } = useSelector((state) => state.shopCategories);
+  const { productList, isLoading: productsLoading } = useSelector((state) => state.shopProducts);
+  const { categoriesList, isLoading: categoriesLoading } = useSelector((state) => state.shopCategories);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { cartItems } = useSelector((state) => state.shopCart);
   const [searchParams] = useSearchParams();
@@ -223,7 +223,7 @@ function ShoppingListing({ categorySlug }) {
 
   /*   function handleAddtoCart(getCurrentProductId, getTotalStock) {
       const getCartItems = cartItems.items || [];
-  
+
       if (getCartItems.length) {
         const indexOfCurrentItem = getCartItems.findIndex(
           (item) => item.productId === getCurrentProductId
@@ -239,7 +239,7 @@ function ShoppingListing({ categorySlug }) {
           }
         }
       }
-  
+
       dispatch(
         addToCart({
           userId: user?.id,
@@ -406,8 +406,26 @@ function ShoppingListing({ categorySlug }) {
   }, [currentCategory, location.pathname, location.search, filteredProducts?.length, getCategoryDescription, getCategoryUrl]);
 
 
-  // Show loader only when productList is initially loading (i.e. empty)
-  if (isLoading && productList.length === 0) return <Loader />;
+  // Show loader when either products or categories are loading and we don't have initial data
+  const isInitialLoading = (productsLoading && productList.length === 0) || (categoriesLoading && categoriesList.length === 0);
+
+  if (isInitialLoading) return (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "90vh",
+      color: "#333333",
+      fontSize: 24,
+      fontWeight: 600,
+      letterSpacing: 1,
+      textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
+    }}
+  >
+    Loading...
+  </div>
+);
 
   return (
     <>
@@ -540,7 +558,7 @@ function ShoppingListing({ categorySlug }) {
                     {currentCategory?.title || "All Products"}
                   </h2>
                   <p className="text-gray-500">
-                    {isLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
+                    {productsLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
                   </p> */}
                 </div>
                 <div className="mt-4 md:mt-0 flex items-center gap-3">
@@ -585,7 +603,7 @@ function ShoppingListing({ categorySlug }) {
                   </div>
 
                   <p className="text-gray-500 mb-3">
-                    {isLoading && "Loading..."}
+                    {productsLoading && "Loading..."}
                   </p>
 
                   {/* Mobile Filter and Sort Controls */}

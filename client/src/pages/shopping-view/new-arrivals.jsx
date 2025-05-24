@@ -11,7 +11,6 @@ import { sortOptions } from "@/config";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import {
   fetchAllFilteredProducts,
-  fetchProductDetails,
 } from "@/store/shop/products-slice";
 import { ArrowUpDownIcon, ShoppingBag } from "lucide-react";
 import Breadcrumb from "@/components/shopping-view/breadcrumb";
@@ -25,7 +24,7 @@ import newArrivalsBanner from "@/assets/newarrivals.png";
 function NewArrivals() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { productList, productDetails, isLoading } = useSelector(
+  const { productList, isLoading: productsLoading } = useSelector(
     (state) => state.shopProducts
   );
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -195,8 +194,25 @@ function NewArrivals() {
     }
   };
 
-  // Show loader only when the product list is not yet available
-  if (isLoading && productList.length === 0) return <Loader />;
+  // Show loader when products are loading and we don't have initial data
+  // if (productsLoading && productList.length === 0) return <Loader />;
+    if (productsLoading && productList.length === 0) return (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "90vh",
+      color: "#333333",
+      fontSize: 24,
+      fontWeight: 600,
+      letterSpacing: 1,
+      textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
+    }}
+  >
+    Loading...
+  </div>
+);
 
   return (
     <>
@@ -293,7 +309,7 @@ function NewArrivals() {
                   New Arrivals
                 </h2>
                 <p className="text-gray-500">
-                  {isLoading ? "Loading..." : `Showing ${newArrivalProducts.length} products`}
+                  {productsLoading ? "Loading..." : `Showing ${newArrivalProducts.length} products`}
                 </p> */}
               </div>
               <div className="mt-4 md:mt-0">
@@ -348,7 +364,7 @@ function NewArrivals() {
               </div>
 
               <p className="text-gray-500 mt-2 md:mt-0">
-                {isLoading && "Loading..."}
+                {productsLoading && "Loading..."}
               </p>
               {/* <p className="text-gray-500">
                   {isLoading ? "Loading..." : `Showing ${newArrivalProducts.length} products`}

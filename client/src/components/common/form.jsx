@@ -12,6 +12,7 @@ import {
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
+import { getOptimizedImageUrl, getOptimizedVideoUrl } from "../../lib/utils";
 
 
 function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText, isBtnDisabled }) {
@@ -24,27 +25,36 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
 
   // Helper function for uploading a color image to Cloudinary.
   const uploadColorImage = async (file, idx, controlItem) => {
+    // Check file size - limit to 1.2MB (1.2 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 1.2MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "error" }));
+      console.error(`File size exceeds 1.2MB limit. Please select a smaller image.`);
+      return;
+    }
+
     setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "uploading" }));
     const data = new FormData();
     data.append("my_file", file);
-  
+
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/admin/products/upload-image`,
         data
       );
-  
+
       if (response?.data?.success) {
         const secureUrl = response.data.result[0].secure_url; // Use secure_url for HTTPS
+        const optimizedUrl = getOptimizedImageUrl(secureUrl); // Apply q_auto,f_auto transformations
         const colorsArray = Array.isArray(formData[controlItem.name]) ? formData[controlItem.name] : [];
         const updatedColors = [...colorsArray];
-        updatedColors[idx] = { ...updatedColors[idx], image: secureUrl };
-  
+        updatedColors[idx] = { ...updatedColors[idx], image: optimizedUrl };
+
         setFormData({
           ...formData,
           [controlItem.name]: updatedColors,
         });
-  
+
         setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "uploaded" }));
       }
     } catch (err) {
@@ -52,40 +62,17 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
       setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "idle" }));
     }
   };
-  
+
 
   // Helper function for uploading video to Cloudinary.
-/*   const uploadVideo = async (file) => {
-    setVideoUploadStatus("uploading");
-    const data = new FormData();
-    data.append("my_file", file);
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/admin/products/upload-video`,
-        data
-      );
-
-      if (response?.data?.success) {
-        setFormData({
-          ...formData,
-          video: response.data.result.url,
-        });
-        setVideoUploadStatus("uploaded");
-      }
-    } catch (err) {
-      console.error("Error uploading video: ", err);
-      setVideoUploadStatus("idle");
-    }
-  };
- */
 
 // Updated uploadVideo function with file size limit and progress tracking
 const uploadVideo = async (file) => {
-  // Check file size - limit to 25MB (25 * 1024 * 1024 bytes)
-  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB in bytes
+  // Check file size - limit to 10MB (10 * 1024 * 1024 bytes)
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
   if (file.size > MAX_FILE_SIZE) {
     setVideoUploadStatus("error");
-    setUploadError(`File size exceeds 25MB limit. Please select a smaller file.`);
+    setUploadError(`File size exceeds 10MB limit. Please select a smaller file.`);
     return;
   }
 
@@ -97,6 +84,8 @@ const uploadVideo = async (file) => {
     cloudinaryFormData.append("file", file);
     cloudinaryFormData.append("upload_preset", "watch_any_buy");
     cloudinaryFormData.append("resource_type", "video");
+
+    // Transformations will be applied at delivery time via getOptimizedVideoUrl
 
     // Use XMLHttpRequest to track upload progress
     return new Promise((resolve, reject) => {
@@ -114,10 +103,11 @@ const uploadVideo = async (file) => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const data = JSON.parse(xhr.responseText);
 
-          // Set the Cloudinary URL in the form data
+          // Set the Cloudinary URL in the form data with optimizations
+          const optimizedVideoUrl = getOptimizedVideoUrl(data.secure_url);
           setFormData((prevFormData) => ({
             ...prevFormData,
-            video: data.secure_url,
+            video: optimizedVideoUrl,
           }));
 
           setVideoUploadStatus("uploaded");
@@ -135,7 +125,7 @@ const uploadVideo = async (file) => {
         reject(new Error("Network error during upload"));
       };
 
-      xhr.open("POST", "https://api.cloudinary.com/v1_1/dhkdsvdvr/video/upload", true);
+      xhr.open("POST", "https://api.cloudinary.com/v1_1/dkqt39aad/video/upload", true);
       xhr.send(cloudinaryFormData);
     });
   } catch (err) {
@@ -306,6 +296,9 @@ const uploadVideo = async (file) => {
                     <span className="text-sm">
                       {colorsUploadStatus[idx] === "uploading" && "Uploading..."}
                       {colorsUploadStatus[idx] === "uploaded" && "Uploaded"}
+                      {colorsUploadStatus[idx] === "error" && (
+                        <span className="text-red-600">File too large (max 1.2MB)</span>
+                      )}
                     </span>
                     <Button
                       type="button"
@@ -407,6 +400,15 @@ const uploadVideo = async (file) => {
     return element;
   }
 
+  // Helper function to check if video upload is required and completed
+  const isVideoUploadRequired = () => {
+    const hasVideoField = formControls.some(control => control.componentType === "video");
+    return hasVideoField && formData.isWatchAndBuy && !formData.video;
+  };
+
+  // Determine if button should be disabled
+  const shouldDisableButton = isBtnDisabled || isVideoUploadRequired() || videoUploadStatus === "uploading";
+
   return (
     <form onSubmit={onSubmit}>
       <div className="flex flex-col gap-3">
@@ -417,7 +419,7 @@ const uploadVideo = async (file) => {
           </div>
         ))}
       </div>
-      <Button disabled={isBtnDisabled} type="submit" className="mt-2 w-full hover:bg-accent">
+      <Button disabled={shouldDisableButton} type="submit" className="mt-2 w-full hover:bg-accent">
         {buttonText || "Submit"}
       </Button>
     </form>

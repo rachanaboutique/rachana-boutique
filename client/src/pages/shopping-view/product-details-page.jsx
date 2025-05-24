@@ -750,7 +750,7 @@ function ProductDetailsPage({ open, setOpen }) {
 
           {/* Color Selection with clean styling */}
           {productDetails?.colors && productDetails.colors.length > 0 && (
-            <div className="mt-2 w-full">
+            <div className="bg-black/5 p-4 mt-2 w-full">
               <div className="w-full text-center">
                 <Label className="text-lg font-semibold uppercase tracking-wide mb-4 block relative inline-block">
                   Colors

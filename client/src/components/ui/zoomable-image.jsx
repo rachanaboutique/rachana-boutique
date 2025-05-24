@@ -70,7 +70,8 @@ function ZoomableImage({ imageSrc, imageAlt, onZoomData, onNavigate, images }) {
   return (
     <div className="flex flex-col gap-4" ref={containerRef}>
       <div
-        className="w-full h-[550px] md:w-[620px] md:h-[900px] relative overflow-hidden border shadow-md cursor-pointer"
+       className="w-full h-[550px] md:w-[620px] md:h-[900px] relative overflow-hidden border shadow-md cursor-pointer"
+
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

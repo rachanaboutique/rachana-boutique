@@ -181,7 +181,7 @@ const Footer = () => {
             {/* About Section */}
             <div className="md:col-span-4">
               <Link to="/shop/home" className="flex items-center">
-                <img src={logo} alt="Logo" className="w-3/4 mx-auto md:mx-0" />
+                <img src={logo} alt="Logo" className="w-3/5 mx-auto md:mx-0" />
               </Link>
               <p className="text-justify text-sm md:text-base my-4">
                 Rachana Boutique brings you a handpicked collection of sarees that blend tradition with a modern flair. each piece is chosen for its quality, style, and craftsmanship. Draping you in timeless elegance, one saree at a time.
@@ -189,7 +189,7 @@ const Footer = () => {
             </div>
 
             {/* Explore Products */}
-            <div className="md:col-span-2">
+            <div className="ml-0 md:ml-12 md:col-span-2">
               <h4 className="text-lg font-semibold text-foreground mb-4">Explore Products</h4>
               <ul className="space-y-2">
                 <li><Link to="/shop/home" className="text-md hover:underline hover:text-rose-600 transition">Home</Link></li>

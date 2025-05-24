@@ -18,10 +18,12 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
   // Extract public ID from Cloudinary URL
   const extractPublicId = (url) => {
     if (!url || !url.includes('cloudinary.com')) {
+      console.log('Not a Cloudinary URL, returning as-is:', url);
       return url;
     }
 
     try {
+      console.log('Processing Cloudinary URL:', url);
 
       // For URL like: https://res.cloudinary.com/dkqt39aad/video/upload/q_auto/f_auto/v1748080301/cpc8j2kmwsvkexprtoyh.mp4
       // We need to extract: cpc8j2kmwsvkexprtoyh
@@ -29,21 +31,26 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
       // Find the upload part and get everything after it
       const uploadIndex = url.indexOf('/upload/');
       if (uploadIndex === -1) {
+        console.log('No /upload/ found in URL');
         return url;
       }
 
       // Get the part after /upload/
       const afterUpload = url.substring(uploadIndex + 8); // 8 = length of '/upload/'
+      console.log('After upload part:', afterUpload);
 
       // Split by '/' to get segments
       const segments = afterUpload.split('/');
+      console.log('URL segments:', segments);
 
       // Find the last segment (which contains the public ID + extension)
       const lastSegment = segments[segments.length - 1];
+      console.log('Last segment:', lastSegment);
 
       // Remove file extension (.mp4, .mov, etc.)
       const publicId = lastSegment.replace(/\.[^/.]+$/, '');
 
+      console.log('Final extracted public ID:', publicId, 'from URL:', url);
       return publicId;
     } catch (error) {
       console.error('Error extracting public ID:', error);
@@ -80,6 +87,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
     if (!isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current) return;
 
     try {
+      console.log('Initializing Cloudinary player for:', videoUrl);
 
       // Create a timeout to ensure DOM is ready
       const initTimeout = setTimeout(() => {
@@ -109,6 +117,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
           }
         });
 
+        console.log('Cloudinary player initialized:', playerInstanceRef.current);
         setIsPlayerReady(true);
 
         // Set up event listeners
@@ -142,31 +151,39 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
           });
 
           playerInstanceRef.current.on('loadstart', () => {
+            console.log('Video load started');
           });
 
           playerInstanceRef.current.on('loadeddata', () => {
+            console.log('Video data loaded');
           });
 
           playerInstanceRef.current.on('loadedmetadata', () => {
+            console.log('Video metadata loaded');
             setIsPlayerReady(true);
           });
 
           playerInstanceRef.current.on('canplay', () => {
+            console.log('Video can start playing');
           });
 
           playerInstanceRef.current.on('playing', () => {
+            console.log('Video is playing');
           });
 
           playerInstanceRef.current.on('pause', () => {
+            console.log('Video is paused');
           });
 
           playerInstanceRef.current.on('ready', () => {
+            console.log('Cloudinary player ready');
             setIsPlayerReady(true);
 
             // Set video source immediately when player is ready
             if (videoUrl) {
               try {
                 const publicId = extractPublicId(videoUrl);
+                console.log('Setting video source on ready with public ID:', publicId);
 
                 playerInstanceRef.current.source(publicId, {
                   transformation: {
@@ -175,15 +192,18 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
                   }
                 });
 
+                console.log('Video source set successfully');
 
                 // If autoplay is enabled, start playing immediately
                 if (autoplay) {
+                  console.log('Autoplay enabled, starting video');
                   setTimeout(() => {
                     if (playerInstanceRef.current) {
                       try {
                         const playPromise = playerInstanceRef.current.play();
                         if (playPromise !== undefined) {
                           playPromise.then(() => {
+                            console.log('Autoplay started successfully');
                           }).catch(error => {
                             console.warn('Autoplay failed:', error);
                           });
@@ -249,6 +269,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
     if (playerInstanceRef.current && videoUrl) {
       try {
         const publicId = extractPublicId(videoUrl);
+        console.log('Setting video source with public ID:', publicId);
 
         playerInstanceRef.current.source(publicId, {
           transformation: {
@@ -268,6 +289,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
     return () => {
       if (playerInstanceRef.current) {
         try {
+          console.log('Cleaning up Cloudinary player');
 
           // Pause the video first
           if (typeof playerInstanceRef.current.pause === 'function') {
