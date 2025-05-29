@@ -2,343 +2,11 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Slider from "react-slick";
+import ReactPlayer from "react-player";
 import { motion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, ShoppingBag } from "lucide-react";
 import FastMovingCard from "./fast-moving-card";
 import "../../styles/watch-and-buy-desktop.css";
-
-// Cloudinary Video Player Component
-function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onError, className, style, autoplay = false }) {
-  const videoRef = useRef();
-  const playerInstanceRef = useRef();
-  const containerRef = useRef();
-  const [isCloudinaryLoaded, setIsCloudinaryLoaded] = useState(false);
-  const [isPlayerReady, setIsPlayerReady] = useState(false);
-
-  // Extract public ID from Cloudinary URL
-  const extractPublicId = (url) => {
-    if (!url || !url.includes('cloudinary.com')) {
-      console.log('Not a Cloudinary URL, returning as-is:', url);
-      return url;
-    }
-
-    try {
-      console.log('Processing Cloudinary URL:', url);
-
-      // For URL like: https://res.cloudinary.com/dkqt39aad/video/upload/q_auto/f_auto/v1748080301/cpc8j2kmwsvkexprtoyh.mp4
-      // We need to extract: cpc8j2kmwsvkexprtoyh
-
-      // Find the upload part and get everything after it
-      const uploadIndex = url.indexOf('/upload/');
-      if (uploadIndex === -1) {
-        console.log('No /upload/ found in URL');
-        return url;
-      }
-
-      // Get the part after /upload/
-      const afterUpload = url.substring(uploadIndex + 8); // 8 = length of '/upload/'
-      console.log('After upload part:', afterUpload);
-
-      // Split by '/' to get segments
-      const segments = afterUpload.split('/');
-      console.log('URL segments:', segments);
-
-      // Find the last segment (which contains the public ID + extension)
-      const lastSegment = segments[segments.length - 1];
-      console.log('Last segment:', lastSegment);
-
-      // Remove file extension (.mp4, .mov, etc.)
-      const publicId = lastSegment.replace(/\.[^/.]+$/, '');
-
-      console.log('Final extracted public ID:', publicId, 'from URL:', url);
-      return publicId;
-    } catch (error) {
-      console.error('Error extracting public ID:', error);
-      return url;
-    }
-  };
-
-  // Check if Cloudinary is loaded
-  useEffect(() => {
-    const checkCloudinary = () => {
-      if (window.cloudinary) {
-        setIsCloudinaryLoaded(true);
-        return true;
-      }
-      return false;
-    };
-
-    if (checkCloudinary()) {
-      return;
-    }
-
-    // Poll for Cloudinary to be loaded
-    const interval = setInterval(() => {
-      if (checkCloudinary()) {
-        clearInterval(interval);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Initialize Cloudinary player
-  useEffect(() => {
-    if (!isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current) return;
-
-    try {
-      console.log('Initializing Cloudinary player for:', videoUrl);
-
-      // Create a timeout to ensure DOM is ready
-      const initTimeout = setTimeout(() => {
-        if (!videoRef.current) {
-          console.warn('Video element not available for initialization');
-          return;
-        }
-
-        // Ensure video element is properly set up
-        const videoElement = videoRef.current;
-        videoElement.preload = 'metadata';
-        videoElement.playsInline = true;
-        videoElement.muted = true;
-
-        playerInstanceRef.current = window.cloudinary.videoPlayer(videoElement, {
-          cloud_name: 'dkqt39aad',
-          controls: false,
-          autoplay: autoplay,
-          muted: true,
-          loop: false,
-          fluid: true,
-          playsinline: true,
-          preload: 'metadata',
-          transformation: {
-            quality: 'auto',
-            fetch_format: 'auto'
-          }
-        });
-
-        console.log('Cloudinary player initialized:', playerInstanceRef.current);
-        setIsPlayerReady(true);
-
-        // Set up event listeners
-        if (playerInstanceRef.current) {
-          // Use a more robust approach for progress tracking
-          playerInstanceRef.current.on('timeupdate', () => {
-            if (onProgress && playerInstanceRef.current) {
-              try {
-                const player = playerInstanceRef.current;
-                const currentTime = player.currentTime();
-                const duration = player.duration();
-
-                if (duration && duration > 0 && !isNaN(currentTime) && !isNaN(duration)) {
-                  const progress = currentTime / duration;
-                  onProgress({ played: progress });
-                }
-              } catch (err) {
-                console.warn('Error in timeupdate:', err);
-              }
-            }
-          });
-
-          playerInstanceRef.current.on('ended', () => {
-            if (onEnded) onEnded();
-          });
-
-          playerInstanceRef.current.on('error', (error) => {
-            console.error('Cloudinary player error:', error);
-            setIsPlayerReady(false);
-            if (onError) onError(error);
-          });
-
-          playerInstanceRef.current.on('loadstart', () => {
-            console.log('Video load started');
-          });
-
-          playerInstanceRef.current.on('loadeddata', () => {
-            console.log('Video data loaded');
-          });
-
-          playerInstanceRef.current.on('loadedmetadata', () => {
-            console.log('Video metadata loaded');
-            setIsPlayerReady(true);
-          });
-
-          playerInstanceRef.current.on('canplay', () => {
-            console.log('Video can start playing');
-          });
-
-          playerInstanceRef.current.on('playing', () => {
-            console.log('Video is playing');
-          });
-
-          playerInstanceRef.current.on('pause', () => {
-            console.log('Video is paused');
-          });
-
-          playerInstanceRef.current.on('ready', () => {
-            console.log('Cloudinary player ready');
-            setIsPlayerReady(true);
-
-            // Set video source immediately when player is ready
-            if (videoUrl) {
-              try {
-                const publicId = extractPublicId(videoUrl);
-                console.log('Setting video source on ready with public ID:', publicId);
-
-                playerInstanceRef.current.source(publicId, {
-                  transformation: {
-                    quality: 'auto',
-                    fetch_format: 'auto'
-                  }
-                });
-
-                console.log('Video source set successfully');
-
-                // If autoplay is enabled, start playing immediately
-                if (autoplay) {
-                  console.log('Autoplay enabled, starting video');
-                  setTimeout(() => {
-                    if (playerInstanceRef.current) {
-                      try {
-                        const playPromise = playerInstanceRef.current.play();
-                        if (playPromise !== undefined) {
-                          playPromise.then(() => {
-                            console.log('Autoplay started successfully');
-                          }).catch(error => {
-                            console.warn('Autoplay failed:', error);
-                          });
-                        }
-                      } catch (playError) {
-                        console.warn('Error starting autoplay:', playError);
-                      }
-                    }
-                  }, 1000); // Increased delay to ensure video is fully loaded
-                }
-              } catch (sourceError) {
-                console.error('Error setting video source on ready:', sourceError);
-              }
-            }
-          });
-        }
-      }, 100);
-
-      return () => clearTimeout(initTimeout);
-    } catch (error) {
-      console.error('Error initializing Cloudinary player:', error);
-      if (onError) onError(error);
-    }
-  }, [isCloudinaryLoaded, videoUrl, onProgress, onEnded, onError]);
-
-  // Handle play/pause
-  useEffect(() => {
-    if (playerInstanceRef.current && isPlayerReady) {
-      try {
-        if (isPlaying) {
-          const playPromise = playerInstanceRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(error => {
-              console.warn('Play failed:', error);
-            });
-          }
-        } else {
-          playerInstanceRef.current.pause();
-        }
-      } catch (error) {
-        console.error('Error controlling playback:', error);
-      }
-    }
-  }, [isPlaying, isPlayerReady]);
-
-  // Handle mute/unmute
-  useEffect(() => {
-    if (playerInstanceRef.current) {
-      try {
-        if (isMuted) {
-          playerInstanceRef.current.mute();
-        } else {
-          playerInstanceRef.current.unmute();
-        }
-      } catch (error) {
-        console.error('Error controlling volume:', error);
-      }
-    }
-  }, [isMuted]);
-
-  // Update video source when videoUrl changes
-  useEffect(() => {
-    if (playerInstanceRef.current && videoUrl) {
-      try {
-        const publicId = extractPublicId(videoUrl);
-        console.log('Setting video source with public ID:', publicId);
-
-        playerInstanceRef.current.source(publicId, {
-          transformation: {
-            quality: 'auto',
-            fetch_format: 'auto'
-          }
-        });
-      } catch (error) {
-        console.error('Error setting video source:', error);
-        if (onError) onError(error);
-      }
-    }
-  }, [videoUrl]);
-
-  // Cleanup function
-  useEffect(() => {
-    return () => {
-      if (playerInstanceRef.current) {
-        try {
-          console.log('Cleaning up Cloudinary player');
-
-          // Pause the video first
-          if (typeof playerInstanceRef.current.pause === 'function') {
-            playerInstanceRef.current.pause();
-          }
-
-          // Remove all event listeners
-          if (typeof playerInstanceRef.current.off === 'function') {
-            playerInstanceRef.current.off();
-          }
-
-          // Dispose the player
-          if (typeof playerInstanceRef.current.dispose === 'function') {
-            playerInstanceRef.current.dispose();
-          }
-
-          playerInstanceRef.current = null;
-        } catch (error) {
-          console.error('Error disposing Cloudinary player:', error);
-          // Force cleanup
-          playerInstanceRef.current = null;
-        }
-      }
-    };
-  }, []);
-
-  return (
-    <div ref={containerRef} className={className} style={style}>
-      <video
-        ref={videoRef}
-        style={{ width: '100%', height: '100%' }}
-        playsInline
-        preload="metadata"
-        muted
-        onContextMenu={(e) => e.preventDefault()}
-        suppressHydrationWarning={true}
-        onLoadStart={() => console.log('Video element load started')}
-        onLoadedMetadata={() => console.log('Video element metadata loaded')}
-        onCanPlay={() => console.log('Video element can play')}
-        onError={(e) => console.error('Video element error:', e)}
-      />
-      {!isPlayerReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <div className="text-white text-sm">Loading video...</div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const navigate = useNavigate();
@@ -350,6 +18,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [activeItem] = useState(0);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const playerRef = useRef(null);
   const [videoCardHeight, setVideoCardHeight] = useState(600);
   const [videoCardWidth, setVideoCardWidth] = useState(320);
   const [modalArrowOffset, setModalArrowOffset] = useState(0);
@@ -819,17 +488,34 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                         {productItem.videoUrl || productItem.video ? (
                           <div className="w-full h-full">
                             <div className="react-player-container" onContextMenu={(e) => e.preventDefault()}>
-                              <VideoPlayer
-                                key={`${productItem._id}-${position}-${showVideoModal}`}
-                                videoUrl={productItem.videoUrl || productItem.video}
+                              <ReactPlayer
+                                ref={position === 0 ? playerRef : null}
+                                url={productItem.videoUrl || productItem.video}
                                 className="react-player"
-                                style={{ width: "100%", height: "100%" }}
-                                isPlaying={position === 0 ? isPlaying : false}
-                                isMuted={position === 0 ? isMuted : true}
-                                autoplay={position === 0 && showVideoModal}
+                                width="100%"
+                                height="100%"
+                                playing={position === 0 ? isPlaying : false}
+                                loop={false}
+                                muted={position === 0 ? isMuted : true}
+                                controls={false}
+                                playsinline
+                                progressInterval={500}
                                 onProgress={position === 0 ? handleProgress : undefined}
+                                onDuration={position === 0 ? () => {} : undefined}
                                 onEnded={position === 0 ? handleVideoEnd : undefined}
                                 onError={(e) => console.log("Video error:", e)}
+                                config={{
+                                  file: {
+                                    forceVideo: true,
+                                    attributes: {
+                                      controlsList: "nodownload",
+                                      disablePictureInPicture: true,
+                                      disableRemotePlayback: true,
+                                      onContextMenu: "return false;",
+                                      preload: "auto"
+                                    }
+                                  }
+                                }}
                               />
                             </div>
 

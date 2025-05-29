@@ -363,7 +363,7 @@ function ShoppingHeader() {
                 <SheetContent side="left" className="w-full max-w-xs p-0">
                   <div className="p-6">
                     <Link to="/shop/home" className="block mb-6">
-                      <img src={logo} alt="Fashion Store Logo" className="h-8" />
+                      <img src={logo} alt="Rachana Boutique Logo" className="h-8" />
                     </Link>
                     <MenuItems onCloseSheet={() => setIsSheetOpen(false)} />
                     <div className="mt-8 pt-6 border-t">
@@ -376,7 +376,7 @@ function ShoppingHeader() {
 
             {/* Logo */}
             <Link to="/shop/home" className="ml-4  md:-ml-8 flex items-center">
-              <img src={logo} alt="Fashion Store Logo" className="mt-1 md:mt-0 h-[36px] md:h-12" />
+              <img src={logo} alt="Rachana Boutique Logo" className="mt-1 md:mt-0 h-[36px] md:h-12" />
             </Link>
 
             {/* Desktop navigation */}

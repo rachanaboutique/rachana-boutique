@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { createSubscription } from "@/store/shop/newsletter-slice";
 import { useToast } from "@/components/ui/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import logo from "@/assets/logo-1.png";
 import { Mail, ArrowRight, Phone, MapPin } from "lucide-react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
@@ -181,9 +181,9 @@ const Footer = () => {
             {/* About Section */}
             <div className="md:col-span-4">
               <Link to="/shop/home" className="flex items-center">
-                <img src={logo} alt="Logo" className="w-3/5 mx-auto md:mx-0" />
+                <img src={logo} alt="Logo" className="w-3/4 mx-auto md:mx-0" />
               </Link>
-              <p className="text-justify text-sm md:text-base my-4">
+              <p className="text-justify text-md md:text-lg my-4">
                 Rachana Boutique brings you a handpicked collection of sarees that blend tradition with a modern flair. each piece is chosen for its quality, style, and craftsmanship. Draping you in timeless elegance, one saree at a time.
               </p>
             </div>
@@ -213,7 +213,7 @@ const Footer = () => {
             </div>
 
             {/* Contact & Social Media */}
-            <div className="md:col-span-4">
+            <div className="md:-ml-4 md:col-span-4">
               <h4 className="text-lg font-semibold text-foreground mb-4">Contact Us</h4>
               <div className="space-y-2 text-md">
                 <div className="flex items-center">
@@ -280,13 +280,16 @@ const Footer = () => {
             <DialogHeader>
               <DialogTitle className="font-bold text-xl mb-4 text-center">{selectedPolicy?.title}</DialogTitle>
             </DialogHeader>
-            {selectedPolicy?.points && (
-              <ol className="list-decimal ml-6 space-y-1 text-sm">
+            <DialogDescription>
+               {selectedPolicy?.points && (
+              <ol className="list-decimal ml-6  space-y-1">
                 {selectedPolicy.points.map((point, index) => (
                   <li key={index}>{point}</li>
                 ))}
               </ol>
             )}
+            </DialogDescription>
+           
           </DialogContent>
         </Dialog>
       </footer>

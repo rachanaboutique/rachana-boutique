@@ -63,12 +63,12 @@ function AdminProducts() {
   const dynamicAddProductFormElements = addProductFormElements.map((element) =>
     element.name === "category"
       ? {
-          ...element,
-          options: categoriesList.map((category) => ({
-            id: category._id,
-            label: category.name,
-          })),
-        }
+        ...element,
+        options: categoriesList.map((category) => ({
+          id: category._id,
+          label: category.name,
+        })),
+      }
       : element
   );
 
@@ -216,7 +216,13 @@ function AdminProducts() {
           matchesFilter = productItem.totalStock <= 0;
           break;
         default:
-          matchesFilter = true;
+          // Check if filterOption is a category ID
+          const selectedCategory = categoriesList.find(cat => cat._id === filterOption);
+          if (selectedCategory) {
+            matchesFilter = productItem.category === filterOption;
+          } else {
+            matchesFilter = true;
+          }
       }
     }
 
@@ -225,8 +231,27 @@ function AdminProducts() {
 
   return (
     <Fragment>
-       <h1 className="mb-4 text-2xl font-semibold leading-none tracking-tight">All Products</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">All Products</h1>
+          {(searchQuery || filterOption !== "all") && (
+            <p className="text-sm text-gray-600 mt-1">
+              {searchQuery && `Searching for "${searchQuery}"`}
+              {searchQuery && filterOption !== "all" && " • "}
+              {filterOption !== "all" && (
+                <span>
+                  Filtered by: {" "}
+                  {filterOption === "newArrivals" && "New Arrivals"}
+                  {filterOption === "featured" && "Featured Products"}
+                  {filterOption === "outOfStock" && "Out of Stock"}
+                  {categoriesList.find(cat => cat._id === filterOption)?.name}
+                </span>
+              )}
+            </p>
+          )}
+        </div>
 
+      </div>
 
       <div className="mb-4 flex items-center justify-between w-full">
         <div className="flex items-center gap-3 w-2/3">
@@ -249,9 +274,27 @@ function AdminProducts() {
                 <SelectItem value="newArrivals">New Arrivals</SelectItem>
                 <SelectItem value="featured">Featured Products</SelectItem>
                 <SelectItem value="outOfStock">Out of Stock</SelectItem>
+                {/* Category filters */}
+                {categoriesList && categoriesList.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-medium text-gray-500 border-t">
+                      Categories
+                    </div>
+                    {categoriesList.map((category) => (
+                      <SelectItem key={category._id} value={category._id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
+          <div className="w-1/3 text-lg font-medium text-gray-700  px-4 py-2">
+            Total: <span className="text-gray-900 font-semibold">{filteredProductList.length}</span> products
+          </div>
+
+
         </div>
         <Button
           className="bg-primary hover:bg-accent"
@@ -267,16 +310,16 @@ function AdminProducts() {
       </div>
 
 
-        {isLoading ? (
-      <div className="flex items-center justify-center w-full mt-16 mb-1">
+      {isLoading ? (
+        <div className="flex items-center justify-center w-full mt-16 mb-1">
 
-        <span className="text-lg whitespace-nowrap px-2">Loading products...</span>
+          <span className="text-lg whitespace-nowrap px-2">Loading products...</span>
 
-      </div>
-    ) : (
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {filteredProductList && filteredProductList.length > 0
-          ? filteredProductList.map((productItem) => (
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {filteredProductList && filteredProductList.length > 0
+            ? filteredProductList.map((productItem) => (
               <AdminProductTile
                 key={productItem._id}
                 setOpenCreateProductsDialog={setOpenCreateProductsDialog}
@@ -286,8 +329,8 @@ function AdminProducts() {
                 handleDelete={handleDelete}
               />
             ))
-          : <p className="text-center col-span-full">No products found.</p>}
-      </div>
+            : <p className="text-center col-span-full">No products found.</p>}
+        </div>
       )}
 
       <Sheet

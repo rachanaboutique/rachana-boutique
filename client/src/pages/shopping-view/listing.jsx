@@ -654,10 +654,10 @@ function ShoppingListing({ categorySlug }) {
 
               {/* Collection Description Section - Always visible */}
               <div className="mb-12 mt-8 p-6 bg-gray-50 rounded-lg">
-                <h2 className="text-2xl font-medium mb-4">{currentCategory ? `About Our ${currentCategory.name} Collection` : 'Our Premium Collections'}</h2>
+                <h2 className="text-2xl text-3xl font-semibold mb-4">{currentCategory ? `About Our ${currentCategory.name} Collection` : 'Our Premium Collections'}</h2>
                 <div className="prose max-w-none">
                   {currentCategory  &&
-                      <p className="mb-4">{getCategoryDescription || ""}</p>
+                      <p className="text-md md:text-lg mb-4">{getCategoryDescription || ""}</p>
                      }
                 </div>
               </div>

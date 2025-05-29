@@ -25,11 +25,11 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
 
   // Helper function for uploading a color image to Cloudinary.
   const uploadColorImage = async (file, idx, controlItem) => {
-    // Check file size - limit to 1.2MB (1.2 * 1024 * 1024 bytes)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 1.2MB in bytes
+    // Check file size - limit to 1MB (1 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
     if (file.size > MAX_FILE_SIZE) {
       setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "error" }));
-      console.error(`File size exceeds 1.2MB limit. Please select a smaller image.`);
+      console.error(`File size exceeds 1MB limit. Please select a smaller image.`);
       return;
     }
 
@@ -297,7 +297,7 @@ const uploadVideo = async (file) => {
                       {colorsUploadStatus[idx] === "uploading" && "Uploading..."}
                       {colorsUploadStatus[idx] === "uploaded" && "Uploaded"}
                       {colorsUploadStatus[idx] === "error" && (
-                        <span className="text-red-600">File too large (max 1.2MB)</span>
+                        <span className="text-red-600">File too large (max 1MB)</span>
                       )}
                     </span>
                     <Button

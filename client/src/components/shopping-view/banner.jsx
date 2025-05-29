@@ -14,7 +14,7 @@ const Banner = ({ imageUrl, altText, description }) => {
     {/* Points on Image */}
     <div className="absolute top-40 right-5 md:top-32 md:right-12 text-white space-y-4 text-lg">
       {descriptionPoints.map((point, index) => (
-        <div key={index} className="py-0 md:py-4 flex items-center text-md md:text-2xl">
+        <div key={index} className="py-0 md:py-4 flex items-center text-md md:text-3xl">
           <span className="mr-2 text-yellow-300">•</span>
           {point.trim()}
         </div>

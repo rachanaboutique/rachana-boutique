@@ -417,19 +417,21 @@ function ShoppingHome() {
 
 
         {/* Watch and Buy Section - Desktop and Mobile versions */}
-        {hasWatchAndBuyProducts && (
-          <>
-            {/* Desktop version */}
-            <div className="hidden md:block">
-              <WatchAndBuy products={filteredProducts} handleAddtoCart={handleAddtoCart} />
-            </div>
+        <section className="">
+          {hasWatchAndBuyProducts && (
+            <>
+              {/* Desktop version */}
+              <div className="hidden md:block">
+                <WatchAndBuy products={filteredProducts} handleAddtoCart={handleAddtoCart} />
+              </div>
 
-            {/* Mobile version */}
-            <div className="md:hidden">
-              <WatchAndBuyMobile products={filteredProducts} handleAddtoCart={handleAddtoCart} />
-            </div>
-          </>
-        )}
+              {/* Mobile version */}
+              <div className="md:hidden">
+                <WatchAndBuyMobile products={filteredProducts} handleAddtoCart={handleAddtoCart} />
+              </div>
+            </>
+          )}
+        </section>
 
         <section className="py-8">
           <Banner

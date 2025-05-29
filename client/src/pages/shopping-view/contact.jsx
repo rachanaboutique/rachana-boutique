@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Facebook, Instagram, Mail, Phone, MessageSquare } from "lucide-react";
+import { Facebook, Instagram, Mail, Phone, MessageSquare, Clock } from "lucide-react";
 import banner from "../../assets/contactus.png";
 import { createContact } from "@/store/shop/contact-slice";
 import { useToast } from "@/components/ui/use-toast";
@@ -124,27 +124,50 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Contact Information Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 className="text-2xl md:text-3xl font-light uppercase tracking-wide mb-4">Get In Touch</h2>
-              <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
-              <p className="text-gray-600">We'd love to hear from you. Here's how you can reach us.</p>
-            </div>
-
-            <div className="max-w-md mx-auto">
-              <div className="bg-white p-8 text-center shadow-md hover:shadow-lg transition-shadow duration-300">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                  <Phone className="h-8 w-8 text-gray-700" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">Phone Number</h3>
-                <p className="text-gray-600">+91 9944796697</p>
+  
+  
+               <div className="max-w-6xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-4 gap-6 px-4">
+          <a href="tel:+919944796697" className="block h-full">
+            <div className="bg-white p-8 text-center shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full flex flex-col items-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <Phone className="h-8 w-8 text-gray-700" />
               </div>
+              <h3 className="text-xl font-medium mb-2">Phone Number</h3>
+              <p className="text-gray-600">+91 9944796697</p>
             </div>
-          </div>
-        </section>
+          </a>
 
+          <a href="https://wa.me/919944796697" target="_blank" className="block h-full">
+            <div className="bg-white p-8 text-center shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full flex flex-col items-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <MessageSquare className="h-8 w-8 text-gray-700" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">WhatsApp</h3>
+              <p className="text-gray-600">+91 9944796697</p>
+            </div>
+          </a>
+
+          <a href="https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=rachanaboutiquechennai@gmail.com" target="_blank" className="block h-full">
+            <div className="bg-white p-8 text-center shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full flex flex-col items-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <Mail className="h-8 w-8 text-gray-700" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Email</h3>
+              <p className="text-gray-600">rachanaboutiquechennai@gmail.com</p>
+            </div>
+          </a>
+
+          <div className="bg-white p-8 text-center shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col items-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+              <Clock className="h-8 w-8 text-gray-700" />
+            </div>
+            <h3 className="text-xl font-medium mb-2">Business Hours</h3>
+            <p className="text-gray-600">Mon - Saturday</p>
+            <p className="text-gray-600">11am to 8pm</p>
+          </div>
+        </div>
+
+     
         {/* Contact Form Section */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
@@ -239,7 +262,7 @@ const Contact = () => {
                       <Facebook size={20} className="text-blue-600" />
                       <span>Facebook</span>
                     </a>
-                    <a
+                    {/* <a
                       href="https://wa.me/9944796697"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -247,8 +270,8 @@ const Contact = () => {
                     >
                       <MessageSquare size={20} className="text-green-500" />
                       <span>WhatsApp</span>
-                    </a>
-                    <a
+                    </a> */}
+                    {/* <a
                      href="https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=rachanaboutiquechennai@gmail.com" target="_blank"
                       className="hidden md:flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
                     >
@@ -262,8 +285,8 @@ const Contact = () => {
                     >
                       <Mail size={20} className="text-red-500" />
                       <span>Email</span>
-                    </a>
-                   
+                    </a> */}
+
                   </div>
                 </div>
               </div>

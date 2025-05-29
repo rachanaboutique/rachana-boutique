@@ -95,7 +95,7 @@ const ShoppingProductTile = ({
       >
         {/* Main product image */}
         {image && image.length > 0 ? (
-            <div className="h-[240px] md:h-full md:aspect-[9/16] overflow-hidden">
+            <div className="h-[280px] w-full md:h-full md:aspect-[10/16] overflow-hidden">
             <img
               src={image[0]}
               alt={name}

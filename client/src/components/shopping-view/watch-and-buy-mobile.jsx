@@ -107,6 +107,9 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
           }
         });
 
+        // Store reference to player on video element for external access
+        videoElement.cloudinaryPlayer = playerInstanceRef.current;
+
         setIsPlayerReady(true);
 
         // Set up event listeners
@@ -159,12 +162,14 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
           });
 
           playerInstanceRef.current.on('ready', () => {
+            console.log('Cloudinary player ready');
             setIsPlayerReady(true);
 
             // Set video source immediately when player is ready
             if (videoUrl) {
               try {
                 const publicId = extractPublicId(videoUrl);
+                console.log('Setting video source:', publicId);
 
                 playerInstanceRef.current.source(publicId, {
                   transformation: {
@@ -172,30 +177,39 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
                     fetch_format: 'auto'
                   }
                 });
-
-
-                // If autoplay is enabled, start playing immediately
-                if (autoplay) {
-                  setTimeout(() => {
-                    if (playerInstanceRef.current) {
-                      try {
-                        const playPromise = playerInstanceRef.current.play();
-                        if (playPromise !== undefined) {
-                          playPromise.then(() => {
-                          }).catch(error => {
-                            console.warn('Autoplay failed:', error);
-                          });
-                        }
-                      } catch (playError) {
-                        console.warn('Error starting autoplay:', playError);
-                      }
-                    }
-                  }, 1000); // Increased delay to ensure video is fully loaded
-                }
               } catch (sourceError) {
                 console.error('Error setting video source on ready:', sourceError);
               }
             }
+          });
+
+          // Handle when video can play - better timing for autoplay
+          playerInstanceRef.current.on('canplay', () => {
+            console.log('Video can play, autoplay:', autoplay);
+            if (autoplay && playerInstanceRef.current) {
+              try {
+                const playPromise = playerInstanceRef.current.play();
+                if (playPromise !== undefined) {
+                  playPromise.then(() => {
+                    console.log('Video started successfully');
+                  }).catch(error => {
+                    console.warn('Video play failed:', error);
+                  });
+                }
+              } catch (playError) {
+                console.warn('Error starting video:', playError);
+              }
+            }
+          });
+
+          // Handle when video starts playing
+          playerInstanceRef.current.on('playing', () => {
+            console.log('Video is now playing');
+          });
+
+          // Handle when video is paused
+          playerInstanceRef.current.on('pause', () => {
+            console.log('Video is now paused');
           });
         }
       }, 100);
@@ -205,7 +219,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
       console.error('Error initializing Cloudinary player:', error);
       if (onError) onError(error);
     }
-  }, [isCloudinaryLoaded, videoUrl, onProgress, onEnded, onError, autoplay]);
+  }, [isCloudinaryLoaded, videoUrl, autoplay]); // Removed callback dependencies to prevent infinite loops
 
   // Handle play/pause
   useEffect(() => {
@@ -244,9 +258,10 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
 
   // Update video source when videoUrl changes
   useEffect(() => {
-    if (playerInstanceRef.current && videoUrl) {
+    if (playerInstanceRef.current && videoUrl && isPlayerReady) {
       try {
         const publicId = extractPublicId(videoUrl);
+        console.log('Changing video source to:', publicId);
 
         playerInstanceRef.current.source(publicId, {
           transformation: {
@@ -254,12 +269,17 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
             fetch_format: 'auto'
           }
         });
+
+        // Reset progress when video source changes
+        if (onProgress) {
+          onProgress({ played: 0 });
+        }
       } catch (error) {
         console.error('Error setting video source:', error);
         if (onError) onError(error);
       }
     }
-  }, [videoUrl]);
+  }, [videoUrl, isPlayerReady]); // Removed onProgress, onError, isPlaying to prevent infinite loops
 
   // Cleanup function
   useEffect(() => {
@@ -325,24 +345,96 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
-  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoProgress, setVideoProgress] = useState({});
   const videoContainerRef = useRef(null);
   const progressBarRef = useRef(null);
   const sliderRef = useRef(null);
 
+  // Function to force unmute the active video player
+  const forceUnmuteActiveVideo = useCallback(() => {
+    // Multiple strategies to find and unmute the active video
+    setTimeout(() => {
+      console.log('Attempting to force unmute active mobile video...');
+
+      // Strategy 1: Find by active class
+      let activeVideoElements = document.querySelectorAll('.video-slide.active video');
+      console.log('Found active mobile videos:', activeVideoElements.length);
+
+      // Strategy 2: Find all videos in modal
+      if (activeVideoElements.length === 0) {
+        activeVideoElements = document.querySelectorAll('.fast-moving-video-modal video');
+        console.log('Found videos in mobile modal:', activeVideoElements.length);
+      }
+
+      // Strategy 3: Find all videos
+      if (activeVideoElements.length === 0) {
+        activeVideoElements = document.querySelectorAll('video');
+        console.log('Found all videos:', activeVideoElements.length);
+      }
+
+      activeVideoElements.forEach((video, index) => {
+        console.log(`Processing mobile video ${index}:`, video);
+
+        // Try cloudinaryPlayer reference
+        if (video && video.cloudinaryPlayer) {
+          try {
+            video.cloudinaryPlayer.unmute();
+            console.log(`Successfully unmuted mobile video ${index} via cloudinaryPlayer`);
+          } catch (error) {
+            console.warn(`Error unmuting mobile video ${index} via cloudinaryPlayer:`, error);
+          }
+        }
+
+        // Also try direct video element unmute
+        if (video) {
+          try {
+            video.muted = false;
+            console.log(`Set mobile video ${index} muted property to false`);
+          } catch (error) {
+            console.warn(`Error setting muted property on mobile video ${index}:`, error);
+          }
+        }
+      });
+
+      // Also ensure React state is updated
+      setIsMuted(false);
+      console.log('Set React isMuted state to false for mobile');
+    }, 200); // Increased delay to ensure DOM is ready
+  }, []);
+
+  // Reset progress for specific video (mobile behavior - start from beginning)
+  const resetVideoProgress = useCallback((videoIndex) => {
+    setVideoProgress(prev => ({
+      ...prev,
+      [videoIndex]: 0
+    }));
+  }, []);
+
   // Function to go to the next video (infinite loop)
   const goToNextVideo = useCallback(() => {
     const newIndex = (currentVideoIndex + 1) % products.length;
+    // Reset progress for the new video (mobile behavior - start from beginning)
+    resetVideoProgress(newIndex);
     setCurrentVideoIndex(newIndex);
     setSelectedVideo(products[newIndex]);
-  }, [currentVideoIndex, products]);
+    // Ensure audio continues playing for the new video
+    setIsMuted(false);
+    // Force unmute the active video player
+    forceUnmuteActiveVideo();
+  }, [currentVideoIndex, products, forceUnmuteActiveVideo, resetVideoProgress]);
 
   // Function to go to the previous video (infinite loop)
   const goToPrevVideo = useCallback(() => {
     const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
+    // Reset progress for the new video (mobile behavior - start from beginning)
+    resetVideoProgress(newIndex);
     setCurrentVideoIndex(newIndex);
     setSelectedVideo(products[newIndex]);
-  }, [currentVideoIndex, products]);
+    // Ensure audio continues playing for the new video
+    setIsMuted(false);
+    // Force unmute the active video player
+    forceUnmuteActiveVideo();
+  }, [currentVideoIndex, products, forceUnmuteActiveVideo, resetVideoProgress]);
 
   // Handle video end - auto slide to next video with a slight delay
   const handleVideoEnd = useCallback(() => {
@@ -502,8 +594,14 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         // After animation completes, update the current index
         setTimeout(() => {
           const newIndex = (currentVideoIndex + 1) % products.length;
+          // Reset progress for the new video (mobile behavior - start from beginning)
+          resetVideoProgress(newIndex);
           setCurrentVideoIndex(newIndex);
           setSelectedVideo(products[newIndex]);
+          // Ensure audio continues playing for the new video
+          setIsMuted(false);
+          // Force unmute the active video player
+          forceUnmuteActiveVideo();
 
           // Reset all slides
           slides.forEach(slide => {
@@ -519,8 +617,14 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         // After animation completes, update the current index
         setTimeout(() => {
           const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
+          // Reset progress for the new video (mobile behavior - start from beginning)
+          resetVideoProgress(newIndex);
           setCurrentVideoIndex(newIndex);
           setSelectedVideo(products[newIndex]);
+          // Ensure audio continues playing for the new video
+          setIsMuted(false);
+          // Force unmute the active video player
+          forceUnmuteActiveVideo();
 
           // Reset all slides
           slides.forEach(slide => {
@@ -598,9 +702,25 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     if (showVideoModal) {
       setIsPlaying(true);
       setIsMuted(false);
-      setVideoProgress(0);
+      // Force unmute when modal opens or video changes
+      setTimeout(() => {
+        forceUnmuteActiveVideo();
+      }, 300);
     }
-  }, [showVideoModal, currentVideoIndex]);
+  }, [showVideoModal, currentVideoIndex, forceUnmuteActiveVideo]);
+
+  // Get current video progress
+  const getCurrentVideoProgress = () => {
+    return videoProgress[currentVideoIndex] || 0;
+  };
+
+  // Update progress for specific video
+  const updateVideoProgress = (videoIndex, progress) => {
+    setVideoProgress(prev => ({
+      ...prev,
+      [videoIndex]: progress
+    }));
+  };
 
   // Check if we have products to display
   const hasWatchAndBuyProducts = products && products.length > 0;
@@ -616,8 +736,8 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
           <p className="text-gray-600">Explore our curated collection of trending products</p>
         </div>
 
-        {/* Watch and Buy Slider - Both Mobile and Desktop */}
-        <div className="w-full mb-4 px-1">
+        {/* Watch and Buy Slider*/}
+        <div className="w-full mb-4 ">
           <div>
             <Slider ref={sliderRef} {...sliderSettings} className="watch-buy-slider mobile-watch-buy-slider">
               {products.map((productItem, index) => (
@@ -627,13 +747,14 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                       setSelectedVideo(productItem);
                       setCurrentVideoIndex(index);
                       setShowVideoModal(true);
+                      setIsPlaying(true);
                     }}
                     className="relative"
                   >
                     <div
                       className="relative cursor-pointer shadow-md overflow-hidden watch-buy-mobile-card"
                       style={{
-                        aspectRatio: "8/16",
+                        aspectRatio: "9/16",
                         background: "#f8f8f8",
                       }}
                     >
@@ -778,11 +899,17 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
           {/* Video Progress Bar at the top */}
           <div className="absolute top-0 left-0 right-0 z-40 h-1 bg-white/20">
             <div
+              key={`progress-${currentVideoIndex}`}
               ref={progressBarRef}
               className="h-full bg-white transition-all duration-100 ease-linear"
-              style={{ width: `${videoProgress * 100}%` }}
+              style={{ width: `${getCurrentVideoProgress() * 100}%` }}
+              title={`Progress: ${Math.round(getCurrentVideoProgress() * 100)}%`}
             ></div>
           </div>
+          {/* Debug info */}
+          {/* <div className="absolute top-2 left-2 z-50 text-white text-xs bg-black/50 px-2 py-1 rounded">
+            Progress: {Math.round(videoProgress * 100)}%
+          </div> */}
 
           {/* VideoStacker UI - Full Height */}
           <div
@@ -832,7 +959,12 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                                 isPlaying={index === currentVideoIndex ? isPlaying : false}
                                 isMuted={isMuted}
                                 autoplay={index === currentVideoIndex && showVideoModal}
-                                onProgress={(state) => index === currentVideoIndex && setVideoProgress(state.played)}
+                                onProgress={(state) => {
+                                  // Update progress for each video independently
+                                  if (state.played >= 0) {
+                                    updateVideoProgress(index, state.played);
+                                  }
+                                }}
                                 onEnded={index === currentVideoIndex ? handleVideoEnd : undefined}
                                 onError={(e) => console.log("Video error:", e)}
                               />

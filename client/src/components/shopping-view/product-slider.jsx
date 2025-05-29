@@ -250,7 +250,7 @@ const ProductSlider = ({
                             type: "spring",
                             stiffness: 50,
                           }}
-                          style={{ width: "40%" }}
+                          style={{ width: "43%" }}
                           className="flex-shrink-0 touch-none"
                         >
                           <ShoppingProductTile
@@ -272,7 +272,7 @@ const ProductSlider = ({
                             type: "spring",
                             stiffness: 50,
                           }}
-                          style={{ width: "40%" }}
+                          style={{ width: "43%" }}
                           className="flex-shrink-0 touch-none"
                         >
                           <ShoppingProductTile

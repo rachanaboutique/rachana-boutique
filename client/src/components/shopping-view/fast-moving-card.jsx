@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import classNames from "classnames";
@@ -6,11 +6,281 @@ import { Heart, ExternalLink, X, ShoppingBag, Loader, Play } from "lucide-react"
 import { useToast } from "../ui/use-toast";
 import { useInView } from "react-intersection-observer";
 
+// Cloudinary Video Player Component
+const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
+  videoUrl,
+  isPlaying,
+  isMuted = true,
+  loop = true,
+  controls = false,
+  className = "",
+  style = {},
+  onLoadedData,
+  onError,
+  poster,
+  autoplay = false,
+  playsInline = true
+}) {
+  const cloudinaryRef = useRef();
+  const videoRef = useRef();
+  const playerInstanceRef = useRef();
+  const [isCloudinaryLoaded, setIsCloudinaryLoaded] = useState(false);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [playerError, setPlayerError] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Create a unique identifier for this player instance
+  const playerIdRef = useRef(`player-${Math.random().toString(36).substring(2, 11)}`);
+
+  // Extract public ID from Cloudinary URL
+  const extractPublicId = (url) => {
+    if (!url || !url.includes('cloudinary.com')) {
+      return url;
+    }
+
+    try {
+      // Handle different Cloudinary URL formats
+      const urlParts = url.split('/');
+      const uploadIndex = urlParts.findIndex(part => part === 'upload');
+
+      if (uploadIndex === -1) return url;
+
+      // Get everything after upload/ and before file extension
+      const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+
+      // Remove transformations (anything before the last segment that doesn't contain a dot)
+      const segments = pathAfterUpload.split('/');
+      const fileSegment = segments[segments.length - 1];
+
+      // Remove file extension (.mp4, .mov, etc.)
+      const publicId = fileSegment.replace(/\.[^/.]+$/, '');
+
+      return publicId;
+    } catch (error) {
+      console.error('Error extracting public ID:', error);
+      return url;
+    }
+  };
+
+  // Check if Cloudinary is loaded
+  useEffect(() => {
+    const checkCloudinary = () => {
+      if (window.cloudinary) {
+        cloudinaryRef.current = window.cloudinary;
+        setIsCloudinaryLoaded(true);
+        return true;
+      }
+      return false;
+    };
+
+    if (checkCloudinary()) {
+      return;
+    }
+
+    // Poll for Cloudinary to be loaded
+    const interval = setInterval(() => {
+      if (checkCloudinary()) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Initialize Cloudinary player
+  useEffect(() => {
+    try {
+    if (!isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current || !videoUrl || hasInitialized) return;
+
+    // Add a small delay to stagger initializations and reduce simultaneous loads
+    const initDelay = Math.random() * 500; // Random delay between 0-500ms
+
+    const delayTimeout = setTimeout(() => {
+      try {
+        console.log(`Initializing Cloudinary player ${playerIdRef.current} for video:`, videoUrl?.substring(videoUrl.lastIndexOf('/') + 1, videoUrl.lastIndexOf('.')) || 'unknown');
+        setHasInitialized(true);
+
+          const initTimeout = setTimeout(() => {
+            if (!videoRef.current) {
+              console.warn(`Video element not available for initialization ${playerIdRef.current}`);
+              return;
+            }
+
+            const videoElement = videoRef.current;
+            videoElement.preload = 'metadata';
+            videoElement.playsInline = playsInline;
+            videoElement.muted = isMuted;
+
+            playerInstanceRef.current = cloudinaryRef.current.videoPlayer(videoElement, {
+              cloud_name: 'dkqt39aad',
+              controls: controls,
+              autoplay: autoplay,
+              muted: isMuted,
+              loop: loop,
+              fluid: true,
+              playsinline: playsInline,
+              preload: 'metadata',
+              transformation: {
+                quality: 'auto',
+                fetch_format: 'auto'
+              }
+            });
+
+            // Set up event listeners
+            playerInstanceRef.current.on('ready', () => {
+              console.log(`Cloudinary player ${playerIdRef.current} ready for video:`, videoUrl?.substring(videoUrl.lastIndexOf('/') + 1, videoUrl.lastIndexOf('.')) || 'unknown');
+              setIsPlayerReady(true);
+
+              // Set video source when player is ready
+              try {
+                const publicId = extractPublicId(videoUrl);
+                playerInstanceRef.current.source(publicId, {
+                  transformation: {
+                    quality: 'auto',
+                    fetch_format: 'auto'
+                  }
+                });
+              } catch (sourceError) {
+                console.error('Error setting video source:', sourceError);
+                setPlayerError(true);
+                onError && onError(sourceError);
+              }
+            });
+
+            playerInstanceRef.current.on('loadeddata', () => {
+              onLoadedData && onLoadedData();
+            });
+
+            playerInstanceRef.current.on('error', (error) => {
+              console.error('Cloudinary player error:', error);
+              setPlayerError(true);
+              onError && onError(error);
+            });
+
+          }, 100);
+
+          return () => clearTimeout(initTimeout);
+        } catch (error) {
+          console.error('Error initializing Cloudinary player:', error);
+          setPlayerError(true);
+          onError && onError(error);
+        }
+      }, initDelay);
+
+      return () => clearTimeout(delayTimeout);
+    }  catch (error) {
+      console.error('Error setting up Cloudinary player initialization:', error);
+      setPlayerError(true);
+      onError && onError(error);
+    }
+  }, [isCloudinaryLoaded, videoUrl, isMuted, loop, controls, autoplay, playsInline, onLoadedData, onError]);
+
+  // Handle play/pause based on isPlaying prop
+  useEffect(() => {
+    if (!playerInstanceRef.current || !isPlayerReady) return;
+
+    try {
+      if (isPlaying) {
+        playerInstanceRef.current.play();
+      } else {
+        playerInstanceRef.current.pause();
+      }
+    } catch (error) {
+      console.error('Error controlling playback:', error);
+    }
+  }, [isPlaying, isPlayerReady]);
+
+  // Handle mute/unmute
+  useEffect(() => {
+    if (!playerInstanceRef.current) return;
+
+    try {
+      // Use the correct Cloudinary video player API for muting
+      if (isMuted) {
+        playerInstanceRef.current.mute();
+      } else {
+        playerInstanceRef.current.unmute();
+      }
+    } catch (error) {
+      console.error('Error controlling mute:', error);
+    }
+  }, [isMuted]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (playerInstanceRef.current) {
+        try {
+          // Pause the video first
+          if (typeof playerInstanceRef.current.pause === 'function') {
+            playerInstanceRef.current.pause();
+          }
+
+          // Remove all event listeners
+          if (typeof playerInstanceRef.current.off === 'function') {
+            playerInstanceRef.current.off();
+          }
+
+          // Dispose the player
+          if (typeof playerInstanceRef.current.dispose === 'function') {
+            playerInstanceRef.current.dispose();
+          }
+
+          playerInstanceRef.current = null;
+        } catch (error) {
+          console.error('Error disposing Cloudinary player:', error);
+          // Force cleanup
+          playerInstanceRef.current = null;
+        }
+      }
+    };
+  }, []);
+
+  // Fallback to regular video if Cloudinary fails or isn't loaded
+  if (playerError || !isCloudinaryLoaded) {
+    return (
+      <video
+        ref={videoRef}
+        className={className}
+        style={style}
+        src={videoUrl}
+        loop={loop}
+        muted={isMuted}
+        playsInline={playsInline}
+        controls={controls}
+        poster={poster}
+        onLoadedData={onLoadedData}
+        onError={onError}
+        preload="metadata"
+      />
+    );
+  }
+
+  return (
+    <div className={className} style={style}>
+      <video
+        ref={videoRef}
+        style={{ width: '100%', height: '100%' }}
+        playsInline
+        preload="metadata"
+        muted
+        onContextMenu={(e) => e.preventDefault()}
+        suppressHydrationWarning={true}
+        poster={poster}
+      />
+      {!isPlayerReady && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="text-white text-sm">Loading video...</div>
+        </div>
+      )}
+    </div>
+  );
+});
+
 const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard = false }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const videoRef = useRef(null);
 
   // Use react-intersection-observer for better viewport detection
   const [ref, inView] = useInView({
@@ -41,44 +311,30 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Handle video playback based on visibility
-  const handleVideoPlayback = useCallback(() => {
-    if (!videoRef.current || !item?.video) return;
-
-    if (inView && videoReady) {
-      // Play video when in view and ready
-      videoRef.current.play()
-        .catch(err => {
-          console.log('Video play error:', err);
-          // If autoplay is prevented, try muted autoplay
-          if (err.name === 'NotAllowedError') {
-            videoRef.current.muted = true;
-            videoRef.current.play().catch(e => console.log('Muted play error:', e));
-          }
-        });
-    } else if (videoRef.current) {
-      // Pause when not in view to save resources
-      videoRef.current.pause();
-    }
-  }, [inView, item?.video, videoReady]);
-
-  // Apply video playback logic when visibility or readiness changes
-  useEffect(() => {
-    handleVideoPlayback();
-  }, [handleVideoPlayback, inView, videoReady]);
-
   // When opening modal, reset video loading state
   const handleCardClick = () => {
     if (isMobile && item?.video && !isMobileCard) {
       setModalOpen(true);
       setVideoLoading(true);
       setVideoError(false);
+      // Prevent body scroll when modal opens
+      document.body.classList.add('modal-open');
     }
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
+    // Re-enable body scroll when modal closes
+    document.body.classList.remove('modal-open');
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Ensure body scroll is re-enabled if component unmounts with modal open
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
 
   const handleViewDetails = (productId) => {
     navigate(`/shop/details/${productId}`);
@@ -104,7 +360,6 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
   const handleVideoLoaded = () => {
     setVideoLoading(false);
     setVideoReady(true);
-    handleVideoPlayback();
   };
 
   // Handle video error
@@ -124,22 +379,20 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
               <div
                 className="w-full h-full"
                 onContextMenu={(e) => e.preventDefault()}
+                ref={ref}
               >
-                <video
-                  ref={(el) => {
-                    videoRef.current = el;
-                    if (isMobileCard) ref(el);
-                  }}
+                <CloudinaryVideoPlayer
+                  videoUrl={item.video}
+                  isPlaying={inView && videoReady}
+                  isMuted={true}
+                  loop={true}
+                  controls={false}
                   className="w-full h-full object-cover"
-                  src={item.video}
-                  loop
-                  muted
-                  playsInline
-                  controlsList="nodownload"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onLoadedData={handleVideoLoaded}
                   onError={handleVideoError}
-                  preload="metadata"
                   poster={item.images && item.images.length > 0 ? item.images[0] : ''}
+                  playsInline={true}
                 />
               </div>
             ) : item?.images && item.images.length > 0 ? (
@@ -193,22 +446,20 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
               <div
                 className="absolute right-0 top-1/2 h-auto w-24 max-w-none -translate-y-1/2 md:left-1/2 md:h-[640px] md:w-[590px] md:-translate-x-1/2 transition-transform duration-700 group-hover:scale-105"
                 onContextMenu={(e) => e.preventDefault()}
+                ref={ref}
               >
-                <video
-                  ref={(el) => {
-                    videoRef.current = el;
-                    ref(el);
-                  }}
+                <CloudinaryVideoPlayer
+                  videoUrl={item.video}
+                  isPlaying={inView && videoReady}
+                  isMuted={true}
+                  loop={true}
+                  controls={false}
                   className="w-full h-full object-cover"
-                  src={item.video}
-                  loop
-                  muted
-                  playsInline
-                  controlsList="nodownload"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   onLoadedData={handleVideoLoaded}
                   onError={handleVideoError}
-                  preload="metadata"
-                  poster={item.image && item.image.length > 0 ? item.image[0] : ''}
+                  poster={item.images && item.images.length > 0 ? item.images[0] : ''}
+                  playsInline={true}
                 />
               </div>
               {videoLoading && (
@@ -225,9 +476,9 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10">
                   <div className="text-center p-4">
                     <p className="text-white text-sm mb-2">Video could not be loaded</p>
-                    {item.image && item.image.length > 0 && (
+                    {item.images && item.images.length > 0 && (
                       <img
-                        src={item.image[0]}
+                        src={item.images[0]}
                         alt={item.name || "Product"}
                         className="max-h-[200px] mx-auto object-contain"
                       />
@@ -235,8 +486,6 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                   </div>
                 </div>
               )}
-
-
             </>
           )}
 
@@ -245,38 +494,47 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
             <div
               className="w-full h-full bg-gray-100 relative overflow-hidden"
               onContextMenu={(e) => e.preventDefault()}
+              ref={ref}
             >
-              <video
-                ref={(el) => {
-                  videoRef.current = el;
-                  ref(el);
-                }}
+              <CloudinaryVideoPlayer
+                videoUrl={item.video}
+                isPlaying={false} // Don't autoplay on mobile preview
+                isMuted={true}
+                loop={true}
+                controls={false}
                 className="w-full h-full object-cover"
-                src={item.video}
-                loop
-                muted
-                playsInline
-                controlsList="nodownload"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block'
+                }}
                 onLoadedData={handleVideoLoaded}
                 onError={handleVideoError}
-                preload="metadata"
-                poster={item.image && item.image.length > 0 ? item.image[0] : ''}
+                poster={item.images && item.images.length > 0 ? item.images[0] : ''}
+                playsInline={true}
               />
               {/* Play button overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center">
-                  <Play className="w-6 h-6 text-black" />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+                <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center shadow-lg">
+                  <Play className="w-6 h-6 text-black ml-1" />
                 </div>
               </div>
+              {/* Loading indicator */}
+              {videoLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50">
+                  <Loader className="w-6 h-6 text-white animate-spin" />
+                </div>
+              )}
             </div>
           )}
 
           {/* Fallback to image if no video */}
           {!item?.video && (
             <div className="w-full h-full">
-              {item?.image && item.image.length > 0 ? (
+              {item?.images && item.images.length > 0 ? (
                 <img
-                  src={item.image[0]}
+                  src={item.images[0]}
                   alt={item.name}
                   className="w-full h-full object-cover"
                 />
@@ -336,10 +594,10 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
 
               <div className="p-3 flex items-center justify-center gap-4">
                 <div className="w-1/3">
-                  {item?.image && item.image.length > 0 ? (
+                  {item?.images && item.images.length > 0 ? (
                     <div className="relative overflow-hidden rounded-md border border-white/10 shadow-lg">
                       <img
-                        src={item.image[0]}
+                        src={item.images[0]}
                         alt={item.name || item.title}
                         className="w-16 h-20 object-cover transition-transform duration-300 group-hover:scale-110"
                       />
@@ -372,37 +630,44 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
       {modalOpen && item?.video && (
         <div className="fast-moving-video-modal">
           {/* Close button */}
-          <div className="absolute top-4 right-4 z-50">
+          <div className="absolute top-4 right-4 z-50 safe-area-inset-top">
             <button
               onClick={handleCloseModal}
-              className="p-2 rounded-full bg-black/50 text-white"
+              className="p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-colors"
+              aria-label="Close video"
             >
               <X size={24} />
             </button>
           </div>
 
-          {/* Full screen video player */}
-          <div className="w-full h-full flex items-center justify-center">
-            <video
+          {/* Full screen video player container */}
+          <div className="relative w-full h-full flex items-center justify-center bg-black">
+            <CloudinaryVideoPlayer
+              videoUrl={item.video}
+              isPlaying={true} // Autoplay in modal
+              isMuted={false} // Allow sound in modal
+              loop={true}
+              controls={true}
               className="w-full h-full object-cover"
-              src={item.video}
-              autoPlay
-              loop
-              playsInline
-              controls
-              controlsList="nodownload"
-              onContextMenu={(e) => e.preventDefault()}
+              style={{
+                width: '100vw',
+                height: '100vh',
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+              playsInline={true}
+              autoplay={true}
             />
           </div>
 
           {/* Product info overlay at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-            <h3 className="text-white text-lg font-semibold mb-2">{item?.name || item?.title}</h3>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pb-6 safe-area-inset-bottom">
+            <h3 className="text-white text-lg font-semibold mb-2 drop-shadow-lg">{item?.name || item?.title}</h3>
             <div className="flex justify-between items-center">
-              <p className="text-white font-bold">₹{item?.price || item?.salePrice}</p>
+              <p className="text-white font-bold text-xl drop-shadow-lg">₹{item?.price || item?.salePrice}</p>
               <button
                 onClick={(e) => handleAddToCartClick(e)}
-                className="px-4 py-2 bg-white text-black rounded-full flex items-center gap-2 text-sm font-medium"
+                className="px-4 py-2 bg-white text-black rounded-full flex items-center gap-2 text-sm font-medium hover:bg-gray-100 transition-colors shadow-lg"
               >
                 <ShoppingBag size={16} />
                 Add to Cart

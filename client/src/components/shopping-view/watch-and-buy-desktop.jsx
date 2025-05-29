@@ -109,6 +109,9 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
           }
         });
 
+        // Store reference to player on video element for external access
+        videoElement.cloudinaryPlayer = playerInstanceRef.current;
+
         setIsPlayerReady(true);
 
         // Set up event listeners
@@ -325,7 +328,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [videoProgress, setVideoProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted to match video player initialization
   const [activeItem] = useState(0);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [videoCardHeight, setVideoCardHeight] = useState(600);
@@ -397,35 +400,105 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     ]
   };
 
+  // Function to force unmute the active video player
+  const forceUnmuteActiveVideo = useCallback(() => {
+    // Multiple strategies to find and unmute the active video
+    setTimeout(() => {
+      console.log('Attempting to force unmute active video...');
+
+      // Strategy 1: Find by z-20 class (center video)
+      let activeVideoElements = document.querySelectorAll('.video-card-container.z-20 video');
+      console.log('Found videos with z-20:', activeVideoElements.length);
+
+      // Strategy 2: If no z-20, find all videos and unmute them
+      if (activeVideoElements.length === 0) {
+        activeVideoElements = document.querySelectorAll('.video-card video');
+        console.log('Found videos with video-card:', activeVideoElements.length);
+      }
+
+      // Strategy 3: Find all videos in modal
+      if (activeVideoElements.length === 0) {
+        activeVideoElements = document.querySelectorAll('.modal-view video');
+        console.log('Found videos in modal:', activeVideoElements.length);
+      }
+
+      activeVideoElements.forEach((video, index) => {
+        console.log(`Processing video ${index}:`, video);
+
+        // Try cloudinaryPlayer reference
+        if (video && video.cloudinaryPlayer) {
+          try {
+            video.cloudinaryPlayer.unmute();
+            console.log(`Successfully unmuted video ${index} via cloudinaryPlayer`);
+          } catch (error) {
+            console.warn(`Error unmuting video ${index} via cloudinaryPlayer:`, error);
+          }
+        }
+
+        // Also try direct video element unmute
+        if (video) {
+          try {
+            video.muted = false;
+            console.log(`Set video ${index} muted property to false`);
+          } catch (error) {
+            console.warn(`Error setting muted property on video ${index}:`, error);
+          }
+        }
+      });
+
+      // Also ensure React state is updated
+      setIsMuted(false);
+      console.log('Set React isMuted state to false');
+    }, 200); // Increased delay to ensure DOM is ready
+  }, []);
+
   // Function to go to the next video (infinite loop)
   const goToNextVideo = useCallback(() => {
     const newIndex = (currentVideoIndex + 1) % products.length;
     setCurrentVideoIndex(newIndex);
     setSelectedVideo(products[newIndex]);
-  }, [currentVideoIndex, products]);
+    // Ensure audio is unmuted for the new video
+    setIsMuted(false);
+    // Force unmute the active video player
+    forceUnmuteActiveVideo();
+  }, [currentVideoIndex, products, forceUnmuteActiveVideo]);
 
   // Function to go to the previous video (infinite loop)
   const goToPrevVideo = useCallback(() => {
     const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
     setCurrentVideoIndex(newIndex);
     setSelectedVideo(products[newIndex]);
-  }, [currentVideoIndex, products]);
+    // Ensure audio is unmuted for the new video
+    setIsMuted(false);
+    // Force unmute the active video player
+    forceUnmuteActiveVideo();
+  }, [currentVideoIndex, products, forceUnmuteActiveVideo]);
 
   // Function to go to a specific video
   const goToVideo = useCallback((index) => {
     setCurrentVideoIndex(index);
     setSelectedVideo(products[index]);
-  }, [products]);
+    // Ensure audio is unmuted for the new video
+    setIsMuted(false);
+    // Force unmute the active video player
+    forceUnmuteActiveVideo();
+  }, [products, forceUnmuteActiveVideo]);
 
   // Reset video state when modal opens or video changes
   useEffect(() => {
     if (showVideoModal) {
       setIsPlaying(true);
-      setIsMuted(false);
       setVideoProgress(0);
       lastProgressRef.current = 0;
+
+      // Unmute audio after a short delay to ensure player is ready
+      setTimeout(() => {
+        setIsMuted(false);
+        // Also force unmute when modal opens or video changes
+        forceUnmuteActiveVideo();
+      }, 500);
     }
-  }, [showVideoModal, currentVideoIndex]);
+  }, [showVideoModal, currentVideoIndex, forceUnmuteActiveVideo]);
 
   // Calculate and update video card dimensions based on viewport size
   useEffect(() => {
@@ -511,8 +584,8 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   if (!hasWatchAndBuyProducts) return null;
 
   return (
-    <section className="py-6 md:py-12 bg-white">
-      <div className="container mx-auto px-2">
+    <section className="w-full py-6 md:py-12 bg-white">
+      <div className="px-2 md:px-8">
         <div className="max-w-3xl mx-auto text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">Watch And Buy</h2>
           <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
@@ -545,7 +618,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
             <Slider ref={sliderRef} {...sliderSettings} className="watch-buy-slider">
               {products.map((productItem, index) => (
-                <div key={productItem._id} className="pb-2 px-0">
+                <div key={productItem._id} className="pb-2 px-2">
                   <div
                     onClick={() => {
                       setSelectedVideo(productItem);
@@ -648,21 +721,10 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
       {/* VideoStacker Modal - When a video is clicked */}
       {showVideoModal && selectedVideo && (
         <div
-          className="fixed inset-0 bg-black z-50 flex flex-col modal-view"
+          className="fixed inset-0 bg-black/90 z-50 flex flex-col modal-view"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Modal Header - Only Close Button in Top Right */}
-          <div className="absolute top-0 left-0 right-0 p-4 flex justify-end items-center z-50">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowVideoModal(false);
-              }}
-              className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/40 transition-colors"
-            >
-              <X className="h-5 w-5 text-white" stroke="currentColor" />
-            </button>
-          </div>
+
 
           {/* VideoStacker UI */}
           <div className="flex-grow flex flex-col items-center justify-center">
@@ -685,9 +747,21 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
             </div>
 
             <div className="video-stacker-container relative h-[90vh] w-full max-w-6xl overflow-hidden">
+               {/* Modal Header - Only Close Button in Top Right */}
+          <div   style={{ right: `calc(50% - ${modalArrowOffset}px - 40px)` }} className="absolute top-0 p-4 flex justify-end items-center z-50">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowVideoModal(false);
+              }}
+              className="w-16 h-16 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center hover:bg-black/40 transition-colors"
+            >
+              <X className="h-10 w-10 text-white" stroke="currentColor" />
+            </button>
+          </div>
               {/* Navigation Arrows */}
               <div
-                className="absolute top-1/2 z-30 transform -translate-y-1/2"
+                className="absolute top-1/2 z-30 "
                 style={{ left: `calc(50% - ${modalArrowOffset}px - 40px)` }}
               >
                 <button
@@ -695,17 +769,17 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     e.stopPropagation();
                     goToPrevVideo();
                   }}
-                  className="nav-arrow transition-all duration-300"
+                  className="nav-arrow "
                   aria-label="Previous video"
                 >
                   <div className="big-arrow-left">
-                    <ChevronLeft className="h-8 w-8 text-white" />
+                    <ChevronLeft className="h-8 w-8   md:w-12 md:h-12 text-white" />
                   </div>
                 </button>
               </div>
 
               <div
-                className="absolute top-1/2 z-30 transform -translate-y-1/2"
+                className="absolute top-1/2 z-30  "
                 style={{ right: `calc(50% - ${modalArrowOffset}px - 40px)` }}
               >
                 <button
@@ -713,11 +787,11 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                     e.stopPropagation();
                     goToNextVideo();
                   }}
-                  className="nav-arrow transition-all duration-300"
+                  className="nav-arrow "
                   aria-label="Next video"
                 >
                   <div className="big-arrow-right">
-                    <ChevronRight className="h-8 w-8 text-white" />
+                    <ChevronRight className="h-8 w-8 md:w-12 md:h-12 text-white" />
                   </div>
                 </button>
               </div>
@@ -781,8 +855,8 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                         style={
                           showVideoModal
                             ? {
-                                width: `${Math.floor(Math.floor(window.innerHeight * 0.8) * (9/16))}px`,
-                                height: `${Math.floor(window.innerHeight * 0.8)}px`,
+                                width: `${Math.floor(Math.floor(window.innerHeight * 0.87) * (9/16))}px`,
+                                height: `${Math.floor(window.innerHeight * 0.85)}px`,
                                 marginBottom: "10px",
                                 aspectRatio: "9/16"
                               }
@@ -803,7 +877,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                                 className="react-player"
                                 style={{ width: "100%", height: "100%" }}
                                 isPlaying={position === 0 ? isPlaying : false}
-                                isMuted={position === 0 ? isMuted : true}
+                                isMuted={position === 0 ? isMuted : false}
                                 autoplay={position === 0 && showVideoModal}
                                 onProgress={position === 0 ? handleProgress : undefined}
                                 onEnded={position === 0 ? handleVideoEnd : undefined}

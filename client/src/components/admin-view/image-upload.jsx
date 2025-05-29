@@ -47,12 +47,12 @@ function ProductImageUpload({
     const selectedFiles = Array.from(event.target.files || []);
 
     // Filter out files that are too large
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 1.2MB in bytes
+    const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
     const validFiles = selectedFiles.filter(file => {
       if (file.size > MAX_FILE_SIZE) {
         toast({
           title: "File too large",
-          description: `${file.name} exceeds 1.2MB limit and was not added.`,
+          description: `${file.name} exceeds 1MB limit and was not added.`,
           variant: "destructive",
         });
         return false;
@@ -177,13 +177,13 @@ function ProductImageUpload({
   }
 
   async function uploadImageToCloudinary(file, index) {
-    // Check file size - limit to 1.2MB (1.2 * 1024 * 1024 bytes)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 1.2MB in bytes
+    // Check file size - limit to 1MB (1 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
     if (file.size > MAX_FILE_SIZE) {
-      console.error(`File size exceeds 1.2MB limit. Please select a smaller image.`);
+      console.error(`File size exceeds 1MB limit. Please select a smaller image.`);
       toast({
         title: "File too large",
-        description: `File size exceeds 1.2MB limit. Please select a smaller image.`,
+        description: `File size exceeds 1MB limit. Please select a smaller image.`,
         variant: "destructive",
       });
       // Remove the file from the arrays
