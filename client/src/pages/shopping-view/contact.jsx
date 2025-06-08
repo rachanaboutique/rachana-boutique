@@ -95,7 +95,7 @@ const Contact = () => {
             "logo": "https://rachanaboutique.in/logo.png",
             "contactPoint": {
               "@type": "ContactPoint",
-              "telephone": "+91 9944796697",
+              "telephone": "+91 9994412667",
               "contactType": "customer service",
               "email": "contact@rachanaboutique.in",
               "availableLanguage": ["English", "Hindi", "Tamil"]
@@ -127,23 +127,23 @@ const Contact = () => {
   
   
                <div className="max-w-6xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-4 gap-6 px-4">
-          <a href="tel:+919944796697" className="block h-full">
+          <a href="tel:+919994412667" className="block h-full">
             <div className="bg-white p-8 text-center shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full flex flex-col items-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
                 <Phone className="h-8 w-8 text-gray-700" />
               </div>
               <h3 className="text-xl font-medium mb-2">Phone Number</h3>
-              <p className="text-gray-600">+91 9944796697</p>
+              <p className="text-gray-600">+91 9994412667</p>
             </div>
           </a>
 
-          <a href="https://wa.me/919944796697" target="_blank" className="block h-full">
+          <a href="https://wa.me/919994412667" target="_blank" className="block h-full">
             <div className="bg-white p-8 text-center shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full flex flex-col items-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
                 <MessageSquare className="h-8 w-8 text-gray-700" />
               </div>
               <h3 className="text-xl font-medium mb-2">WhatsApp</h3>
-              <p className="text-gray-600">+91 9944796697</p>
+              <p className="text-gray-600">+91 9994412667</p>
             </div>
           </a>
 
@@ -263,7 +263,7 @@ const Contact = () => {
                       <span>Facebook</span>
                     </a>
                     {/* <a
-                      href="https://wa.me/9944796697"
+                      href="https://wa.me/9994412667"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"

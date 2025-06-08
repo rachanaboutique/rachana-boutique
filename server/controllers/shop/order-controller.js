@@ -87,10 +87,28 @@ const capturePayment = async (req, res) => {
     order.orderStatus = "confirmed";
     order.paymentId = paymentId;
 
-    // Reduce the total stock for each product in the order
+    // Reduce the total stock and color inventory for each product in the order
     for (let item of order.cartItems) {
       const product = await Product.findById(item.productId);
+
+      // Reduce total stock
       product.totalStock -= item.quantity;
+
+      // Reduce color inventory if the item has a color
+      if (item.colors && item.colors._id) {
+        const colorIndex = product.colors.findIndex(color =>
+          color._id.toString() === item.colors._id.toString()
+        );
+
+        if (colorIndex !== -1) {
+          product.colors[colorIndex].inventory -= item.quantity;
+          // Ensure inventory doesn't go below 0
+          if (product.colors[colorIndex].inventory < 0) {
+            product.colors[colorIndex].inventory = 0;
+          }
+        }
+      }
+
       await product.save();
     }
 

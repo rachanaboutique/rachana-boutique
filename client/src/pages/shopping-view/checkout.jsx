@@ -85,7 +85,11 @@ function ShoppingCheckout() {
         image: item?.image[0],
         price: item?.salePrice > 0 ? item?.salePrice : item?.price,
         quantity: item?.quantity,
-        colors: item?.colors,
+        colors: item?.colors ? {
+          _id: item.colors._id,
+          title: item.colors.title,
+          image: item.colors.image
+        } : null,
       })),
       addressInfo: {
         addressId: currentSelectedAddress?._id,

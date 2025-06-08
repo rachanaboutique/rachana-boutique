@@ -127,12 +127,7 @@ const ShoppingProductTile = ({
           </div>
         )}
 
-        {/* Product Code Badge (if available) */}
-        {product.productCode && (
-          <div className="hidden md:block absolute top-2 right-2 bg-white text-black text-xs font-semibold px-2 py-1 rounded">
-            Code: {product.productCode}
-          </div>
-        )}
+        {/* Product Code Badge removed from image */}
 
         {/* Stock Status Badge */}
         {totalStock === 0 && (
@@ -172,30 +167,31 @@ const ShoppingProductTile = ({
       </div>
 
       {/* Product Info */}
-      <div className="flex-grow flex flex-col items-center">
+      <div className="flex flex-col items-center">
         <h3
-          className="text-lg font-medium mb-1 line-clamp-2 cursor-pointer hover:text-gray-600 text-center"
+          className="text-xl font-medium line-clamp-2 cursor-pointer hover:text-gray-600 text-center"
           onClick={() => handleViewDetails(product._id)}
         >
           {name}
         </h3>
-       {/*  {product.productCode && (
-          <p className="text-sm text-gray-500">Code: {product.productCode}</p>
-        )} */}
+       
       
 
-        <div className="mt-auto">
+        <div className="">
           <div className="flex items-center justify-center">
             {salePrice && price > salePrice ? (
               <>
-                <span className="font-medium text-md text-black">{formatPrice(salePrice)}</span>
+                <span className="font-semibold text-lg text-black">{formatPrice(salePrice)}</span>
                 <span className="ml-2 text-sm text-gray-500 line-through">{formatPrice(price)}</span>
               </>
             ) : (
-              <span className="font-medium  text-md text-black">{formatPrice(price)}</span>
+              <span className="font-semibold  text-lg text-black">{formatPrice(price)}</span>
             )}
           </div>
         </div>
+         {product.productCode && (
+          <p className="text-md text-gray-700 mb-2">Code: {product.productCode.toUpperCase()}</p>
+        )}
       </div>
     </div>
   );

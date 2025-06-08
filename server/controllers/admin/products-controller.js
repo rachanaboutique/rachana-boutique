@@ -51,7 +51,7 @@ const handleImageUpload = async (req, res) => {
       // Compress and convert the image
       const compressedBuffer = await sharp(file.buffer)
         .resize({ width: 1024 }) // Resize to optimize storage
-        .toFormat(outputFormat, { quality: 90 }) 
+        .toFormat(outputFormat, { quality: 90 })
         .toBuffer();
 
       const b64 = compressedBuffer.toString("base64");
@@ -135,6 +135,17 @@ const addProduct = async (req, res) => {
     const images = Array.isArray(image) ? image : [image];
     // Ensure that colors is an array if provided; otherwise, default to an empty array.
     const colorsArray = colors ? (Array.isArray(colors) ? colors : [colors]) : [];
+
+    // Validate color inventory doesn't exceed total stock
+    if (colorsArray.length > 0) {
+      const totalColorInventory = colorsArray.reduce((sum, color) => sum + (color.inventory || 0), 0);
+      if (totalColorInventory > totalStock) {
+        return res.status(400).json({
+          success: false,
+          message: "Total color inventory cannot exceed total stock"
+        });
+      }
+    }
 
     const newlyCreatedProduct = new Product({
       image: images,
@@ -230,6 +241,17 @@ const editProduct = async (req, res) => {
     const images = Array.isArray(image) ? image : [image];
     // Ensure that colors is an array if provided; otherwise, default to an empty array.
     const colorsArray = colors ? (Array.isArray(colors) ? colors : [colors]) : [];
+
+    // Validate color inventory doesn't exceed total stock
+    if (colorsArray.length > 0) {
+      const totalColorInventory = colorsArray.reduce((sum, color) => sum + (color.inventory || 0), 0);
+      if (totalColorInventory > totalStock) {
+        return res.status(400).json({
+          success: false,
+          message: "Total color inventory cannot exceed total stock"
+        });
+      }
+    }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,

@@ -304,28 +304,11 @@ const Footer = () => {
                   <a href="tel:+919994412667" className="hover:underline" onClick={(e) => { window.location.href = 'tel:+919994412667'; e.preventDefault(); }}>+91 9994412667</a>
                 </div>
 
-
-
-
-                <a href="https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=rachanaboutiquechennai@gmail.com" target="_blank" className="hidden md:block">
-                  <div className="flex-shrink-0 flex items-center gap-x-2" style={{ cursor: 'pointer' }}>
-                    <Mail className="w-5 h-5 text-rose-600 mr-2" />
-                    <h1 className="text-md md:text-lg">rachanaboutiquechennai@gmail.com</h1>
-
-                  </div>
+                {/* Email */}
+                <a href="mailto:rachanaboutiquechennai@gmail.com" target="_blank" className="flex items-center gap-x-2" rel="noopener noreferrer">
+                  <Mail className="w-5 h-5 text-rose-600 mr-2" />
+                  <span className="text-md md:text-lg">rachanaboutiquechennai@gmail.com</span>
                 </a>
-
-
-                <a href="mailto:rachanaboutiquechennai@gmail.com" target="_blank" className="block md:hidden">
-                  <div className="flex-shrink-0 flex items-center gap-x-2" style={{ cursor: 'pointer' }}>
-                    <Mail className="w-5 h-5 text-rose-600 mr-2" />
-                    <h1 className="text-md md:text-lg">rachanaboutiquechennai@gmail.com</h1>
-
-                  </div>
-                </a>
-
-
-
 
                 {/* Social Media Links */}
                 <div className="flex gap-4 mt-3">

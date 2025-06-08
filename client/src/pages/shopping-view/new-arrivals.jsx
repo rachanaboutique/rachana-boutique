@@ -81,28 +81,60 @@ function NewArrivals() {
         return Promise.reject("Out of stock");
       }
 
-      // Check if adding one more would exceed stock limit
-      let currentCartItems = cartItems.items || [];
-      if (currentCartItems.length) {
+      // Get the first available color (with inventory > 0) if product has colors
+      let colorId = undefined;
+      let selectedColor = null;
+
+      if (product?.colors && product.colors.length > 0) {
+        selectedColor = product.colors.find(color => color.inventory > 0);
+
+        if (!selectedColor) {
+          toast({
+            title: "All colors are out of stock",
+            variant: "destructive",
+          });
+          return Promise.reject("All colors out of stock");
+        }
+
+        colorId = selectedColor._id;
+
+        // Check color inventory
+        let currentCartItems = cartItems.items || [];
         const itemIndex = currentCartItems.findIndex(
-          (item) => item.productId === productId
+          (item) => item.productId === productId &&
+                    item.colors &&
+                    item.colors._id === colorId
         );
+
         if (itemIndex > -1) {
           const currentQuantity = currentCartItems[itemIndex].quantity;
-          if (currentQuantity + 1 > totalStock) {
+          if (currentQuantity + 1 > selectedColor.inventory) {
             toast({
-              title: `Only ${totalStock} quantity available for this item`,
+              title: `Only ${selectedColor.inventory} quantity available for ${selectedColor.title}`,
               variant: "destructive",
             });
-            return Promise.reject("Exceeds stock limit");
+            return Promise.reject("Exceeds color stock limit");
+          }
+        }
+      } else {
+        // Check total stock for products without colors
+        let currentCartItems = cartItems.items || [];
+        if (currentCartItems.length) {
+          const itemIndex = currentCartItems.findIndex(
+            (item) => item.productId === productId
+          );
+          if (itemIndex > -1) {
+            const currentQuantity = currentCartItems[itemIndex].quantity;
+            if (currentQuantity + 1 > totalStock) {
+              toast({
+                title: `Only ${totalStock} quantity available for this item`,
+                variant: "destructive",
+              });
+              return Promise.reject("Exceeds stock limit");
+            }
           }
         }
       }
-
-      // Get the first color if available
-      const colorId = product?.colors && product.colors.length > 0
-        ? product.colors[0]._id
-        : undefined;
 
       // Add to cart
       return dispatch(
@@ -197,21 +229,10 @@ function NewArrivals() {
   // Show loader when products are loading and we don't have initial data
   // if (productsLoading && productList.length === 0) return <Loader />;
     if (productsLoading && productList.length === 0) return (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      height: "90vh",
-      color: "#333333",
-      fontSize: 24,
-      fontWeight: 600,
-      letterSpacing: 1,
-      textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
-    }}
-  >
-    Loading...
-  </div>
+  <div className="flex items-center justify-center h-screen w-screen bg-white">
+  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+</div>
+
 );
 
   return (
@@ -364,7 +385,10 @@ function NewArrivals() {
               </div>
 
               <p className="text-gray-500 mt-2 md:mt-0">
-                {productsLoading && "Loading..."}
+                {productsLoading && (<div className="flex items-center justify-center h-screen w-screen bg-white">
+  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+</div>
+)}
               </p>
               {/* <p className="text-gray-500">
                   {isLoading ? "Loading..." : `Showing ${newArrivalProducts.length} products`}

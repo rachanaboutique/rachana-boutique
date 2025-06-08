@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
@@ -18,6 +18,7 @@ import banner from '@/assets/allproducts.png';
 function ShoppingListing({ categorySlug }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { productList, isLoading: productsLoading } = useSelector((state) => state.shopProducts);
   const { categoriesList, isLoading: categoriesLoading } = useSelector((state) => state.shopCategories);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -63,9 +64,19 @@ function ShoppingListing({ categorySlug }) {
     }
   }, [categorySearchParam, categoriesList, categorySlug, navigate]);
 
-  // Fetch categories
+  // Fetch categories on mount
   useEffect(() => {
     dispatch(fetchCategories());
+  }, [dispatch]);
+
+  // Initial product fetch when component mounts
+  useEffect(() => {
+    dispatch(
+      fetchAllFilteredProducts({
+        filterParams: null,
+        sortParams: null,
+      })
+    );
   }, [dispatch]);
 
   const filteredProducts = useMemo(() => {
@@ -119,11 +130,11 @@ function ShoppingListing({ categorySlug }) {
     }
 
     return updatedProducts;
-  }, [productList, filters, sort, categorySearchParam]);
+  }, [productList, filters, sort, currentCategory]);
 
 
 
-  const handleFilter = (filterKey, filterValue) => {
+  const handleFilter = useCallback((filterKey, filterValue) => {
     const updatedFilters = { ...filters };
 
     // Add or remove filter value
@@ -144,82 +155,13 @@ function ShoppingListing({ categorySlug }) {
     }
 
     setFilters(updatedFilters);
-  };
+  }, [filters]);
 
-  function handleSort(value) {
+  const handleSort = useCallback((value) => {
     setSort(value);
-  }
+  }, []);
 
-  function handleGetProductDetails(getCurrentProductId) {
-    navigate(`/shop/details/${getCurrentProductId}`);
-  }
 
-  function handleAddtoCart(product) {
-    const productId = product._id;
-    const totalStock = product.totalStock;
-
-    // Check if user is authenticated
-    if (!isAuthenticated) {
-      toast({
-        title: "Please log in to add items to the cart!",
-        variant: "destructive",
-      });
-      return Promise.reject("Not authenticated");
-    }
-
-    // Check if product is in stock
-    if (totalStock <= 0) {
-      toast({
-        title: "This product is out of stock",
-        variant: "destructive",
-      });
-      return Promise.reject("Out of stock");
-    }
-
-    // Check if adding one more would exceed stock limit
-    let currentCartItems = cartItems.items || [];
-    if (currentCartItems.length) {
-      const itemIndex = currentCartItems.findIndex(
-        (item) => item.productId === productId
-      );
-      if (itemIndex > -1) {
-        const currentQuantity = currentCartItems[itemIndex].quantity;
-        if (currentQuantity + 1 > totalStock) {
-          toast({
-            title: `Only ${totalStock} quantity available for this item`,
-            variant: "destructive",
-          });
-          return Promise.reject("Exceeds stock limit");
-        }
-      }
-    }
-
-    // Get the first color if available
-    const colorId = product?.colors && product.colors.length > 0
-      ? product.colors[0]._id
-      : undefined;
-
-    // Add to cart
-    return dispatch(
-      addToCart({
-        userId: user?.id,
-        productId: productId,
-        quantity: 1,
-        colorId: colorId,
-      })
-    ).then((data) => {
-      if (data?.payload?.success) {
-        // Force a refresh of the cart items to ensure we have the latest data
-        return dispatch(fetchCartItems(user?.id)).then(() => {
-          toast({
-            title: "Product added to cart",
-          });
-          return data;
-        });
-      }
-      return data;
-    });
-  }
 
   /*   function handleAddtoCart(getCurrentProductId, getTotalStock) {
       const getCartItems = cartItems.items || [];
@@ -257,11 +199,16 @@ function ShoppingListing({ categorySlug }) {
       });
     } */
 
-  // Optimize fetching by using a single useEffect for filter/sort changes
+  // Fetch products when filters, sort, or category changes (but not on initial mount)
   useEffect(() => {
+    // Skip if this is the initial render and no filters/sort are applied
+    if (!currentCategory && Object.keys(filters).length === 0 && !sort) {
+      return;
+    }
+
     const filterParams = {};
     // Use currentCategory instead of categorySearchParam
-    if (currentCategory) {
+    if (currentCategory?._id) {
       filterParams.category = currentCategory._id;
     }
     if (Object.keys(filters).length > 0) {
@@ -275,17 +222,16 @@ function ShoppingListing({ categorySlug }) {
         sortParams: sort,
       })
     );
-  }, [dispatch, currentCategory, filters, sort]);
+  }, [dispatch, currentCategory?._id, filters, sort]);
 
   // Enhanced category descriptions with more detailed content
   const getCategoryDescription = useMemo(() => {
     if (!currentCategory) return "";
 
-
     const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
     console.log(mappedCategory);
     return mappedCategory?.description || "";
-  }, [currentCategory, categoryMapping]);
+  }, [currentCategory]);
 
   // Get SEO-friendly URL for current category - Always use SEO-friendly URLs
   const getCategoryUrl = useMemo(() => {
@@ -295,7 +241,112 @@ function ShoppingListing({ categorySlug }) {
     return mappedCategory ?
       `/shop/collections/${mappedCategory.slug}` :
       `/shop/collections/${currentCategory.name.toLowerCase().replace(/\s+/g, '-')}`; // Fallback to a slug based on category name
-  }, [currentCategory, categoryMapping]);
+  }, [currentCategory]);
+
+  // Memoize the handleAddtoCart function to prevent unnecessary re-renders
+  const handleAddtoCart = useCallback((product) => {
+    const productId = product._id;
+    const totalStock = product.totalStock;
+
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in to add items to the cart!",
+        variant: "destructive",
+      });
+      return Promise.reject("Not authenticated");
+    }
+
+    // Check if product is in stock
+    if (totalStock <= 0) {
+      toast({
+        title: "This product is out of stock",
+        variant: "destructive",
+      });
+      return Promise.reject("Out of stock");
+    }
+
+    // Get the first available color (with inventory > 0) if product has colors
+    let colorId = undefined;
+    let selectedColor = null;
+
+    if (product?.colors && product.colors.length > 0) {
+      selectedColor = product.colors.find(color => color.inventory > 0);
+
+      if (!selectedColor) {
+        toast({
+          title: "All colors are out of stock",
+          variant: "destructive",
+        });
+        return Promise.reject("All colors out of stock");
+      }
+
+      colorId = selectedColor._id;
+
+      // Check color inventory
+      let currentCartItems = cartItems.items || [];
+      const itemIndex = currentCartItems.findIndex(
+        (item) => item.productId === productId &&
+                  item.colors &&
+                  item.colors._id === colorId
+      );
+
+      if (itemIndex > -1) {
+        const currentQuantity = currentCartItems[itemIndex].quantity;
+        if (currentQuantity + 1 > selectedColor.inventory) {
+          toast({
+            title: `Only ${selectedColor.inventory} quantity available for ${selectedColor.title}`,
+            variant: "destructive",
+          });
+          return Promise.reject("Exceeds color stock limit");
+        }
+      }
+    } else {
+      // Check total stock for products without colors
+      let currentCartItems = cartItems.items || [];
+      if (currentCartItems.length) {
+        const itemIndex = currentCartItems.findIndex(
+          (item) => item.productId === productId
+        );
+        if (itemIndex > -1) {
+          const currentQuantity = currentCartItems[itemIndex].quantity;
+          if (currentQuantity + 1 > totalStock) {
+            toast({
+              title: `Only ${totalStock} quantity available for this item`,
+              variant: "destructive",
+            });
+            return Promise.reject("Exceeds stock limit");
+          }
+        }
+      }
+    }
+
+    // Add to cart
+    return dispatch(
+      addToCart({
+        userId: user?.id,
+        productId: productId,
+        quantity: 1,
+        colorId: colorId,
+      })
+    ).then((data) => {
+      if (data?.payload?.success) {
+        // Force a refresh of the cart items to ensure we have the latest data
+        return dispatch(fetchCartItems(user?.id)).then(() => {
+          toast({
+            title: "Product added to cart",
+          });
+          return data;
+        });
+      }
+      return data;
+    });
+  }, [isAuthenticated, cartItems.items, dispatch, user?.id, toast]);
+
+  // Memoize the handleGetProductDetails function
+  const handleGetProductDetails = useCallback((getCurrentProductId) => {
+    navigate(`/shop/details/${getCurrentProductId}`);
+  }, [navigate]);
 
   const structuredData = useMemo(() => {
     const baseUrl = 'https://rachanaboutique.in';
@@ -403,28 +454,17 @@ function ShoppingListing({ categorySlug }) {
     }
 
     return data;
-  }, [currentCategory, location.pathname, location.search, filteredProducts?.length, getCategoryDescription, getCategoryUrl]);
+  }, [currentCategory, location.pathname, filteredProducts?.length, getCategoryDescription, getCategoryUrl]);
 
 
   // Show loader when either products or categories are loading and we don't have initial data
   const isInitialLoading = (productsLoading && productList.length === 0) || (categoriesLoading && categoriesList.length === 0);
 
   if (isInitialLoading) return (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      height: "90vh",
-      color: "#333333",
-      fontSize: 24,
-      fontWeight: 600,
-      letterSpacing: 1,
-      textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
-    }}
-  >
-    Loading...
-  </div>
+<div className="flex items-center justify-center h-screen w-screen bg-white">
+  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+</div>
+
 );
 
   return (
@@ -554,10 +594,7 @@ function ShoppingListing({ categorySlug }) {
             <div className="bg-white">
               <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between mb-6 pb-4 border-b">
                 <div>
-                  {/*  <h2 className="text-2xl font-light uppercase tracking-wide mb-2">
-                    {currentCategory?.title || "All Products"}
-                  </h2>
-                  <p className="text-gray-500">
+                  {/* <p className="text-gray-500">
                     {productsLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
                   </p> */}
                 </div>
@@ -602,9 +639,9 @@ function ShoppingListing({ categorySlug }) {
                     </h2>
                   </div>
 
-                  <p className="text-gray-500 mb-3">
-                    {productsLoading && "Loading..."}
-                  </p>
+                  {/* <p className="text-gray-500 mb-3">
+                    {productsLoading ? "Loading..." : `Showing ${filteredProducts.length} products`}
+                  </p> */}
 
                   {/* Mobile Filter and Sort Controls */}
                   <div className="flex items-center justify-between gap-2 mb-3">
@@ -641,20 +678,42 @@ function ShoppingListing({ categorySlug }) {
 
 
               {/* Products Grid - Using Original ShoppingProductTile */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {filteredProducts.map((productItem) => (
-                  <ShoppingProductTile
-                    key={productItem._id}
-                    handleGetProductDetails={handleGetProductDetails}
-                    product={productItem}
-                    handleAddtoCart={handleAddtoCart}
-                  />
-                ))}
-              </div>
+              {productsLoading ? (
+  //               <div
+  //   style={{
+  //     display: "flex",
+  //     justifyContent: "center",
+  //     alignItems: "center",
+  //     height: "90vh",
+  //     color: "#333333",
+  //     fontSize: 24,
+  //     fontWeight: 600,
+  //     letterSpacing: 1,
+  //     textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
+  //   }}
+  // >
+  //   Loading...
+  // </div>
+  <div className="flex items-center justify-center h-screen w-screen bg-white">
+  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+</div>
+
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {filteredProducts.map((productItem) => (
+                    <ShoppingProductTile
+                      key={productItem._id}
+                      handleGetProductDetails={handleGetProductDetails}
+                      product={productItem}
+                      handleAddtoCart={handleAddtoCart}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Collection Description Section - Always visible */}
               <div className="mb-12 mt-8 p-6 bg-gray-50 rounded-lg">
-                <h2 className="text-2xl text-3xl font-semibold mb-4">{currentCategory ? `About Our ${currentCategory.name} Collection` : 'Our Premium Collections'}</h2>
+                <h2 className="text-2xl text-3xl font-semibold mb-4">{currentCategory ? `About Our ${currentCategory.name} Collection` : ''}</h2>
                 <div className="prose max-w-none">
                   {currentCategory  &&
                       <p className="text-md md:text-lg mb-4">{getCategoryDescription || ""}</p>
@@ -663,7 +722,7 @@ function ShoppingListing({ categorySlug }) {
               </div>
 
               {/* Empty State - Improved with more content */}
-              {filteredProducts.length === 0 && (
+              {!productsLoading && filteredProducts.length === 0 && (
                 <div className="text-center py-12 border-t border-b my-8">
                   <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-100">
                     <ShoppingBag className="h-8 w-8 text-gray-400" />

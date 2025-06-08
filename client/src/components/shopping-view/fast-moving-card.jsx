@@ -89,20 +89,20 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
 
   // Initialize Cloudinary player
   useEffect(() => {
-    try {
     if (!isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current || !videoUrl || hasInitialized) return;
 
-    // Add a small delay to stagger initializations and reduce simultaneous loads
-    const initDelay = Math.random() * 500; // Random delay between 0-500ms
+    try {
+      // Add a small delay to stagger initializations and reduce simultaneous loads
+      const initDelay = Math.random() * 500; // Random delay between 0-500ms
 
-    const delayTimeout = setTimeout(() => {
-      try {
-        console.log(`Initializing Cloudinary player ${playerIdRef.current} for video:`, videoUrl?.substring(videoUrl.lastIndexOf('/') + 1, videoUrl.lastIndexOf('.')) || 'unknown');
-        setHasInitialized(true);
+      const delayTimeout = setTimeout(() => {
+        try {
+          console.log(`Initializing Cloudinary player ${playerIdRef.current} for video:`, extractPublicId(videoUrl));
+          setHasInitialized(true);
 
           const initTimeout = setTimeout(() => {
-            if (!videoRef.current) {
-              console.warn(`Video element not available for initialization ${playerIdRef.current}`);
+            if (!videoRef.current || playerInstanceRef.current) {
+              console.warn(`Video element not available or player already initialized ${playerIdRef.current}`);
               return;
             }
 
@@ -128,7 +128,7 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
 
             // Set up event listeners
             playerInstanceRef.current.on('ready', () => {
-              console.log(`Cloudinary player ${playerIdRef.current} ready for video:`, videoUrl?.substring(videoUrl.lastIndexOf('/') + 1, videoUrl.lastIndexOf('.')) || 'unknown');
+              console.log(`Cloudinary player ${playerIdRef.current} ready`);
               setIsPlayerReady(true);
 
               // Set video source when player is ready
@@ -168,12 +168,12 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
       }, initDelay);
 
       return () => clearTimeout(delayTimeout);
-    }  catch (error) {
+    } catch (error) {
       console.error('Error setting up Cloudinary player initialization:', error);
       setPlayerError(true);
       onError && onError(error);
     }
-  }, [isCloudinaryLoaded, videoUrl, isMuted, loop, controls, autoplay, playsInline, onLoadedData, onError]);
+  }, [isCloudinaryLoaded, videoUrl, hasInitialized]); // Removed callback dependencies to prevent re-initialization
 
   // Handle play/pause based on isPlaying prop
   useEffect(() => {
@@ -296,7 +296,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
   const [liked, setLiked] = useState(false);
 
   // State to track mobile modal visibility and mobile detection
-  const [modalOpen, setModalOpen] = useState(false);
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // Video states
@@ -314,7 +314,6 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
   // When opening modal, reset video loading state
   const handleCardClick = () => {
     if (isMobile && item?.video && !isMobileCard) {
-      setModalOpen(true);
       setVideoLoading(true);
       setVideoError(false);
       // Prevent body scroll when modal opens
@@ -322,19 +321,6 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
     }
   };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    // Re-enable body scroll when modal closes
-    document.body.classList.remove('modal-open');
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      // Ensure body scroll is re-enabled if component unmounts with modal open
-      document.body.classList.remove('modal-open');
-    };
-  }, []);
 
   const handleViewDetails = (productId) => {
     navigate(`/shop/details/${productId}`);
@@ -626,56 +612,8 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
       )}
 
 
-      {/* Video Modal for Mobile */}
-      {modalOpen && item?.video && (
-        <div className="fast-moving-video-modal">
-          {/* Close button */}
-          <div className="absolute top-4 right-4 z-50 safe-area-inset-top">
-            <button
-              onClick={handleCloseModal}
-              className="p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-colors"
-              aria-label="Close video"
-            >
-              <X size={24} />
-            </button>
-          </div>
 
-          {/* Full screen video player container */}
-          <div className="relative w-full h-full flex items-center justify-center bg-black">
-            <CloudinaryVideoPlayer
-              videoUrl={item.video}
-              isPlaying={true} // Autoplay in modal
-              isMuted={false} // Allow sound in modal
-              loop={true}
-              controls={true}
-              className="w-full h-full object-cover"
-              style={{
-                width: '100vw',
-                height: '100vh',
-                objectFit: 'cover',
-                objectPosition: 'center'
-              }}
-              playsInline={true}
-              autoplay={true}
-            />
-          </div>
 
-          {/* Product info overlay at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pb-6 safe-area-inset-bottom">
-            <h3 className="text-white text-lg font-semibold mb-2 drop-shadow-lg">{item?.name || item?.title}</h3>
-            <div className="flex justify-between items-center">
-              <p className="text-white font-bold text-xl drop-shadow-lg">₹{item?.price || item?.salePrice}</p>
-              <button
-                onClick={(e) => handleAddToCartClick(e)}
-                className="px-4 py-2 bg-white text-black rounded-full flex items-center gap-2 text-sm font-medium hover:bg-gray-100 transition-colors shadow-lg"
-              >
-                <ShoppingBag size={16} />
-                Add to Cart
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

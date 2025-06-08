@@ -205,6 +205,25 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
       return;
     }
 
+    // Check color inventory if increasing quantity
+    if (newQuantity > cartItem?.quantity && selectedColor) {
+      if (selectedColor.inventory <= 0) {
+        toast({
+          title: "Selected color is out of stock",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (newQuantity > selectedColor.inventory) {
+        toast({
+          title: `Only ${selectedColor.inventory} items available for ${selectedColor.title}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsQuantityUpdating(true);
 
     // Optimistically update UI to show the new quantity
@@ -222,6 +241,11 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
         // Refresh cart items to ensure we have the latest data
         dispatch(fetchCartItems(user?.id));
         toast({ title: "Cart updated successfully" });
+      } else {
+        toast({
+          title: data?.payload?.message || "Failed to update quantity",
+          variant: "destructive",
+        });
       }
       // Small delay before removing loading state to prevent UI flicker
       setTimeout(() => {
@@ -335,6 +359,15 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
             </p>
           </div>
 
+          {/* Out of Stock Warning */}
+          {selectedColor && selectedColor.inventory <= 0 && (
+            <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-sm">
+              <p className="text-xs text-red-600 font-medium">
+                ⚠️ Selected color is out of stock
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
             {/* Color Selection - Only show if product has colors */}
             {availableColors.length > 0 && (
@@ -386,40 +419,58 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
                       </div>
 
                       <div className="max-h-40 overflow-y-auto">
-                        {availableColors.map((color) => (
-                          <button
-                            key={color._id}
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleColorChange(color);
-                            }}
-                            className="w-full text-left flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-gray-50 transition-colors"
-                          >
-                            <div className="relative flex items-center">
-                              {color.image ? (
-                                <div className="relative w-6 h-6 overflow-hidden rounded-sm border border-gray-200">
-                                  <img
-                                    src={color.image}
-                                    alt={color.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                  {selectedColor?._id === color._id && (
-                                    <div className="absolute inset-0 border-2 border-black"></div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div
-                                  className={`w-6 h-6 rounded-sm ${selectedColor?._id === color._id ? 'border-2 border-black' : 'border border-gray-300'}`}
-                                  style={{ backgroundColor: color?.colorCode || '#ccc' }}
-                                ></div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-xs uppercase tracking-wide block truncate">{color.title}</span>
-                            </div>
-                          </button>
-                        ))}
+                        {availableColors.map((color) => {
+                          const isOutOfStock = color.inventory <= 0;
+                          return (
+                            <button
+                              key={color._id}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isOutOfStock) {
+                                  handleColorChange(color);
+                                }
+                              }}
+                              className={`w-full text-left flex items-center gap-2 px-2 py-1.5 transition-colors ${
+                                isOutOfStock
+                                  ? 'cursor-not-allowed opacity-50'
+                                  : 'cursor-pointer hover:bg-gray-50'
+                              }`}
+                              disabled={isOutOfStock}
+                            >
+                              <div className="relative flex items-center">
+                                {color.image ? (
+                                  <div className="relative w-6 h-6 overflow-hidden rounded-sm border border-gray-200">
+                                    <img
+                                      src={color.image}
+                                      alt={color.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    {selectedColor?._id === color._id && (
+                                      <div className="absolute inset-0 border-2 border-black"></div>
+                                    )}
+                                    {isOutOfStock && (
+                                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                        <span className="text-white text-xs font-bold">OOS</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={`w-6 h-6 rounded-sm ${selectedColor?._id === color._id ? 'border-2 border-black' : 'border border-gray-300'}`}
+                                    style={{ backgroundColor: color?.colorCode || '#ccc' }}
+                                  ></div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className={`text-xs uppercase tracking-wide block truncate ${isOutOfStock ? 'line-through' : ''}`}>
+                                  {color.title}
+                                  {isOutOfStock && <span className="text-red-500 ml-1">(Out of Stock)</span>}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -444,8 +495,12 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
                   </button>
                   <span className="w-6 text-center text-xs">{cartItem?.quantity}</span>
                   <button
-                    className="w-6 h-6 flex items-center justify-center border border-gray-300 hover:border-black transition-colors"
+                    className="w-6 h-6 flex items-center justify-center border border-gray-300 hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleQuantityChange(cartItem?.quantity + 1)}
+                    disabled={selectedColor && (selectedColor.inventory <= 0 || cartItem?.quantity >= selectedColor.inventory)}
+                    title={selectedColor && selectedColor.inventory <= 0 ? "Color is out of stock" :
+                           selectedColor && cartItem?.quantity >= selectedColor.inventory ? `Only ${selectedColor.inventory} items available` :
+                           "Increase quantity"}
                   >
                     <Plus className="w-2.5 h-2.5" />
                   </button>

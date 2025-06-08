@@ -618,7 +618,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
             <Slider ref={sliderRef} {...sliderSettings} className="watch-buy-slider">
               {products.map((productItem, index) => (
-                <div key={productItem._id} className="pb-2 px-2">
+                <div key={productItem._id} className="pb-2 px-1">
                   <div
                     onClick={() => {
                       setSelectedVideo(productItem);
@@ -636,7 +636,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                       }}
                       className="relative cursor-pointer shadow-md overflow-hidden watch-buy-mobile-card"
                       style={{
-                        aspectRatio: "8/15",
+                        aspectRatio: "9/15",
                         background: "#f8f8f8",
                       }}
                     >
@@ -651,9 +651,9 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
                     {/* Product info below the card */}
                     <div className="mt-3 px-1">
-                      <h3 className="text-base font-medium line-clamp-1 mb-2">{productItem?.title}</h3>
+                      <h3 className="text-lg font-medium line-clamp-2 mb-1">{productItem?.title}</h3>
                       <div className="flex justify-between items-center">
-                        <p className="text-base font-bold">₹{productItem.price}</p>
+                        <p className="text-md font-semibold">₹{productItem.price}</p>
                         <div className="flex gap-2">
                           <button
                             onClick={(e) => {
@@ -814,7 +814,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                   return (
                     <div
                       key={productItem._id}
-                      className={`absolute transition-all duration-500 ease-in-out cursor-pointer video-card-container ${
+                      className={`absolute transition-all duration-500 ease-in-out  video-card-container ${
                         position === 0 ? "z-20 scale-100 opacity-100" : "z-10 scale-90 opacity-70"
                       }`}
                       style={{
@@ -964,7 +964,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
           {/* Product Info and Action Buttons */}
           <div className="absolute bottom-[48px] left-0 right-0 flex justify-center z-40">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg"></div>
+          <div className="absolute -bottom-[5px] inset-0 bg-gradient-to-t from-black/70 to-transparent rounded-lg"></div>
             <div className="relative flex items-center justify-between" style={{ width: `${Math.floor(Math.floor(window.innerHeight * 0.8) * (9/16))}px` }}>
 
               <div className="text-white p-2 z-10">

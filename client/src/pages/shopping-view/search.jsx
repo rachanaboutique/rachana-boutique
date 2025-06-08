@@ -23,7 +23,7 @@ function SearchProducts() {
 
   const { productList } = useSelector((state) => state.shopProducts);
   const { cartItems } = useSelector((state) => state.shopCart);
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const { toast } = useToast();
 
@@ -91,6 +91,15 @@ function SearchProducts() {
   }, []);
 
   function handleAddtoCart(getCurrentProductId, totalStock, product) {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in to add items to the cart!",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Find the product in the product list
     const currentProduct = product || productList.find((p) => p._id === getCurrentProductId);
 
@@ -102,11 +111,69 @@ function SearchProducts() {
       return;
     }
 
-    // Check if the product has colors
-    const hasColors = currentProduct.colors && currentProduct.colors.length > 0;
+    // Check if product is in stock
+    if (currentProduct.totalStock <= 0) {
+      toast({
+        title: "This product is out of stock",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Use the first color if available, otherwise null
-    const colorId = hasColors ? currentProduct.colors[0]._id : null;
+    // Check if the product has colors and find first available color
+    const hasColors = currentProduct.colors && currentProduct.colors.length > 0;
+    let colorId = null;
+    let selectedColor = null;
+
+    if (hasColors) {
+      selectedColor = currentProduct.colors.find(color => color.inventory > 0);
+
+      if (!selectedColor) {
+        toast({
+          title: "All colors are out of stock",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      colorId = selectedColor._id;
+
+      // Check color inventory
+      let currentCartItems = cartItems.items || [];
+      const itemIndex = currentCartItems.findIndex(
+        (item) => item.productId === getCurrentProductId &&
+                  item.colors &&
+                  item.colors._id === colorId
+      );
+
+      if (itemIndex > -1) {
+        const currentQuantity = currentCartItems[itemIndex].quantity;
+        if (currentQuantity + 1 > selectedColor.inventory) {
+          toast({
+            title: `Only ${selectedColor.inventory} quantity available for ${selectedColor.title}`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    } else {
+      // Check total stock for products without colors
+      let currentCartItems = cartItems.items || [];
+      const itemIndex = currentCartItems.findIndex(
+        (item) => item.productId === getCurrentProductId
+      );
+
+      if (itemIndex > -1) {
+        const currentQuantity = currentCartItems[itemIndex].quantity;
+        if (currentQuantity + 1 > currentProduct.totalStock) {
+          toast({
+            title: `Only ${currentProduct.totalStock} quantity available for this item`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
 
     dispatch(
       addToCart({
@@ -122,7 +189,18 @@ function SearchProducts() {
         toast({
           title: "Product is added to cart",
         });
+      } else {
+        toast({
+          title: data?.payload?.message || "Failed to add item to cart",
+          variant: "destructive",
+        });
       }
+    }).catch((error) => {
+      console.error("Error adding to cart:", error);
+      toast({
+        title: "Failed to add item to cart",
+        variant: "destructive",
+      });
     });
   }
 

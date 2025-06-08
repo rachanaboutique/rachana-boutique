@@ -6,7 +6,7 @@ import FastMovingCard from "./fast-moving-card";
 import "@/styles/watch-and-buy-mobile.css";
 
 // Cloudinary Video Player Component for Mobile
-function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onError, className, style, autoplay = false }) {
+function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onError, className, style }) {
   const videoRef = useRef();
   const playerInstanceRef = useRef();
   const containerRef = useRef();
@@ -75,14 +75,13 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
 
   // Initialize Cloudinary player
   useEffect(() => {
-    if (!isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current) return;
+    if (!isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current || !videoUrl) return;
 
     try {
-
       // Create a timeout to ensure DOM is ready
       const initTimeout = setTimeout(() => {
-        if (!videoRef.current) {
-          console.warn('Video element not available for initialization');
+        if (!videoRef.current || playerInstanceRef.current) {
+          console.warn('Video element not available or player already initialized');
           return;
         }
 
@@ -95,7 +94,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         playerInstanceRef.current = window.cloudinary.videoPlayer(videoElement, {
           cloud_name: 'dkqt39aad',
           controls: false,
-          autoplay: autoplay,
+          autoplay: false, // Never autoplay during initialization
           muted: true,
           loop: false,
           fluid: true,
@@ -142,35 +141,18 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
             if (onError) onError(error);
           });
 
-          playerInstanceRef.current.on('loadstart', () => {
-          });
-
-          playerInstanceRef.current.on('loadeddata', () => {
-          });
-
           playerInstanceRef.current.on('loadedmetadata', () => {
             setIsPlayerReady(true);
           });
 
-          playerInstanceRef.current.on('canplay', () => {
-          });
-
-          playerInstanceRef.current.on('playing', () => {
-          });
-
-          playerInstanceRef.current.on('pause', () => {
-          });
-
           playerInstanceRef.current.on('ready', () => {
-            console.log('Cloudinary player ready');
+            console.log('Cloudinary player ready for:', extractPublicId(videoUrl));
             setIsPlayerReady(true);
 
             // Set video source immediately when player is ready
             if (videoUrl) {
               try {
                 const publicId = extractPublicId(videoUrl);
-                console.log('Setting video source:', publicId);
-
                 playerInstanceRef.current.source(publicId, {
                   transformation: {
                     quality: 'auto',
@@ -182,35 +164,6 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
               }
             }
           });
-
-          // Handle when video can play - better timing for autoplay
-          playerInstanceRef.current.on('canplay', () => {
-            console.log('Video can play, autoplay:', autoplay);
-            if (autoplay && playerInstanceRef.current) {
-              try {
-                const playPromise = playerInstanceRef.current.play();
-                if (playPromise !== undefined) {
-                  playPromise.then(() => {
-                    console.log('Video started successfully');
-                  }).catch(error => {
-                    console.warn('Video play failed:', error);
-                  });
-                }
-              } catch (playError) {
-                console.warn('Error starting video:', playError);
-              }
-            }
-          });
-
-          // Handle when video starts playing
-          playerInstanceRef.current.on('playing', () => {
-            console.log('Video is now playing');
-          });
-
-          // Handle when video is paused
-          playerInstanceRef.current.on('pause', () => {
-            console.log('Video is now paused');
-          });
         }
       }, 100);
 
@@ -219,13 +172,14 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
       console.error('Error initializing Cloudinary player:', error);
       if (onError) onError(error);
     }
-  }, [isCloudinaryLoaded, videoUrl, autoplay]); // Removed callback dependencies to prevent infinite loops
+  }, [isCloudinaryLoaded, videoUrl]); // Removed autoplay and callback dependencies to prevent infinite loops
 
   // Handle play/pause
   useEffect(() => {
     if (playerInstanceRef.current && isPlayerReady) {
       try {
         if (isPlaying) {
+          console.log('Playing video:', extractPublicId(videoUrl));
           const playPromise = playerInstanceRef.current.play();
           if (playPromise !== undefined) {
             playPromise.catch(error => {
@@ -233,13 +187,14 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
             });
           }
         } else {
+          console.log('Pausing video:', extractPublicId(videoUrl));
           playerInstanceRef.current.pause();
         }
       } catch (error) {
         console.error('Error controlling playback:', error);
       }
     }
-  }, [isPlaying, isPlayerReady]);
+  }, [isPlaying, isPlayerReady, videoUrl]);
 
   // Handle mute/unmute
   useEffect(() => {
@@ -350,14 +305,41 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   const progressBarRef = useRef(null);
   const sliderRef = useRef(null);
 
+  // Function to pause all videos except the active one
+  const pauseAllVideosExceptActive = useCallback(() => {
+    const allVideos = document.querySelectorAll('video');
+    allVideos.forEach((video, index) => {
+      const videoContainer = video.closest('.mobile-video-slide');
+      const isActiveVideo = videoContainer && videoContainer.classList.contains('active');
+
+      if (!isActiveVideo) {
+        // Pause non-active videos
+        if (video.cloudinaryPlayer) {
+          try {
+            video.cloudinaryPlayer.pause();
+            console.log(`Paused non-active video ${index} via cloudinaryPlayer`);
+          } catch (error) {
+            console.warn(`Error pausing video ${index}:`, error);
+          }
+        } else {
+          video.pause();
+          console.log(`Paused non-active video ${index} via HTML5`);
+        }
+      }
+    });
+  }, []);
+
   // Function to force unmute the active video player
   const forceUnmuteActiveVideo = useCallback(() => {
     // Multiple strategies to find and unmute the active video
     setTimeout(() => {
       console.log('Attempting to force unmute active mobile video...');
 
+      // First pause all non-active videos
+      pauseAllVideosExceptActive();
+
       // Strategy 1: Find by active class
-      let activeVideoElements = document.querySelectorAll('.video-slide.active video');
+      let activeVideoElements = document.querySelectorAll('.mobile-video-slide.active video');
       console.log('Found active mobile videos:', activeVideoElements.length);
 
       // Strategy 2: Find all videos in modal
@@ -400,7 +382,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
       setIsMuted(false);
       console.log('Set React isMuted state to false for mobile');
     }, 200); // Increased delay to ensure DOM is ready
-  }, []);
+  }, [pauseAllVideosExceptActive]);
 
   // Reset progress for specific video (mobile behavior - start from beginning)
   const resetVideoProgress = useCallback((videoIndex) => {
@@ -413,19 +395,6 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   // Function to go to the next video (infinite loop)
   const goToNextVideo = useCallback(() => {
     const newIndex = (currentVideoIndex + 1) % products.length;
-    // Reset progress for the new video (mobile behavior - start from beginning)
-    resetVideoProgress(newIndex);
-    setCurrentVideoIndex(newIndex);
-    setSelectedVideo(products[newIndex]);
-    // Ensure audio continues playing for the new video
-    setIsMuted(false);
-    // Force unmute the active video player
-    forceUnmuteActiveVideo();
-  }, [currentVideoIndex, products, forceUnmuteActiveVideo, resetVideoProgress]);
-
-  // Function to go to the previous video (infinite loop)
-  const goToPrevVideo = useCallback(() => {
-    const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
     // Reset progress for the new video (mobile behavior - start from beginning)
     resetVideoProgress(newIndex);
     setCurrentVideoIndex(newIndex);
@@ -455,6 +424,16 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Effect to manage video playback when currentVideoIndex changes
+  useEffect(() => {
+    if (showVideoModal) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        pauseAllVideosExceptActive();
+      }, 100);
+    }
+  }, [currentVideoIndex, showVideoModal, pauseAllVideosExceptActive]);
 
   // Handle touch events for mobile video swiping
   const handleTouchStart = (e) => {
@@ -702,6 +681,21 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     if (showVideoModal) {
       setIsPlaying(true);
       setIsMuted(false);
+
+      // Pause all videos first
+      const allVideos = document.querySelectorAll('video');
+      allVideos.forEach(video => {
+        if (video.cloudinaryPlayer) {
+          try {
+            video.cloudinaryPlayer.pause();
+          } catch (error) {
+            console.warn('Error pausing video:', error);
+          }
+        } else {
+          video.pause();
+        }
+      });
+
       // Force unmute when modal opens or video changes
       setTimeout(() => {
         forceUnmuteActiveVideo();
@@ -737,7 +731,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         </div>
 
         {/* Watch and Buy Slider*/}
-        <div className="w-full mb-4 ">
+        <div className="w-full mb-4">
           <div>
             <Slider ref={sliderRef} {...sliderSettings} className="watch-buy-slider mobile-watch-buy-slider">
               {products.map((productItem, index) => (
@@ -924,20 +918,22 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
               {/* Stacked Videos */}
               <div className="video-stack-wrapper relative h-full w-full flex flex-col">
                 {products.map((productItem, index) => {
-                  // For mobile: Only show current, previous, and next videos
-                  if (index !== currentVideoIndex &&
-                      index !== (currentVideoIndex + 1) % products.length &&
-                      index !== (currentVideoIndex - 1 + products.length) % products.length) {
+                  // For mobile: Only render the current video to prevent multiple videos playing
+                  const isCurrentVideo = index === currentVideoIndex;
+                  const isNextVideo = index === (currentVideoIndex + 1) % products.length;
+                  const isPrevVideo = index === (currentVideoIndex - 1 + products.length) % products.length;
+
+                  if (!isCurrentVideo && !isNextVideo && !isPrevVideo) {
                     return null; // Don't render videos that aren't visible in the carousel
                   }
 
                   return (
                     <div
-                      key={productItem._id}
+                      key={`${productItem._id}-${currentVideoIndex}`} // Include currentVideoIndex to force re-render
                       className={`mobile-video-slide ${
-                         index === currentVideoIndex ? 'active' :
-                         index === (currentVideoIndex + 1) % products.length ? 'next' :
-                         index === (currentVideoIndex - 1 + products.length) % products.length ? 'prev' : ''
+                         isCurrentVideo ? 'active' :
+                         isNextVideo ? 'next' :
+                         isPrevVideo ? 'prev' : ''
                         }`}
                     >
                       <div
@@ -952,20 +948,19 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
                               onContextMenu={(e) => e.preventDefault()}
                             >
                               <VideoPlayer
-                                key={`${productItem._id}-${index}-${showVideoModal}`}
+                                key={`video-${productItem._id}-${index}-${currentVideoIndex}-${showVideoModal}`}
                                 videoUrl={productItem.videoUrl || productItem.video}
                                 className="react-player"
                                 style={{ width: "100%", height: "100%" }}
-                                isPlaying={index === currentVideoIndex ? isPlaying : false}
+                                isPlaying={isCurrentVideo && isPlaying && showVideoModal}
                                 isMuted={isMuted}
-                                autoplay={index === currentVideoIndex && showVideoModal}
                                 onProgress={(state) => {
-                                  // Update progress for each video independently
-                                  if (state.played >= 0) {
+                                  // Only update progress for the currently active video
+                                  if (isCurrentVideo && state.played >= 0) {
                                     updateVideoProgress(index, state.played);
                                   }
                                 }}
-                                onEnded={index === currentVideoIndex ? handleVideoEnd : undefined}
+                                onEnded={isCurrentVideo ? handleVideoEnd : undefined}
                                 onError={(e) => console.log("Video error:", e)}
                               />
                             </div>

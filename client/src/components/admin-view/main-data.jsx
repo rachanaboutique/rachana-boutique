@@ -125,7 +125,10 @@ const MainData = () => {
     }, [dispatch]);
 
     if (isLoading || !summary) {
-        return <p className="text-center">Loading...</p>;
+        return <div className="flex items-center justify-center h-screen w-screen bg-white">
+  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+</div>
+;
     }
 
     return (

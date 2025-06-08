@@ -98,50 +98,50 @@ const ProductSlider = ({
     };
   }, [products?.length, isPaused, itemsPerSlide]);
 
-  // If there are not enough products for sliding, show them statically
-  if (!products || (products?.length || 0) <= itemsPerSlide) {
-    return (
-      <section className={`py-16 ${bgColor}`}>
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">{title}</h2>
-            <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
-            <p className="text-gray-600">{description}</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8">
-            {products?.map((product, index) => (
-              <motion.div
-                key={product._id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{
-                  duration: 0.5,
-                  delay: index * 0.1,
-                  type: "spring",
-                  stiffness: 50,
-                }}
-              >
-                <ShoppingProductTile
-                  handleGetProductDetails={handleGetProductDetails}
-                  product={product}
-                  handleAddtoCart={handleAddtoCart}
-                />
-              </motion.div>
-            ))}
-          </div>
-          <div className="text-center mt-12">
-            <button
-              onClick={() => navigate(isNewArrival ? "/shop/new-arrivals" : "/shop/collections")}
-              className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
-            >
-              {isNewArrival ? "View New Products" : "View All Products"}
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // // If there are not enough products for sliding, show them statically
+  // if (!products || (products?.length || 0) <= itemsPerSlide) {
+  //   return (
+  //     <section className={`py-16 ${bgColor}`}>
+  //       <div className="container mx-auto px-4">
+  //         <div className="max-w-3xl mx-auto text-center mb-12">
+  //           <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">{title}</h2>
+  //           <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
+  //           <p className="text-gray-600">{description}</p>
+  //         </div>
+  //         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8">
+  //           {products?.map((product, index) => (
+  //             <motion.div
+  //               key={product._id}
+  //               initial={{ opacity: 0, y: 20 }}
+  //               whileInView={{ opacity: 1, y: 0 }}
+  //               viewport={{ once: false, amount: 0.2 }}
+  //               transition={{
+  //                 duration: 0.5,
+  //                 delay: index * 0.1,
+  //                 type: "spring",
+  //                 stiffness: 50,
+  //               }}
+  //             >
+  //               <ShoppingProductTile
+  //                 handleGetProductDetails={handleGetProductDetails}
+  //                 product={product}
+  //                 handleAddtoCart={handleAddtoCart}
+  //               />
+  //             </motion.div>
+  //           ))}
+  //         </div>
+  //         <div className="text-center mt-12">
+  //           <button
+  //             onClick={() => navigate(isNewArrival ? "/shop/new-arrivals" : "/shop/collections")}
+  //             className="inline-block px-8 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+  //           >
+  //             {isNewArrival ? "View New Products" : "View All Products"}
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </section>
+  //   );
+  // }
 
   // Get products for the current slide
   const getCurrentSlideProducts = () => {
@@ -190,12 +190,12 @@ const ProductSlider = ({
 
   return (
     <section className={`py-8 md:py-16 ${bgColor}`}>
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-2">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-light uppercase tracking-wide mb-4">{title}</h2>
           <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
-          <p className="text-gray-600">{description}</p>
+          <p className="text-gray-600 px-1">{description}</p>
         </div>
 
         {/* Slider with external navigation arrows */}
@@ -236,9 +236,9 @@ const ProductSlider = ({
                   transition={{ duration: 0.5 }}
                   className={`${isMobile ? "md:grid-cols-5 md:gap-5" : "grid grid-cols-5 gap-5"}`}
                 >
-                  {/* Mobile view with 2.5 cards visible */}
+                  {/* Mobile view with exactly 2 cards visible */}
                   {isMobile && (
-                    <div className="flex space-x-4 pr-[20%]" style={{ width: "120%", touchAction: "pan-y" }}>
+                    <div className="flex space-x-3" style={{ width: "100%", touchAction: "pan-y" }}>
                       {getCurrentSlideProducts()?.map((product, index) => (
                         <motion.div
                           key={product._id}
@@ -250,7 +250,7 @@ const ProductSlider = ({
                             type: "spring",
                             stiffness: 50,
                           }}
-                          style={{ width: "43%" }}
+                          style={{ width: "calc(50% - 5px)" }}
                           className="flex-shrink-0 touch-none"
                         >
                           <ShoppingProductTile
@@ -260,28 +260,6 @@ const ProductSlider = ({
                           />
                         </motion.div>
                       ))}
-
-                      {/* Show partial view of next product if available */}
-                      {products && currentIndex < totalSlides - 1 && (products.length > (currentIndex + 1) * itemsPerSlide) && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: 0.5,
-                            delay: 0.3,
-                            type: "spring",
-                            stiffness: 50,
-                          }}
-                          style={{ width: "43%" }}
-                          className="flex-shrink-0 touch-none"
-                        >
-                          <ShoppingProductTile
-                            handleGetProductDetails={handleGetProductDetails}
-                            product={products[(currentIndex + 1) * itemsPerSlide]}
-                            handleAddtoCart={handleAddtoCart}
-                          />
-                        </motion.div>
-                      )}
                     </div>
                   )}
 

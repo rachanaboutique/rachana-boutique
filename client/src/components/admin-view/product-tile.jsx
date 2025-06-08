@@ -107,7 +107,7 @@ function AdminProductTile({
            Code: {product?.productCode}             </div>
         )}
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-3">
           <span className={`${product?.salePrice > 0 ? "line-through text-gray-500" : "text-gray-600"} text-lg font-medium`}>
             ₹{product?.price}
           </span>
@@ -117,6 +117,57 @@ function AdminProductTile({
             </span>
           )}
         </div>
+
+        {/* Color Inventory Status */}
+        {product?.colors && product.colors.length > 0 && (
+          <div className="border-t pt-3">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Color Inventory:</h4>
+            <div className="flex flex-wrap gap-1">
+              {product.colors.map((color, index) => {
+                const isOutOfStock = color.inventory <= 0;
+                const isLowStock = color.inventory > 0 && color.inventory < 5;
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                      isOutOfStock
+                        ? 'bg-red-100 text-red-700 border border-red-200'
+                        : isLowStock
+                        ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                        : 'bg-green-100 text-green-700 border border-green-200'
+                    }`}
+                    title={`${color.title}: ${color.inventory || 0} items`}
+                  >
+                    {color.image && (
+                      <div className="w-3 h-3 rounded-full overflow-hidden border border-gray-300">
+                        <img
+                          src={color.image}
+                          alt={color.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <span className="truncate max-w-[60px]">{color.title}</span>
+                    <span className="font-bold">
+                      {isOutOfStock ? '0' : color.inventory || 0}
+                    </span>
+                    {isOutOfStock && <span className="text-red-600">⚠️</span>}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Summary */}
+            <div className="mt-2 text-xs text-gray-600">
+              {product.colors.filter(c => c.inventory <= 0).length > 0 && (
+                <span className="text-red-600 font-medium">
+                  {product.colors.filter(c => c.inventory <= 0).length} color(s) out of stock
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </CardContent>
 
       {/* Delete confirmation modal */}

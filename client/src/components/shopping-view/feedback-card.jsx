@@ -60,7 +60,7 @@ const FeedbackCard = () => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-light uppercase tracking-wide text-center">Share Your Experience</DialogTitle>
+          <DialogTitle className="mt-6 text-xl font-light uppercase tracking-wide text-center">Share Your Experience</DialogTitle>
           <div className="w-16 h-0.5 bg-black mx-auto mt-2 mb-4"></div>
           <p className="text-center text-gray-500 text-sm">
             We value your feedback. Tell us about your experience with our products and services.
@@ -75,7 +75,7 @@ const FeedbackCard = () => {
             onChange={(e) => setFeedback(e.target.value)}
             required
             rows={6}
-            className="border-gray-300 focus:border-black focus:ring-black resize-none"
+            className="text-lg border-gray-300 focus:border-black focus:ring-black resize-none"
           />
           <DialogFooter className="mt-6">
             <button

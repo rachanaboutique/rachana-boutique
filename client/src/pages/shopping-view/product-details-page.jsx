@@ -121,19 +121,60 @@ function ProductDetailsPage({ open, setOpen }) {
       return;
     }
 
-    let currentCartItems = cartItems.items || [];
-    if (currentCartItems.length) {
+    // Check if a color is selected and if it's out of stock
+    if (selectedColor && selectedColor.inventory <= 0) {
+      toast({
+        title: "Selected color is out of stock",
+        variant: "destructive",
+      });
+      setIsAddingToCart(false);
+      return;
+    }
+
+    // Check color inventory if a color is selected
+    if (selectedColor) {
+      let currentCartItems = cartItems.items || [];
       const itemIndex = currentCartItems.findIndex(
-        (item) => item.productId === currentProductId
+        (item) => item.productId === currentProductId &&
+                  item.colors &&
+                  item.colors._id === selectedColor._id
       );
+
       if (itemIndex > -1) {
         const currentQuantity = currentCartItems[itemIndex].quantity;
-        if (currentQuantity + quantity > totalStock) {
+        if (currentQuantity + quantity > selectedColor.inventory) {
           toast({
-            title: `Only ${totalStock - currentQuantity} more can be added for this item`,
+            title: `Only ${selectedColor.inventory - currentQuantity} more can be added for this color`,
             variant: "destructive",
           });
+          setIsAddingToCart(false);
           return;
+        }
+      } else if (quantity > selectedColor.inventory) {
+        toast({
+          title: `Only ${selectedColor.inventory} items available for this color`,
+          variant: "destructive",
+        });
+        setIsAddingToCart(false);
+        return;
+      }
+    } else {
+      // Fallback to total stock check for products without colors
+      let currentCartItems = cartItems.items || [];
+      if (currentCartItems.length) {
+        const itemIndex = currentCartItems.findIndex(
+          (item) => item.productId === currentProductId
+        );
+        if (itemIndex > -1) {
+          const currentQuantity = currentCartItems[itemIndex].quantity;
+          if (currentQuantity + quantity > totalStock) {
+            toast({
+              title: `Only ${totalStock - currentQuantity} more can be added for this item`,
+              variant: "destructive",
+            });
+            setIsAddingToCart(false);
+            return;
+          }
         }
       }
     }
@@ -757,28 +798,42 @@ function ProductDetailsPage({ open, setOpen }) {
                 </Label>
 
                 <div className="flex justify-center gap-5 mx-auto">
-                  {productDetails.colors.map((colorItem, index) => (
-                    <div
-                      key={index}
-                      onClick={() => handleColorSelect(colorItem)}
-                      className={`cursor-pointer flex flex-col items-center transition-all duration-300 w-20
-                        ${selectedColor && selectedColor._id === colorItem._id
-                          ? "transform scale-110"
-                          : "hover:scale-105"}
-                      `}
-                    >
-                      <div className={`w-full h-16 overflow-hidden ${selectedColor && selectedColor._id === colorItem._id ? "ring-2 ring-black ring-offset-2" : ""}`}>
-                        <img
-                          src={colorItem.image}
-                          alt={colorItem.title}
-                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                        />
+                  {productDetails.colors.map((colorItem, index) => {
+                    const isOutOfStock = colorItem.inventory <= 0;
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => !isOutOfStock && handleColorSelect(colorItem)}
+                        className={`flex flex-col items-center transition-all duration-300 w-20 relative
+                          ${isOutOfStock
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer"}
+                          ${selectedColor && selectedColor._id === colorItem._id
+                            ? "transform scale-110"
+                            : !isOutOfStock ? "hover:scale-105" : ""}
+                        `}
+                      >
+                        <div className={`w-full h-16 overflow-hidden ${selectedColor && selectedColor._id === colorItem._id ? "ring-2 ring-black ring-offset-2" : ""}`}>
+                          <img
+                            src={colorItem.image}
+                            alt={colorItem.title}
+                            className={`w-full h-full object-cover transition-transform duration-500 ${!isOutOfStock ? "hover:scale-110" : ""}`}
+                          />
+                          {/* {isOutOfStock && (
+                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">Out of Stock</span>
+                            </div>
+                          )} */}
+                        </div>
+                        <p className="mt-2 text-sm font-medium text-center">
+                          {colorItem.title}
+                        </p>
+                        {isOutOfStock && (
+                          <p className="text-xs text-red-500 font-medium">Out of Stock</p>
+                        )}
                       </div>
-                      <p className="mt-2 text-sm font-medium text-center">
-                        {colorItem.title}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

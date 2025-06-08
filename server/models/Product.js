@@ -18,6 +18,11 @@ const ProductSchema = new mongoose.Schema(
       {
         title: String,
         image: String,
+        inventory: {
+          type: Number,
+          default: 0,
+          min: 0
+        }
       }
     ],
     isWatchAndBuy: Boolean,

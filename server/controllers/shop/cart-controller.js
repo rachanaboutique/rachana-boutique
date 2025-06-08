@@ -298,6 +298,39 @@ const addToCart = async (req, res) => {
       cart = new Cart({ userId, items: [] });
     }
 
+    // Check color inventory if colorId is provided
+    if (colorId) {
+      const selectedColor = product.colors.find(color => color._id.toString() === colorId);
+      if (!selectedColor) {
+        return res.status(400).json({
+          success: false,
+          message: "Selected color not found",
+        });
+      }
+
+      if (selectedColor.inventory <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Selected color is out of stock",
+        });
+      }
+
+      // Check if adding this quantity would exceed color inventory
+      const existingCartItem = cart.items.find(item =>
+        item.productId.toString() === productId &&
+        item.colors &&
+        item.colors._id === colorId
+      );
+
+      const currentQuantityInCart = existingCartItem ? existingCartItem.quantity : 0;
+      if (currentQuantityInCart + quantity > selectedColor.inventory) {
+        return res.status(400).json({
+          success: false,
+          message: `Only ${selectedColor.inventory - currentQuantityInCart} more items available for this color`,
+        });
+      }
+    }
+
     // Handle products with and without color options
     let selectedColor = null;
     let newColor = null;

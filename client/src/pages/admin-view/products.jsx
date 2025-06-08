@@ -215,6 +215,11 @@ function AdminProducts() {
         case "outOfStock":
           matchesFilter = productItem.totalStock <= 0;
           break;
+        case "colorOutOfStock":
+          // Check if any color has zero inventory
+          matchesFilter = productItem.colors && productItem.colors.length > 0 &&
+                         productItem.colors.some(color => color.inventory <= 0);
+          break;
         default:
           // Check if filterOption is a category ID
           const selectedCategory = categoriesList.find(cat => cat._id === filterOption);
@@ -244,6 +249,7 @@ function AdminProducts() {
                   {filterOption === "newArrivals" && "New Arrivals"}
                   {filterOption === "featured" && "Featured Products"}
                   {filterOption === "outOfStock" && "Out of Stock"}
+                  {filterOption === "colorOutOfStock" && "Colors Out of Stock"}
                   {categoriesList.find(cat => cat._id === filterOption)?.name}
                 </span>
               )}
@@ -274,6 +280,7 @@ function AdminProducts() {
                 <SelectItem value="newArrivals">New Arrivals</SelectItem>
                 <SelectItem value="featured">Featured Products</SelectItem>
                 <SelectItem value="outOfStock">Out of Stock</SelectItem>
+                <SelectItem value="colorOutOfStock">Colors Out of Stock</SelectItem>
                 {/* Category filters */}
                 {categoriesList && categoriesList.length > 0 && (
                   <>

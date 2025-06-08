@@ -272,6 +272,21 @@ const uploadVideo = async (file) => {
                         });
                       }}
                     />
+                    <Input
+                      placeholder="Inventory"
+                      type="number"
+                      min="0"
+                      value={color.inventory || ""}
+                      onChange={({ target }) => {
+                        const updatedColors = [...colorsArray];
+                        updatedColors[idx] = { ...updatedColors[idx], inventory: parseInt(target.value) || 0 };
+                        setFormData({
+                          ...formData,
+                          [controlItem.name]: updatedColors,
+                        });
+                      }}
+                      className="w-24"
+                    />
                     {color.image && (
                       <img
                         src={color.image}

@@ -11,8 +11,9 @@ const OrderSchema = new mongoose.Schema({
       price: String,
       quantity: Number,
       colors: {
+        _id: String,
         title: String,
-        image: String,  
+        image: String,
       }
     },
   ],
@@ -32,6 +33,7 @@ const OrderSchema = new mongoose.Schema({
   orderUpdateDate: Date,
   paymentId: String,
   payerId: String,
+  trackingNumber: String,
 });
 
 module.exports = mongoose.model("Order", OrderSchema);

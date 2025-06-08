@@ -41,7 +41,7 @@ function ShoppingOrderDetailsView({ orderDetails }) {
   return (
     <DialogContent className="sm:max-w-[600px] max-h-[90vh] bg-white">
       <div className="mt-4 overflow-y-auto pr-1 -mr-1 max-h-[calc(90vh-80px)]">
-        <DialogTitle className="text-xl font-light uppercase tracking-wide text-center sticky top-0 bg-white pb-4 z-10">
+        <DialogTitle className="text-xl font-light uppercase tracking-wide text-center sticky top-0  pb-4 z-10">
           Order Details
         </DialogTitle>
         <div className="w-16 h-0.5 bg-black mx-auto mb-6"></div>

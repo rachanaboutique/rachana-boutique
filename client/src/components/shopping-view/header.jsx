@@ -312,9 +312,9 @@ function ShoppingHeader() {
         <div className="bg-black text-white py-2 px-4">
           <div className="max-w-[1440px] mx-auto flex justify-between items-center">
             <div className="hidden md:flex items-center space-x-4">
-              <a href="tel:+919944796697" className="text-xs flex items-center hover:text-gray-300 transition-colors">
+              <a href="tel:+919994412667" className="text-xs flex items-center hover:text-gray-300 transition-colors">
                 <Phone className="h-3 w-3 mr-1" />
-                +91 9944796697
+                +91 9994412667
               </a>
               <div className="text-xs">|</div>
               <a href="mailto:rachanaboutiquechennai@gmail.com" className="text-xs hover:text-gray-300 transition-colors md:hidden">
@@ -340,7 +340,7 @@ function ShoppingHeader() {
               <a href="https://www.facebook.com/profile.php?id=61570600405333" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
                 <Facebook className="h-4 w-4" />
               </a>
-              <a href="https://wa.me/9944796697" className="hover:text-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/9994412667" className="hover:text-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">
                 <FaWhatsapp size={17} />
               </a>
             </div>
