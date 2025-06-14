@@ -112,7 +112,7 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
             videoElement.muted = isMuted;
 
             playerInstanceRef.current = cloudinaryRef.current.videoPlayer(videoElement, {
-              cloud_name: 'dkqt39aad',
+              cloud_name: 'dxfeyj7hl',
               controls: controls,
               autoplay: autoplay,
               muted: isMuted,

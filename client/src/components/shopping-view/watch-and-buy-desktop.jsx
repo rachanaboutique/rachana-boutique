@@ -23,9 +23,6 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
 
     try {
 
-      // For URL like: https://res.cloudinary.com/dkqt39aad/video/upload/q_auto/f_auto/v1748080301/cpc8j2kmwsvkexprtoyh.mp4
-      // We need to extract: cpc8j2kmwsvkexprtoyh
-
       // Find the upload part and get everything after it
       const uploadIndex = url.indexOf('/upload/');
       if (uploadIndex === -1) {
@@ -95,7 +92,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         videoElement.muted = true;
 
         playerInstanceRef.current = window.cloudinary.videoPlayer(videoElement, {
-          cloud_name: 'dkqt39aad',
+          cloud_name: 'dxfeyj7hl',
           controls: false,
           autoplay: autoplay,
           muted: true,

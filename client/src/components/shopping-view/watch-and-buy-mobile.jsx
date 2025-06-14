@@ -12,6 +12,8 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
   const containerRef = useRef();
   const [isCloudinaryLoaded, setIsCloudinaryLoaded] = useState(false);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [isVideoSourceLoaded, setIsVideoSourceLoaded] = useState(false);
+  const [hasVideoError, setHasVideoError] = useState(false);
 
   // Extract public ID from Cloudinary URL
   const extractPublicId = (url) => {
@@ -21,8 +23,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
 
     try {
 
-      // For URL like: https://res.cloudinary.com/dkqt39aad/video/upload/q_auto/f_auto/v1748080301/cpc8j2kmwsvkexprtoyh.mp4
-      // We need to extract: cpc8j2kmwsvkexprtoyh
+
 
       // Find the upload part and get everything after it
       const uploadIndex = url.indexOf('/upload/');
@@ -92,7 +93,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         videoElement.muted = true;
 
         playerInstanceRef.current = window.cloudinary.videoPlayer(videoElement, {
-          cloud_name: 'dkqt39aad',
+          cloud_name: 'dxfeyj7hl',
           controls: false,
           autoplay: false, // Never autoplay during initialization
           muted: true,
@@ -138,11 +139,25 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
           playerInstanceRef.current.on('error', (error) => {
             console.error('Cloudinary player error:', error);
             setIsPlayerReady(false);
+            setHasVideoError(true);
             if (onError) onError(error);
           });
 
           playerInstanceRef.current.on('loadedmetadata', () => {
+            console.log('Video metadata loaded for:', extractPublicId(videoUrl));
             setIsPlayerReady(true);
+            setIsVideoSourceLoaded(true);
+          });
+
+          playerInstanceRef.current.on('loadeddata', () => {
+            console.log('Video data loaded for:', extractPublicId(videoUrl));
+            setIsVideoSourceLoaded(true);
+          });
+
+          playerInstanceRef.current.on('canplay', () => {
+            console.log('Video can play for:', extractPublicId(videoUrl));
+            setIsPlayerReady(true);
+            setIsVideoSourceLoaded(true);
           });
 
           playerInstanceRef.current.on('ready', () => {
@@ -161,6 +176,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
                 });
               } catch (sourceError) {
                 console.error('Error setting video source on ready:', sourceError);
+                setHasVideoError(true);
               }
             }
           });
@@ -172,20 +188,31 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
       console.error('Error initializing Cloudinary player:', error);
       if (onError) onError(error);
     }
-  }, [isCloudinaryLoaded, videoUrl]); // Removed autoplay and callback dependencies to prevent infinite loops
+  }, [isCloudinaryLoaded, videoUrl]);
 
-  // Handle play/pause
+  // Handle play/pause with improved logic
   useEffect(() => {
-    if (playerInstanceRef.current && isPlayerReady) {
+    if (playerInstanceRef.current && isPlayerReady && isVideoSourceLoaded) {
       try {
         if (isPlaying) {
           console.log('Playing video:', extractPublicId(videoUrl));
-          const playPromise = playerInstanceRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(error => {
-              console.warn('Play failed:', error);
-            });
-          }
+          // Add a small delay to ensure the video is fully ready
+          setTimeout(() => {
+            if (playerInstanceRef.current) {
+              const playPromise = playerInstanceRef.current.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                  console.warn('Play failed:', error);
+                  // Try again after a short delay
+                  setTimeout(() => {
+                    if (playerInstanceRef.current) {
+                      playerInstanceRef.current.play().catch(e => console.warn('Retry play failed:', e));
+                    }
+                  }, 100);
+                });
+              }
+            }
+          }, 50);
         } else {
           console.log('Pausing video:', extractPublicId(videoUrl));
           playerInstanceRef.current.pause();
@@ -194,7 +221,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         console.error('Error controlling playback:', error);
       }
     }
-  }, [isPlaying, isPlayerReady, videoUrl]);
+  }, [isPlaying, isPlayerReady, isVideoSourceLoaded, videoUrl]);
 
   // Handle mute/unmute
   useEffect(() => {
@@ -218,6 +245,10 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         const publicId = extractPublicId(videoUrl);
         console.log('Changing video source to:', publicId);
 
+        // Reset states before changing source
+        setIsVideoSourceLoaded(false);
+        setHasVideoError(false);
+
         playerInstanceRef.current.source(publicId, {
           transformation: {
             quality: 'auto',
@@ -231,10 +262,11 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         }
       } catch (error) {
         console.error('Error setting video source:', error);
+        setHasVideoError(true);
         if (onError) onError(error);
       }
     }
-  }, [videoUrl, isPlayerReady]); // Removed onProgress, onError, isPlaying to prevent infinite loops
+  }, [videoUrl, isPlayerReady]);
 
   // Cleanup function
   useEffect(() => {
@@ -282,9 +314,17 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         onCanPlay={() => console.log('Video element can play')}
         onError={(e) => console.error('Video element error:', e)}
       />
-      {!isPlayerReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <div className="text-white text-sm">Loading video...</div>
+      {!isVideoSourceLoaded && !hasVideoError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div className="text-white text-sm">Loading video...</div>
+          </div>
+        </div>
+      )}
+      {hasVideoError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          <div className="text-white text-sm">Unable to load video</div>
         </div>
       )}
     </div>
@@ -381,7 +421,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
       // Also ensure React state is updated
       setIsMuted(false);
       console.log('Set React isMuted state to false for mobile');
-    }, 200); // Increased delay to ensure DOM is ready
+    }, 300); // Increased delay to ensure transitions are complete
   }, [pauseAllVideosExceptActive]);
 
   // Reset progress for specific video (mobile behavior - start from beginning)
@@ -407,10 +447,10 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
   // Handle video end - auto slide to next video with a slight delay
   const handleVideoEnd = useCallback(() => {
-    // Simple delay before going to next video
+    // Smooth delay before going to next video
     setTimeout(() => {
       goToNextVideo();
-    }, 300);
+    }, 800);
   }, [goToNextVideo]);
 
   // Check if device is mobile
@@ -428,10 +468,14 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   // Effect to manage video playback when currentVideoIndex changes
   useEffect(() => {
     if (showVideoModal) {
-      // Small delay to ensure DOM is updated
+      // Small delay to ensure DOM is updated and transitions are complete
       setTimeout(() => {
         pauseAllVideosExceptActive();
-      }, 100);
+        // Force play the new active video after transition
+        setTimeout(() => {
+          setIsPlaying(true);
+        }, 100);
+      }, 200);
     }
   }, [currentVideoIndex, showVideoModal, pauseAllVideosExceptActive]);
 
@@ -443,12 +487,21 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     const slides = document.querySelectorAll('.mobile-video-slide');
     if (!slides.length) return;
 
-    // Store the starting touch position
+    // Store the starting touch position and timestamp for velocity calculation
     const touchY = e.touches[0].clientY;
+    const touchTime = Date.now();
     videoContainerRef.current.dataset.touchStartY = touchY;
+    videoContainerRef.current.dataset.touchStartTime = touchTime;
 
     // Add a class to indicate active swiping
     videoContainerRef.current.classList.add('active-swiping');
+    const stackerContainer = videoContainerRef.current.querySelector('.video-stacker-container');
+    if (stackerContainer) {
+      stackerContainer.classList.add('active-swiping');
+    }
+
+    // Temporarily pause video during swipe for better performance
+    setIsPlaying(false);
   };
 
   const handleTouchMove = (e) => {
@@ -495,17 +548,26 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
     if (!targetSlide) return;
 
-    // Calculate the percentage of the swipe (0 to 1)
+    // Calculate the percentage of the swipe with damping for smoother feel
     const screenHeight = window.innerHeight;
-    const swipePercentage = Math.min(Math.abs(diff) / (screenHeight * 0.3), 1);
-
-    // Apply transforms based on swipe direction and percentage
+    const rawSwipePercentage = Math.abs(diff) / (screenHeight * 0.4); // Increased threshold for less sensitivity
+    
+    // Apply easing to the swipe percentage for more natural feel
+    const swipePercentage = Math.min(rawSwipePercentage * (2 - rawSwipePercentage), 1); // Ease-out curve
+    
+    // Apply transforms based on swipe direction and percentage with smoother interpolation
     if (direction === 'up') {
-      activeSlide.style.transform = `translateY(${-swipePercentage * 100}%)`;
-      targetSlide.style.transform = `translateY(${(100 + 20/screenHeight*100) - swipePercentage * (100 + 20/screenHeight*100)}%)`;
+      const activeTransform = -swipePercentage * 100;
+      const targetTransform = 100 - (swipePercentage * 100);
+      
+      activeSlide.style.transform = `translateY(${activeTransform}%)`;
+      targetSlide.style.transform = `translateY(${targetTransform}%)`;
     } else {
-      activeSlide.style.transform = `translateY(${swipePercentage * 100}%)`;
-      targetSlide.style.transform = `translateY(${-(100 + 20/screenHeight*100) + swipePercentage * (100 + 20/screenHeight*100)}%)`;
+      const activeTransform = swipePercentage * 100;
+      const targetTransform = -100 + (swipePercentage * 100);
+      
+      activeSlide.style.transform = `translateY(${activeTransform}%)`;
+      targetSlide.style.transform = `translateY(${targetTransform}%)`;
     }
   };
 
@@ -514,6 +576,10 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
     // Remove active swiping class
     videoContainerRef.current.classList.remove('active-swiping');
+    const stackerContainer = videoContainerRef.current.querySelector('.video-stacker-container');
+    if (stackerContainer) {
+      stackerContainer.classList.remove('active-swiping');
+    }
 
     const slides = document.querySelectorAll('.mobile-video-slide');
     if (!slides.length) return;
@@ -555,13 +621,20 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
     if (!targetSlide) return;
 
-    // Determine if the swipe was far enough to change slides
-    const threshold = window.innerHeight * 0.15;
-    const shouldChangeSlide = Math.abs(diff) > threshold;
+    // Calculate velocity for better swipe detection
+    const touchStartTime = parseFloat(videoContainerRef.current.dataset.touchStartTime);
+    const touchEndTime = Date.now();
+    const timeDiff = touchEndTime - touchStartTime;
+    const velocity = Math.abs(diff) / Math.max(timeDiff, 1); // pixels per ms
+    
+    // Determine if the swipe was far enough to change slides with velocity consideration
+    const threshold = window.innerHeight * 0.25; // Threshold for distance-based swipe
+    const velocityThreshold = 0.5; // pixels per ms for velocity-based swipe
+    const shouldChangeSlide = Math.abs(diff) > threshold || velocity > velocityThreshold;
 
-    // Add transition class for smooth animation
-    activeSlide.classList.add('manual-transition');
-    targetSlide.classList.add('manual-transition');
+    // Add smooth completion transition class
+    activeSlide.classList.add('completing-swipe');
+    targetSlide.classList.add('completing-swipe');
 
     if (shouldChangeSlide) {
       // Complete the transition
@@ -584,10 +657,13 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
           // Reset all slides
           slides.forEach(slide => {
-            slide.classList.remove('manual-transition');
+            slide.classList.remove('completing-swipe');
             slide.style.transform = '';
           });
-        }, 300);
+          
+          // Resume video playback
+          setIsPlaying(true);
+        }, 800);
       } else {
         // Move to previous slide
         activeSlide.style.transform = 'translateY(100%)';
@@ -607,10 +683,13 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
           // Reset all slides
           slides.forEach(slide => {
-            slide.classList.remove('manual-transition');
+            slide.classList.remove('completing-swipe');
             slide.style.transform = '';
           });
-        }, 300);
+          
+          // Resume video playback
+          setIsPlaying(true);
+        }, 800);
       }
     } else {
       // Return to original positions
@@ -624,10 +703,13 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
       // After animation completes, remove transition class
       setTimeout(() => {
         slides.forEach(slide => {
-          slide.classList.remove('manual-transition');
+          slide.classList.remove('completing-swipe');
           slide.style.transform = '';
         });
-      }, 300);
+        
+        // Resume video playback
+        setIsPlaying(true);
+      }, 800);
     }
   };
 

@@ -352,7 +352,7 @@ const Footer = () => {
 
         {/* Policy Dialog */}
         <Dialog open={policyDialogOpen} onOpenChange={(open) => !open && closePolicyDialog()}>
-          <DialogContent>
+          <DialogContent className="w-[90%] md:w-[80vw]">
             <DialogHeader>
               <DialogTitle className="font-bold text-xl mb-4 text-center">{selectedPolicy?.title}</DialogTitle>
             </DialogHeader>

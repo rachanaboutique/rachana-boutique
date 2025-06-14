@@ -125,7 +125,7 @@ const uploadVideo = async (file) => {
         reject(new Error("Network error during upload"));
       };
 
-      xhr.open("POST", "https://api.cloudinary.com/v1_1/dkqt39aad/video/upload", true);
+      xhr.open("POST", "https://api.cloudinary.com/v1_1/dxfeyj7hl/video/upload", true);
       xhr.send(cloudinaryFormData);
     });
   } catch (err) {

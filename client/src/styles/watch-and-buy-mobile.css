@@ -28,7 +28,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  transition: transform 0.3s ease;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   display: flex;
   justify-content: center;
   /* Remove padding to allow full-height display */
@@ -52,7 +52,17 @@
 }
 
 .mobile-video-slide.manual-transition {
-  transition: transform 0.3s ease;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Smooth swipe transition during touch events */
+.video-stacker-container.active-swiping .mobile-video-slide {
+  transition: transform 0.1s ease-out; /* Very subtle transition during swiping for smoother feel */
+}
+
+/* Smoother completion transition */
+.mobile-video-slide.completing-swipe {
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Styling for video cards */
