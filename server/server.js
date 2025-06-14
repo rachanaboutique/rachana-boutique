@@ -39,37 +39,70 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 
-app.use(
-  cors({
-    origin: function(origin, callback) {
-      const allowedOrigins = [
-        "http://localhost:5173", 
-        "https://rachana-boutique-chennai.web.app", 
-        "https://rachanaboutique.in",
-      ];
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "Cache-Control",
-      "Expires",
-      "Pragma",
-      "X-Requested-With"
-    ],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-  })
-);
+// CORS configuration for Vercel deployment
+const corsOptions = {
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:5173", 
+      "https://rachana-boutique-chennai.web.app", 
+      "https://rachanaboutique.in",
+    ];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS", "PATCH"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Cache-Control",
+    "Expires",
+    "Pragma",
+    "X-Requested-With",
+    "Access-Control-Allow-Origin",
+    "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Methods"
+  ],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
 
-app.options('*', cors());
+app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
+// Additional middleware to ensure CORS headers are always present
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    "http://localhost:5173", 
+    "https://rachana-boutique-chennai.web.app", 
+    "https://rachanaboutique.in",
+  ];
+  
+  // Log for debugging
+  console.log(`Request from origin: ${origin}, Method: ${req.method}, Path: ${req.path}`);
+  
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control, Expires, Pragma, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
+    return res.sendStatus(204);
+  }
+  
+  next();
+});
 
 app.use(cookieParser());
 app.use(express.json());

@@ -37,6 +37,19 @@ const sharp = require("sharp");
 
 const handleImageUpload = async (req, res) => {
   try {
+    // Ensure CORS headers are set
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      "http://localhost:5173", 
+      "https://rachana-boutique-chennai.web.app", 
+      "https://rachanaboutique.in",
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin || '*');
+    }
+    res.header('Access-Control-Allow-Credentials', 'true');
+
     let results = [];
 
     const processImage = async (file) => {
@@ -82,6 +95,19 @@ const handleImageUpload = async (req, res) => {
 };
 const handleVideoUpload = async (req, res) => {
   try {
+    // Ensure CORS headers are set
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      "http://localhost:5173", 
+      "https://rachana-boutique-chennai.web.app", 
+      "https://rachanaboutique.in",
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin || '*');
+    }
+    res.header('Access-Control-Allow-Credentials', 'true');
+
     // Check if a video file was uploaded
     if (req.file) {
       // Convert the video file buffer to a base64 string
