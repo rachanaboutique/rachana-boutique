@@ -13,6 +13,7 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { getOptimizedImageUrl, getOptimizedVideoUrl } from "../../lib/utils";
+import { optimizeImageForUpload, isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
 
 
 function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText, isBtnDisabled }) {
@@ -23,28 +24,41 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState("");
 
-  // Helper function for uploading a color image to Cloudinary.
+  // Helper function for uploading a color image directly to Cloudinary with optimization.
   const uploadColorImage = async (file, idx, controlItem) => {
-    // Check file size - limit to 1MB (1 * 1024 * 1024 bytes)
-    const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB in bytes
-    if (file.size > MAX_FILE_SIZE) {
+    // Validate file type and size using the same logic as backend
+    if (!isValidImageFile(file)) {
+      setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "error" }));
+      console.error(`Unsupported file format: ${file.type || 'unknown'}`);
+      return;
+    }
+
+    if (!isValidFileSize(file)) {
       setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "error" }));
       console.error(`File size exceeds 1MB limit. Please select a smaller image.`);
       return;
     }
 
     setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "uploading" }));
-    const data = new FormData();
-    data.append("my_file", file);
 
     try {
+      // Apply the same optimization logic as backend
+      const optimizedFile = await optimizeImageForUpload(file);
+
+      const cloudinaryFormData = new FormData();
+      cloudinaryFormData.append("file", optimizedFile);
+      cloudinaryFormData.append("upload_preset", "upload_product_image");
+      cloudinaryFormData.append("resource_type", "image");
+
+      // Upload directly to Cloudinary using environment variable for cloud name
+      const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/admin/products/upload-image`,
-        data
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        cloudinaryFormData
       );
 
-      if (response?.data?.success) {
-        const secureUrl = response.data.result[0].secure_url; // Use secure_url for HTTPS
+      if (response?.data?.secure_url) {
+        const secureUrl = response.data.secure_url;
         const optimizedUrl = getOptimizedImageUrl(secureUrl); // Apply q_auto,f_auto transformations
         const colorsArray = Array.isArray(formData[controlItem.name]) ? formData[controlItem.name] : [];
         const updatedColors = [...colorsArray];
@@ -59,7 +73,7 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
       }
     } catch (err) {
       console.error("Error uploading color image: ", err);
-      setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "idle" }));
+      setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "error" }));
     }
   };
 
@@ -125,7 +139,8 @@ const uploadVideo = async (file) => {
         reject(new Error("Network error during upload"));
       };
 
-      xhr.open("POST", "https://api.cloudinary.com/v1_1/dxfeyj7hl/video/upload", true);
+      const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
+      xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, true);
       xhr.send(cloudinaryFormData);
     });
   } catch (err) {
@@ -312,7 +327,7 @@ const uploadVideo = async (file) => {
                       {colorsUploadStatus[idx] === "uploading" && "Uploading..."}
                       {colorsUploadStatus[idx] === "uploaded" && "Uploaded"}
                       {colorsUploadStatus[idx] === "error" && (
-                        <span className="text-red-600">File too large (max 1MB)</span>
+                        <span className="text-red-600">Upload failed (check file format/size)</span>
                       )}
                     </span>
                     <Button

@@ -53,7 +53,7 @@ const handleImageUpload = async (req, res) => {
       }
 
       // Validate file size (optional - adjust as needed)
-      const maxFileSize = 50 * 1024 * 1024; // 50MB
+      const maxFileSize = 1 * 1024 * 1024; // 1MB
       if (file.size > maxFileSize) {
         throw new Error(`File too large: ${file.size} bytes. Maximum allowed: ${maxFileSize} bytes`);
       }
