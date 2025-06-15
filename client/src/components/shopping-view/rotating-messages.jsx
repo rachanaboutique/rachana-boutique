@@ -1,51 +1,79 @@
 import { useState, useEffect } from "react";
 
-/**
- * RotatingMessages component displays a series of messages that rotate at a specified interval
- * 
- * @param {Object} props
- * @param {Array<string>} props.messages - Array of message strings to display
- * @param {number} [props.interval=5000] - Rotation interval in milliseconds
- * @param {string} [props.className] - Additional CSS classes for the container
- */
-function RotatingMessages({ messages, interval = 5000, className = "" }) {
+function RotatingMessages({
+  messages,
+  interval = 4000,
+  className = "",
+  variant = "dark", // new variant for dark theme
+  showDots = true,
+}) {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  // Set up message rotation with useEffect
   useEffect(() => {
-    // Only set up the interval if we have more than one message to display
     if (messages.length <= 1) return;
-    
-    // Set up an interval to rotate through messages
+
     const intervalId = setInterval(() => {
-      setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
+        setIsAnimating(false);
+      }, 300);
     }, interval);
-    
-    // Clean up the interval when component unmounts
+
     return () => clearInterval(intervalId);
   }, [messages, interval]);
 
-  // If no messages, don't render anything
   if (!messages.length) return null;
 
-  return (
-    <div className={`overflow-hidden h-5 flex items-center justify-center ${className}`}>
-      <div
-        key={currentMessageIndex}
-        className="text-xs md:text-sm font-medium text-center animate-fade-in"
-      >
-        {messages[currentMessageIndex]}
-      </div>
+  const getVariantClasses = () => {
+    switch (variant) {
+      case "solid":
+        return "bg-primary text-primary-foreground";
+      case "bordered":
+        return "bg-background border-t border-b border-border";
+      case "dark":
+      default:
+        return "bg-gradient-to-r from-[#0f172a] via-[#111827] to-[#0f172a] border-t border-b border-gray-800";
+    }
+  };
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.5s ease-in-out;
-        }
-      `}} />
+  return (
+    <div
+      className={`relative overflow-hidden h-5 flex items-center justify-center px-4 select-none ${getVariantClasses()} ${className}`}
+      style={{ fontFeatureSettings: '"liga" 0' }} // subtle font smoothing (optional)
+    >
+      {/* subtle overlay for depth */}
+      <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
+
+      <div className="relative flex items-center space-x-3 w-full max-w-6xl">
+        <div className="relative overflow-hidden h-5 flex items-center flex-1">
+          <div
+            key={currentMessageIndex}
+            className={`text-xs md:text-sm font-semibold text-center w-full tracking-wide uppercase text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] transition-all duration-300 ease-out ${
+              isAnimating ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"
+            }`}
+            style={{ transitionProperty: "opacity, transform" }}
+          >
+            {messages[currentMessageIndex]}
+          </div>
+        </div>
+
+        {showDots && messages.length > 1 && (
+          <div className="flex items-center space-x-1 flex-shrink-0">
+            {messages.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentMessageIndex
+                    ? "bg-white shadow-[0_0_5px_2px_rgba(255,255,255,0.6)] scale-110"
+                    : "bg-white/40 hover:bg-white/60"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
