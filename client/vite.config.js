@@ -26,27 +26,32 @@ export default defineConfig({
     viteCompression(),
 
     // ✅ Add Progressive Web App (PWA) Support
-    VitePWA({
-      registerType: "autoUpdate",
-      manifest: {
-        name: "Rachana Boutique",
-        short_name: "Boutique",
-        description: "Discover trendy ethnic and western wear at Rachana Boutique.",
-        theme_color: "#ffffff",
-        icons: [
-          {
-            src: "/icon-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "/icon-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-        ],
+   VitePWA({
+  registerType: "autoUpdate",
+  manifestFilename: "site.webmanifest", // <- explicitly generate site.webmanifest
+  workbox: {
+    maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+  },
+  manifest: {
+    name: "Rachana Boutique",
+    short_name: "Boutique",
+    description: "Discover trendy ethnic and western wear at Rachana Boutique.",
+    theme_color: "#ffffff",
+    icons: [
+      {
+        src: "/icon-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
       },
-    }),
+      {
+        src: "/icon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+  },
+}),
+
   ],
   resolve: {
     alias: {

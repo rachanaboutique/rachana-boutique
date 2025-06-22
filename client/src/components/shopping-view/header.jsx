@@ -44,12 +44,12 @@ function ShoppingHeader() {
   const { toast } = useToast();
   const navigate = useNavigate(); // Add navigate at the component level
 
-  const messages = [
-    "🔥 NEW ARRIVALS: Summer Collection 2024 is here!",
-    "👗 EXCLUSIVE: 20% off all dresses with code SUMMER24",
-    "✨ FREE SHIPPING on orders over ₹1000",
-    "🎁 Buy 2 Get 1 Free on all accessories this week",
-  ];
+const messages = [
+  "Luxury looks at affordable prices",
+  "Free shipping on orders over ₹1000",
+  "Unveil your true beauty with our new collection"
+];
+
 
   function MenuItems({ onCloseSheet }) {
     const navigate = useNavigate();

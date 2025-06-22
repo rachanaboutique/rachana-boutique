@@ -194,11 +194,12 @@
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Slider customization */
+/* Slider customization - Ensure exactly 5 cards start from left */
 .watch-buy-slider .slick-track {
   display: flex;
-  margin-left: 0;
-  margin-right: 0;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  transform: translate3d(0px, 0px, 0px) !important; /* Force start from left */
 }
 
 .watch-buy-slider .slick-slide {
@@ -206,7 +207,8 @@
   padding: 0 8px; /* Use padding instead of margin for consistent sizing */
   height: auto;
   box-sizing: border-box; /* Ensure padding is included in width calculation */
-  width: 20%; /* Exactly 5 cards (100% / 5) */
+  width: 20% !important; /* Exactly 5 cards (100% / 5) */
+  float: left; /* Ensure left alignment */
 }
 
 /* Ensure the slider container has proper width */
@@ -222,18 +224,59 @@
   box-sizing: border-box;
 }
 
-/* Fix for exact 5 cards display */
+/* Fix for exact 5 cards display - start from left */
 .watch-buy-slider .slick-list {
   overflow: hidden;
-  margin: 0;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Ensure each slide has equal width */
+/* Ensure each slide has equal width and starts from left */
 .watch-buy-slider .slick-slide > div {
   width: 100%;
   height: 100%;
   display: flex;
   justify-content: center;
+}
+
+/* Force the slider to start from the leftmost position */
+.watch-buy-slider .slick-initialized .slick-track {
+  transform: translate3d(0px, 0px, 0px) !important;
+}
+
+/* Ensure slider wrapper starts from left */
+.watch-buy-slider .slick-slider {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  user-select: none;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Additional fix for exact 5-card layout */
+.watch-buy-slider .slick-slide {
+  display: block;
+  height: auto;
+  outline: none;
+}
+
+/* Ensure no center padding or offset */
+.watch-buy-slider .slick-list {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.watch-buy-slider .slick-list:focus {
+  outline: none;
+}
+
+.watch-buy-slider .slick-list.dragging {
+  cursor: pointer;
+  cursor: hand;
 }
 
 /* Big arrow navigation buttons with three sides rounded */

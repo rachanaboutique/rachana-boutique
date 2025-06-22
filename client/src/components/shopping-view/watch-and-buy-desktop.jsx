@@ -338,6 +338,14 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   // Reference to the slider
   const sliderRef = useRef(null);
 
+  // Ensure slider starts from the first slide
+  useEffect(() => {
+    if (sliderRef.current) {
+      // Reset to first slide on component mount
+      sliderRef.current.slickGoTo(0);
+    }
+  }, [products]);
+
   // Custom navigation functions
   const goToNextSlide = () => {
     if (sliderRef.current) {
@@ -351,47 +359,52 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     }
   };
 
-  // Settings for the slider
+  // Settings for the slider - ensure exactly 5 cards are shown
   const sliderSettings = {
     dots: true,
-    infinite: true,
+    infinite: products.length >= 5, // Only infinite if we have 5+ products
     speed: 500,
-    slidesToShow: 5,
+    slidesToShow: Math.min(5, products.length), // Show max 5 or total products if less
     slidesToScroll: 1, // Scroll one card at a time
-    autoplay: true, // Enable autoplay
-    autoplaySpeed: 3000, // 2 seconds delay between slides
+    autoplay: products.length >= 5, // Only autoplay if we have 5+ products
+    autoplaySpeed: 3000, // 3 seconds delay between slides
     arrows: false, // We'll use custom arrows
     adaptiveHeight: false, // Set to false for consistent height
-    centerMode: false,
+    centerMode: false, // Ensure no center mode
     swipeToSlide: false, // Disable swipe to slide for precise movement
-    variableWidth: false,
+    variableWidth: false, // Fixed width for consistent layout
     draggable: false, // Disable dragging for precise control
     cssEase: "ease-out",
     slidesPerRow: 1,
+    initialSlide: 0, // Start from the first slide
+    rtl: false, // Left to right direction
+    lazyLoad: 'ondemand',
     afterChange: (current) => setCurrentSlideIndex(current),
     responsive: [
       {
         breakpoint: 1440,
         settings: {
-          slidesToShow: 5,
+          slidesToShow: Math.min(5, products.length),
           slidesToScroll: 1,
           dots: true,
           centerMode: false,
-          infinite: true,
-          autoplay: true,
+          infinite: products.length >= 5,
+          autoplay: products.length >= 5,
           autoplaySpeed: 3000,
+          initialSlide: 0,
         }
       },
       {
         breakpoint: 1024,
         settings: {
-          slidesToShow: 4,
+          slidesToShow: Math.min(4, products.length),
           slidesToScroll: 1,
           dots: true,
           centerMode: false,
-          infinite: true,
-          autoplay: true,
+          infinite: products.length >= 4,
+          autoplay: products.length >= 4,
           autoplaySpeed: 3000,
+          initialSlide: 0,
         }
       }
     ]
@@ -590,7 +603,7 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
         </div>
 
         {/* Watch and Buy Slider - Both Mobile and Desktop */}
-        <div className="w-full mb-4 px-1">
+        <div className="w-full mb-4 px-6">
           <div className="relative">
 
             {/* <button

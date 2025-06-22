@@ -294,9 +294,14 @@ function ProductImageUpload({
         if (!Array.isArray(prev)) return [];
         return prev.filter((_, i) => i !== index);
       });
+
+      // Show specific error message for HEIC files
+      const isHEICError = error.message.includes('HEIC');
       toast({
-        title: "Upload failed",
-        description: "Failed to upload image. Please try again.",
+        title: isHEICError ? "HEIC conversion failed" : "Upload failed",
+        description: isHEICError
+          ? "Unable to process iPhone HEIC image. Please convert to JPEG/PNG first or try a different image."
+          : "Failed to upload image. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -533,7 +538,7 @@ function ProductImageUpload({
           ref={inputRef}
           onChange={handleImageFileChange}
           multiple={!isSingleImage}
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           disabled={isUploading}
         />
       </div>

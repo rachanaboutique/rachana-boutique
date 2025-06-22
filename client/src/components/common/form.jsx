@@ -74,6 +74,11 @@ function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText,
     } catch (err) {
       console.error("Error uploading color image: ", err);
       setColorsUploadStatus((prevStatus) => ({ ...prevStatus, [idx]: "error" }));
+
+      // Log specific error for HEIC files
+      if (err.message.includes('HEIC')) {
+        console.warn('HEIC file processing failed. User should convert to JPEG/PNG first.');
+      }
     }
   };
 
@@ -139,8 +144,7 @@ const uploadVideo = async (file) => {
         reject(new Error("Network error during upload"));
       };
 
-      const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
-      xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, true);
+      xhr.open("POST", `https://api.cloudinary.com/v1_1/dxfeyj7hl/video/upload`, true);
       xhr.send(cloudinaryFormData);
     });
   } catch (err) {
@@ -312,7 +316,7 @@ const uploadVideo = async (file) => {
                     {!color.image && colorsUploadStatus[idx] !== "uploading" && (
                       <Input
                         type="file"
-                        accept="image/*"
+                        accept="image/*,.heic,.heif"
                         onChange={async (event) => {
                           const file = event.target.files[0];
                           if (file) {
