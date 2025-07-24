@@ -1,13 +1,21 @@
 /* Custom styles for the watch-and-buy-mobile component */
 
-/* Mobile slider specific styles */
-.mobile-watch-buy-slider .slick-track {
-  display: flex;
-  gap: 12px;
+/* Custom slider container */
+.custom-slider-container {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
-.mobile-watch-buy-slider .slick-slide {
-  padding: 0px;
+/* Custom slider track */
+.custom-slider-track {
+  display: flex;
+  transition: transform 0.3s ease-out;
+  will-change: transform;
 }
 
 /* Ensure the video cards have proper styling */
@@ -16,11 +24,83 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   width: 100%;
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .watch-buy-mobile-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+
+
+/* Improve mobile touch experience */
+@media (max-width: 768px) {
+  .watch-buy-mobile-card {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  .custom-slider-container {
+    -webkit-overflow-scrolling: touch;
+    cursor: grab;
+  }
+  
+  .custom-slider-container:active {
+    cursor: grabbing;
+  }
+}
+
+/* Prevent text selection during drag */
+.custom-slider-container * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Additional mobile improvements */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  .custom-slider-container {
+    padding: 8px 0;
+  }
+  
+  /* Better spacing for mobile */
+  .watch-buy-mobile-card {
+    margin-bottom: 0;
+  }
+  
+  /* Ensure proper touch handling */
+  .custom-slider-track {
+    touch-action: pan-y pinch-zoom;
+  }
+  
+  /* Smoother scrolling on iOS */
+  .custom-slider-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Disable default drag behavior on images */
+.watch-buy-mobile-card img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+
+/* Improve button interactions */
+.watch-buy-mobile-card button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Mobile video slide transitions */

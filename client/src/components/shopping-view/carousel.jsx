@@ -66,7 +66,7 @@ const Carousel = ({ bannersList }) => {
         <img
             src={item.image}
             alt="Banner"
-            className="w-full h-full object-center object-cover"
+            className="w-full h-full object-center object-cover md:object-top"
             loading={index === 0 ? "eager" : "lazy"} // First image loads eagerly
           />
         </div>

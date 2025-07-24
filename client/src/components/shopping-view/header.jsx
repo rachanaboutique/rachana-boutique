@@ -47,7 +47,7 @@ function ShoppingHeader() {
 const messages = [
   "Luxury looks at affordable prices",
   "Free shipping on orders over ₹1000",
-  "Unveil your true beauty with our new collection"
+  "Unveil your true beauty"
 ];
 
 

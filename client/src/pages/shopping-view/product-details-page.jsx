@@ -12,7 +12,7 @@ import { Separator } from "../../components/ui/separator";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
-import { ChevronLeft, ChevronRight, Plus, Minus, ShoppingBag, CheckCircle, Star, Sparkles, Gem, Award, Heart, Scissors, Palette, Zap, Leaf } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Minus, ShoppingBag, CheckCircle, Star, Sparkles, Gem, Award, Heart, Scissors, Palette, Zap, Leaf, ChevronDown, ChevronUp } from "lucide-react";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import ProductSlider from "@/components/shopping-view/product-slider";
 import { fetchAllProducts } from "@/store/admin/products-slice";
@@ -24,6 +24,7 @@ function ProductDetailsPage({ open, setOpen }) {
   const [rating, setRating] = useState(0);
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [expandedFAQ, setExpandedFAQ] = useState({});
   const { productList, productDetails } = useSelector((state) => state.shopProducts);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -383,6 +384,14 @@ function ProductDetailsPage({ open, setOpen }) {
     }
   };
 
+  // Toggle FAQ section
+  const toggleFAQ = (index) => {
+    setExpandedFAQ(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
   const renderDescriptionBulletPoints = (description) => {
     return description
       // Split on both literal "\n" and actual new lines
@@ -632,7 +641,7 @@ function ProductDetailsPage({ open, setOpen }) {
         </script>
       </Helmet>
 
-      <div className="container mx-auto px-4 py-8 md:py-16">
+        <div className="container mx-auto px-4 py-8 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-[2fr_1.5fr] gap-12 md:gap-16">
 
         <div className="flex items-start gap-4">
@@ -905,9 +914,165 @@ function ProductDetailsPage({ open, setOpen }) {
               )}
             </div>
           </div>
+
+          {/* FAQ-Style Product Information - Desktop Only */}
+          <div className="hidden md:block mt-8 w-full max-w-2xl mx-auto">
+            <div className="space-y-4 w-full">
+              {/* Color Accuracy Notice */}
+              <div className="w-full border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 bg-white">
+                <button
+                  onClick={() => toggleFAQ('color')}
+                  className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Palette className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="font-semibold text-gray-800 text-base">Color Accuracy Notice</span>
+                  </div>
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 transition-all duration-200">
+                    {expandedFAQ['color'] ? (
+                      <ChevronUp className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    )}
+                  </div>
+                </button>
+                {expandedFAQ['color'] && (
+                  <div className="w-full px-5 pb-5 text-sm text-gray-700 leading-relaxed bg-gray-50 border-t border-gray-100">
+                    <div className="pt-3 pl-3 border-l-3 border-gray-300">
+                      Slight variations in colour may occur due to photographic lighting and individual monitor settings. We strive to represent colors as accurately as possible to ensure your satisfaction.
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Shipping Order Processing */}
+              <div className="w-full border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 bg-white">
+                <button
+                  onClick={() => toggleFAQ('shipping')}
+                  className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Zap className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="font-semibold text-gray-800 text-base">Shipping Order Processing</span>
+                  </div>
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 transition-all duration-200">
+                    {expandedFAQ['shipping'] ? (
+                      <ChevronUp className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    )}
+                  </div>
+                </button>
+                {expandedFAQ['shipping'] && (
+                  <div className="w-full px-5 pb-5 text-sm text-gray-700 leading-relaxed bg-gray-50 border-t border-gray-100">
+                    <div className="pt-3 pl-3 border-l-3 border-gray-300">
+                      Orders are shipped after we receive them, which may affect processing time. A tracking link will be shared via email once dispatched for your convenience.
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Wash Care Instructions */}
+              <div className="w-full border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 bg-white">
+                <button
+                  onClick={() => toggleFAQ('washcare')}
+                  className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Leaf className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="font-semibold text-gray-800 text-base">Wash Care Instructions</span>
+                  </div>
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 transition-all duration-200">
+                    {expandedFAQ['washcare'] ? (
+                      <ChevronUp className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    )}
+                  </div>
+                </button>
+                {expandedFAQ['washcare'] && (
+                  <div className="w-full px-5 pb-5 text-sm text-gray-700 leading-relaxed bg-gray-50 border-t border-gray-100">
+                    <div className="pt-3 pl-3 border-l-3 border-gray-300">
+                      Dry clean recommended for best results. If hand washing, use cold water with mild detergent. Avoid direct sunlight when drying to preserve fabric quality and colour.
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Return & Exchange Policy */}
+              <div className="w-full border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 bg-white">
+                <button
+                  onClick={() => toggleFAQ('return')}
+                  className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Award className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="font-semibold text-gray-800 text-base">Return & Exchange Policy</span>
+                  </div>
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 transition-all duration-200">
+                    {expandedFAQ['return'] ? (
+                      <ChevronUp className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    )}
+                  </div>
+                </button>
+                {expandedFAQ['return'] && (
+                  <div className="w-full px-5 pb-5 text-sm text-gray-700 leading-relaxed bg-gray-50 border-t border-gray-100">
+                    <div className="pt-3 pl-3 border-l-3 border-gray-300 space-y-3">
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">Damaged or Incorrect Item</p>
+                      <p>To be eligible for return/exchange, you must share an unedited unpacking video clearly showing the sealed package and the issue.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">Contact Timeline</p>
+                      <p>Reach out within 2 days of delivery via WhatsApp at +91 9994412667 to initiate a return/exchange.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">Return Shipping Details</p>
+                      <p>Return shipping by customer (unless wrong/damaged item) use INDIA POST only. Rs 100/- courier fee will be reimbursed.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">Replacement Timeline</p>
+                      <p>Once your return is received and approved, a replacement will be shipped within 5 business days.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">💰 Refunds (if applicable)</p>
+                      <p>If a replacement isn't available, a refund will be processed within 2 working days.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">⚠ No Return/Refund/Exchange for:</p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Items bought on sale or discounts</li>
+                        <li>Beaded/sequined products (minor fall-off is considered normal)</li>
+                        <li>Cases of personal dislike or unmet expectations</li>
+                        <li>International Orders</li>
+                      </ul>
+                    </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              </div>
+              
+          </div>
         </div>
 
-        <div className="text-center max-w-2xl mx-auto md:hidden">
+        <div className="md:hidden">
+          <div className="text-center max-w-2xl mx-auto">
             {productDetails?.description && (
               <div className="space-y-5">
                 {renderDescriptionBulletPoints(productDetails.description).map((point, index) => {
@@ -929,8 +1094,142 @@ function ProductDetailsPage({ open, setOpen }) {
             )}
           </div>
 
+            {/* FAQ-Style Product Information - Mobile Only */}
+            <div className="mt-8 space-y-3 w-full">
+              {/* Color Accuracy Notice */}
+              <div className="w-full border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => toggleFAQ('color-mobile')}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <Palette className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="font-medium text-gray-800">Color Accuracy Notice</span>
+                  </div>
+                  {expandedFAQ['color-mobile'] ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                  ) : (
+                    <Plus className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                  )}
+                </button>
+                {expandedFAQ['color-mobile'] && (
+                  <div className="w-full px-4 pb-4 text-sm text-gray-600 leading-relaxed">
+                    Slight variations in colour may occur due to photographic lighting and individual monitor settings. We strive to represent as accurately as possible.
+                  </div>
+                )}
+              </div>
 
+              {/* Shipping Order Processing */}
+              <div className="w-full border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => toggleFAQ('shipping-mobile')}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <Zap className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="font-medium text-gray-800">Shipping Order Processing</span>
+                  </div>
+                  {expandedFAQ['shipping-mobile'] ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <Plus className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                {expandedFAQ['shipping-mobile'] && (
+                  <div className="w-full px-4 pb-4 text-sm text-gray-600 leading-relaxed">
+                    Orders are shipped after we receive them, which may affect processing time. A tracking link will be shared via email once dispatched.
+                  </div>
+                )}
+              </div>
 
+              {/* Wash Care Instructions */}
+              <div className="w-full border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => toggleFAQ('washcare-mobile')}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <Leaf className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="font-medium text-gray-800">Wash Care Instructions</span>
+                  </div>
+                  {expandedFAQ['washcare-mobile'] ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <Plus className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                {expandedFAQ['washcare-mobile'] && (
+                  <div className="w-full px-4 pb-4 text-sm text-gray-600 leading-relaxed">
+                    Dry clean recommended for best results. If hand washing use cold water with mild detergent. Avoid direct sunlight when drying to preserve fabric quality and colour.
+                  </div>
+                )}
+              </div>
+
+              {/* Return & Exchange Policy */}
+              <div className="w-full border border-gray-200 rounded-lg">
+                <button
+                  onClick={() => toggleFAQ('return-mobile')}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <Award className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="font-medium text-gray-800">Return & Exchange Policy</span>
+                  </div>
+                  {expandedFAQ['return-mobile'] ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <Plus className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                {expandedFAQ['return-mobile'] && (
+                  <div className="w-full px-4 pb-4 text-sm text-gray-600 leading-relaxed space-y-3">
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">Damaged or Incorrect Item</p>
+                      <p>To be eligible for return/exchange, you must share an unedited unpacking video clearly showing the sealed package and the issue.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">Contact Timeline</p>
+                      <p>Reach out within 2 days of delivery via WhatsApp at +91 9994412667 to initiate a return/exchange.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">Return Shipping Details</p>
+                      <p>Return shipping by customer (unless wrong/damaged item) use INDIA POST only. Rs 100/- courier fee will be reimbursed.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">Replacement Timeline</p>
+                      <p>Once your return is received and approved, a replacement will be shipped within 5 business days.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">💰 Refunds (if applicable)</p>
+                      <p>If a replacement isn't available, a refund will be processed within 2 working days.</p>
+                    </div>
+
+                    <div>
+                      <p className="font-medium text-gray-800 mb-1">⚠ No Return/Refund/Exchange for:</p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Items bought on sale or discounts</li>
+                        <li>Beaded/sequined products (minor fall-off is considered normal)</li>
+                        <li>Cases of personal dislike or unmet expectations</li>
+                        <li>International Orders</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
 
         <div className="flex flex-col justify-between">
 
@@ -1026,8 +1325,8 @@ function ProductDetailsPage({ open, setOpen }) {
             bgColor="bg-white"
           />
         )}
+        </div>
       </div>
-    </div>
     </>
   );
 }

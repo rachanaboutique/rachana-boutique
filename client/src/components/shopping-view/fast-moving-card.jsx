@@ -97,7 +97,7 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
 
       const delayTimeout = setTimeout(() => {
         try {
-          console.log(`Initializing Cloudinary player ${playerIdRef.current} for video:`, extractPublicId(videoUrl));
+          // console.log(`Initializing Cloudinary player ${playerIdRef.current} for video:`, extractPublicId(videoUrl));
           setHasInitialized(true);
 
           const initTimeout = setTimeout(() => {
@@ -128,7 +128,7 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
 
             // Set up event listeners
             playerInstanceRef.current.on('ready', () => {
-              console.log(`Cloudinary player ${playerIdRef.current} ready`);
+              // console.log(`Cloudinary player ${playerIdRef.current} ready`);
               setIsPlayerReady(true);
 
               // Set video source when player is ready
@@ -399,7 +399,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
       ) : (
         // Enhanced Desktop Card Style
         <div
-          className="relative h-full w-full overflow-hidden bg-foreground group cursor-pointer"
+          className="relative h-full w-full overflow-hidden group cursor-pointer"
           onClick={handleCardClick}
         >
           {/* Top Left Like Icon with improved styling */}
@@ -543,8 +543,8 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-black/20 to-black/40 z-5"></div>
           </div>
 
-          {/* Overlay for Desktop */}
-          <div className="hidden md:absolute inset-0 bg-black opacity-35"></div>
+          {/* Overlay for Desktop - Removed to show cards without black border */}
+          {/* <div className="hidden md:absolute inset-0 bg-black opacity-35"></div> */}
 
           {/* Enhanced Text Content for Desktop */}
           <div

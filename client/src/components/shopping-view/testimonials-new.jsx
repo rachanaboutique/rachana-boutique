@@ -8,39 +8,46 @@ import { motion } from 'framer-motion';
 
 const testimonials = [
   {
-    name: "Priya Sharma",
-    title: "Fashion Enthusiast",
+    name: "Thana Malar",
+    title: "Satisfied Customer",
     review:
-      "The quality of their clothing is exceptional! Every piece I've purchased has become a staple in my wardrobe. The attention to detail and fit is perfect.",
+      "I like the sarees at Rachana's Boutique and find their collection to be exquisite. I had purchased a saree and found their delivery and service were efficient. Sridevi Mam gives her personal attention in fulfilling customer satisfaction. Thank you and all the best.",
     image: "https://randomuser.me/api/portraits/women/25.jpg",
   },
   {
-    name: "Ananya Patel",
-    title: "Loyal Customer",
+    name: "Bharathi",
+    title: "Saree Enthusiast",
     review:
-      "I love how their collections are always on-trend yet timeless. The fabrics are comfortable and the styles are versatile enough for both work and weekends.",
+      "RACHANA BOUTIQUE having an Exclusive saree collections of Excellent combinations of colours from various places inclusive of all Traditional & Fashionable Party wear sarees ranging from daily wear to Special Occasions. A must try place to have an Elegant Saree look.",
     image: "https://randomuser.me/api/portraits/women/30.jpg",
   },
   {
-    name: "Riya Verma",
-    title: "Style Blogger",
+    name: "Prisha",
+    title: "Fashion Lover",
     review:
-      "As someone who's very particular about fashion, I'm impressed by their consistent quality and design aesthetic. Their customer service is also outstanding!",
+      "I've honestly loved the saree collection the designs feel super fresh but still have that traditional touch. The fabric quality is really good, and the colors are so well picked. You've clearly put a lot of thought into every piece, and it shows. Can't wait to see how it all looks on the website.",
     image: "https://randomuser.me/api/portraits/women/35.jpg",
   },
   {
-    name: "Kavya Reddy",
-    title: "Fashion Consultant",
+    name: "Lynn Ernestina",
+    title: "Happy Customer",
     review:
-      "The pieces I ordered arrived promptly and exceeded my expectations. The fit is perfect and the materials are high quality. Will definitely shop here again!",
+      "The service was very prompt, courteous and very professional. I am happy with the variety available and the overall experience. Definitely recommend and consider purchasing again.",
     image: "https://randomuser.me/api/portraits/women/40.jpg",
   },
   {
-    name: "Aarohi Gupta",
+    name: "Shobhana",
     title: "Regular Shopper",
     review:
-      "Their clothing has transformed my wardrobe. The pieces mix and match beautifully, and I always receive compliments when wearing their designs.",
+      "My recent saree shopping from Rachana's boutique was a great experience… lovely hand picked collections, choice of colours, good quality, and reasonable price. Overall a good shopping and satisfaction. Try Rachana's collections.",
     image: "https://randomuser.me/api/portraits/women/45.jpg",
+  },
+  {
+    name: "Sumathi Puniyaseelan",
+    title: "Loyal Customer",
+    review:
+      "RACHANA BOUTIQUE has a truly unique collection with a wide variety of beautiful designs at reasonable prices. The quality and patterns are exceptional—totally awesome experience! Highly recommended for anyone looking for stylish and affordable sarees.",
+    image: "https://randomuser.me/api/portraits/women/50.jpg",
   },
 ];
 
@@ -130,7 +137,7 @@ const TestimonialCard = ({ testimonial, index }) => {
           />
           <div className="ml-4">
             <h4 className="font-medium text-gray-900">{testimonial.name}</h4>
-            <p className="text-sm text-gray-500">{testimonial.title}</p>
+            {/* <p className="text-sm text-gray-500">{testimonial.title}</p> */}
           </div>
         </div>
       </div>

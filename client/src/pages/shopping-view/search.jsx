@@ -27,12 +27,13 @@ function SearchProducts() {
 
   const { toast } = useToast();
 
-  // Popular saree searches
+  // Popular saree searches (including product codes)
   const popularSearches = [
     "Colourful Elegance",
     "Multicolour Frenzy",
     "Purple Garden",
     "Traditional Elegance",
+    "TC010",
     "Red Loctus",
     "Blue Elephant",
     "Polka Dots"
@@ -51,17 +52,43 @@ function SearchProducts() {
       // Small timeout to simulate loading and prevent UI flicker
       const timer = setTimeout(() => {
         const lowerCaseKeyword = keyword.toLowerCase();
-        // First get exact matches (starts with the keyword)
-        const exactMatches = productList.filter((product) =>
-          product.title.toLowerCase().startsWith(lowerCaseKeyword)
+
+        // Search by product code (exact match first)
+        const productCodeExactMatches = productList.filter((product) =>
+          product.productCode && product.productCode.toLowerCase() === lowerCaseKeyword
         );
-        // Then get partial matches (includes the keyword but doesn't start with it)
-        const partialMatches = productList.filter((product) =>
+
+        // Search by product code (partial match)
+        const productCodePartialMatches = productList.filter((product) =>
+          product.productCode &&
+          product.productCode.toLowerCase().includes(lowerCaseKeyword) &&
+          product.productCode.toLowerCase() !== lowerCaseKeyword
+        );
+
+        // Search by title (exact matches - starts with the keyword)
+        const titleExactMatches = productList.filter((product) =>
+          product.title.toLowerCase().startsWith(lowerCaseKeyword) &&
+          !productCodeExactMatches.some(p => p._id === product._id) &&
+          !productCodePartialMatches.some(p => p._id === product._id)
+        );
+
+        // Search by title (partial matches - includes the keyword but doesn't start with it)
+        const titlePartialMatches = productList.filter((product) =>
           product.title.toLowerCase().includes(lowerCaseKeyword) &&
-          !product.title.toLowerCase().startsWith(lowerCaseKeyword)
+          !product.title.toLowerCase().startsWith(lowerCaseKeyword) &&
+          !productCodeExactMatches.some(p => p._id === product._id) &&
+          !productCodePartialMatches.some(p => p._id === product._id) &&
+          !titleExactMatches.some(p => p._id === product._id)
         );
-        // Combine both for complete results
-        const suggestions = [...exactMatches, ...partialMatches];
+
+        // Combine results with priority: Product Code Exact > Product Code Partial > Title Exact > Title Partial
+        const suggestions = [
+          ...productCodeExactMatches,
+          ...productCodePartialMatches,
+          ...titleExactMatches,
+          ...titlePartialMatches
+        ];
+
         setSuggestions(suggestions);
         setIsLoading(false);
       }, 300);
@@ -246,7 +273,7 @@ function SearchProducts() {
               setHighlightedIndex(-1);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Search by product name or code..."
+            placeholder="Search by product name or code (e.g., TC010)..."
             className="w-full bg-transparent text-lg outline-none pr-10"
             autoFocus
           />

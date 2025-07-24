@@ -34,20 +34,20 @@ function RotatingMessages({
         return "bg-background border-t border-b border-border";
       case "dark":
       default:
-        return "bg-gradient-to-r from-[#0f172a] via-[#111827] to-[#0f172a] border-t border-b border-gray-800";
+        return "";
     }
   };
 
   return (
     <div
-      className={`relative overflow-hidden h-5 flex items-center justify-center px-4 select-none ${getVariantClasses()} ${className}`}
+      className={`relative overflow-hidden h-10 md:h-5 flex items-center justify-center px-4 select-none ${getVariantClasses()} ${className}`}
       style={{ fontFeatureSettings: '"liga" 0' }} // subtle font smoothing (optional)
     >
       {/* subtle overlay for depth */}
       <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
 
       <div className="relative flex items-center space-x-3 w-full max-w-6xl">
-        <div className="relative overflow-hidden h-5 flex items-center flex-1">
+        <div className="relative overflow-hidden  flex items-center flex-1">
           <div
             key={currentMessageIndex}
             className={`text-xs md:text-sm font-semibold text-center w-full tracking-wide uppercase text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] transition-all duration-300 ease-out ${

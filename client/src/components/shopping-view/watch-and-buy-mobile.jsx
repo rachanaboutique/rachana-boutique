@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Slider from "react-slick";
 import { X, ShoppingBag, Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import FastMovingCard from "./fast-moving-card";
 import "@/styles/watch-and-buy-mobile.css";
 
@@ -161,7 +161,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
           });
 
           playerInstanceRef.current.on('ready', () => {
-            console.log('Cloudinary player ready for:', extractPublicId(videoUrl));
+            // console.log('Cloudinary player ready for:', extractPublicId(videoUrl));
             setIsPlayerReady(true);
 
             // Set video source immediately when player is ready
@@ -337,6 +337,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [direction, setDirection] = useState(1); // 1 for next, -1 for previous
   const [isMobile, setIsMobile] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
@@ -344,6 +345,17 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   const videoContainerRef = useRef(null);
   const progressBarRef = useRef(null);
   const sliderRef = useRef(null);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  
+  // Touch event states for custom slider
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchStartY, setTouchStartY] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
+  const [touchEndY, setTouchEndY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const containerRef = useRef(null);
+  const autoPlayIntervalRef = useRef(null);
 
   // Function to pause all videos except the active one
   const pauseAllVideosExceptActive = useCallback(() => {
@@ -464,6 +476,184 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Responsive items per slide: 2 for mobile, 5 for desktop
+  const getSlidesPerView = () => {
+    if (typeof window === 'undefined') return 2;
+    const width = window.innerWidth;
+    if (width >= 1280) return 5;
+    if (width >= 1024) return 4;
+    if (width >= 768) return 3;
+    return 2;
+  };
+
+  // Calculate total number of slides available
+  const getTotalSlides = useCallback(() => {
+    const itemsPerSlide = getSlidesPerView();
+    return Math.ceil((products?.length || 0) / itemsPerSlide);
+  }, [products?.length]);
+
+  // Get products for the current slide
+  const getCurrentSlideProducts = useCallback(() => {
+    if (!products || !products.length) return [];
+    const itemsPerSlide = getSlidesPerView();
+    const startIdx = currentSlideIndex * itemsPerSlide;
+    return products.slice(startIdx, startIdx + itemsPerSlide);
+  }, [currentSlideIndex, products]);
+
+  // Function to advance to the next slide
+  const nextSlide = useCallback(() => {
+    const totalSlides = getTotalSlides();
+    setDirection(1);
+    setCurrentSlideIndex((prevIndex) => {
+      const next = prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1;
+      console.log(`Moving from slide ${prevIndex} to ${next} (total: ${totalSlides})`);
+      return next;
+    });
+  }, [getTotalSlides]);
+
+  // Function to go to the previous slide
+  const prevSlide = useCallback(() => {
+    const totalSlides = getTotalSlides();
+    setDirection(-1);
+    setCurrentSlideIndex((prevIndex) => {
+      const previous = prevIndex <= 0 ? totalSlides - 1 : prevIndex - 1;
+      console.log(`Moving from slide ${prevIndex} to ${previous} (total: ${totalSlides})`);
+      return previous;
+    });
+  }, [getTotalSlides]);
+
+  const goToSlide = useCallback((index) => {
+    // Set direction based on relative index
+    setDirection(index > currentSlideIndex ? 1 : -1);
+    setCurrentSlideIndex(index);
+    console.log(`Going to slide ${index}`);
+  }, [currentSlideIndex]);
+
+  // Initialize slider
+  useEffect(() => {
+    if (products.length > 0) {
+      setCurrentSlideIndex(0); // Always start at the beginning
+      console.log(`Initialized slider with ${products.length} products`);
+    }
+  }, [products.length]);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (isAutoPlaying && !isDragging && products.length > 0) {
+      autoPlayIntervalRef.current = setInterval(() => {
+        console.log('Auto-play: moving to next slide');
+        nextSlide();
+      }, 4000);
+    }
+
+    return () => {
+      if (autoPlayIntervalRef.current) {
+        clearInterval(autoPlayIntervalRef.current);
+      }
+    };
+  }, [isAutoPlaying, isDragging, nextSlide, products.length]);
+
+  // Touch handlers for custom slider
+  const handleTouchStartSlider = useCallback((e) => {
+    setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
+    setIsDragging(true);
+    setIsAutoPlaying(false);
+  }, []);
+
+  const handleTouchMoveSlider = useCallback((e) => {
+    if (!isDragging) return;
+    
+    const currentX = e.touches[0].clientX;
+    const diff = touchStartX - currentX;
+    setDragOffset(-diff);
+  }, [isDragging, touchStartX]);
+
+  const handleTouchEndSlider = useCallback((e) => {
+    if (!isDragging) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    setTouchEndX(touchEndX);
+    setTouchEndY(touchEndY);
+    
+    const horizontalDiff = touchStartX - touchEndX;
+    const verticalDiff = touchStartY - touchEndY;
+    const threshold = 50; // Minimum swipe distance
+    
+    // Only trigger slide if horizontal movement is greater than vertical movement
+    if (Math.abs(horizontalDiff) > Math.abs(verticalDiff) && Math.abs(horizontalDiff) > threshold) {
+      if (horizontalDiff > 0) {
+        nextSlide(); // Swipe left - next slide
+      } else {
+        prevSlide(); // Swipe right - previous slide
+      }
+    }
+    
+    setIsDragging(false);
+    setDragOffset(0);
+    
+    // Resume autoplay after touch interaction
+    setTimeout(() => {
+      setIsAutoPlaying(true);
+    }, 5000);
+  }, [isDragging, touchStartX, touchStartY, nextSlide, prevSlide]);
+
+  // Mouse handlers for desktop dragging
+  const handleMouseDown = useCallback((e) => {
+    setTouchStartX(e.clientX);
+    setIsDragging(true);
+    setIsAutoPlaying(false);
+  }, []);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging) return;
+    
+    const currentX = e.clientX;
+    const diff = touchStartX - currentX;
+    setDragOffset(-diff);
+  }, [isDragging, touchStartX]);
+
+  const handleMouseUp = useCallback((e) => {
+    if (!isDragging) return;
+    
+    const mouseEnd = e.clientX;
+    const diff = touchStartX - mouseEnd;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    }
+    
+    setIsDragging(false);
+    setDragOffset(0);
+    
+    setTimeout(() => {
+      setIsAutoPlaying(true);
+    }, 5000);
+  }, [isDragging, touchStartX, nextSlide, prevSlide]);
+
+  // Add global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+
+
+
 
   // Effect to manage video playback when currentVideoIndex changes
   useEffect(() => {
@@ -713,50 +903,7 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     }
   };
 
-  // Settings for the slider
-  const sliderSettings = {
-    dots: false, // We're using custom dots
-    infinite: true,
-    speed: 500,
-    slidesToShow: 5,
-    slidesToScroll: 1,
-    arrows: false,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    swipeToSlide: true,
-    beforeChange: (_, next) => setCurrentSlideIndex(next),
-    responsive: [
-      {
-        breakpoint: 1280,
-        settings: {
-          slidesToShow: 4,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-          arrows: false,
-        },
-      },
-    ],
-  };
+
 
   // Reset video state when modal opens or video changes
   useEffect(() => {
@@ -812,110 +959,144 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
           <p className="text-gray-600">Explore our curated collection of trending products</p>
         </div>
 
-        {/* Watch and Buy Slider*/}
-        <div className="w-full mb-4">
-          <div>
-            <Slider ref={sliderRef} {...sliderSettings} className="watch-buy-slider mobile-watch-buy-slider">
-              {products.map((productItem, index) => (
-                <div key={productItem._id} className="pb-2">
-                  <div
-                    onClick={() => {
-                      setSelectedVideo(productItem);
-                      setCurrentVideoIndex(index);
-                      setShowVideoModal(true);
-                      setIsPlaying(true);
+        {/* Custom Watch and Buy Slider */}
+        <div className="relative w-full mb-4">
+          {/* Slider Container */}
+          <div
+            className="overflow-hidden cursor-grab active:cursor-grabbing"
+            ref={containerRef}
+            onTouchStart={handleTouchStartSlider}
+            onTouchMove={handleTouchMoveSlider}
+            onTouchEnd={handleTouchEndSlider}
+            onMouseDown={handleMouseDown}
+            style={{ touchAction: 'pan-y pinch-zoom' }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSlideIndex}
+                initial={{ opacity: 0, x: direction * 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -direction * 100 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="flex"
+                style={{ width: "100%", touchAction: "pan-y", gap: "12px" }}
+              >
+                {getCurrentSlideProducts()?.map((productItem, index) => (
+                  <motion.div
+                    key={productItem._id}
+                    initial={{ opacity: 0, x: direction * 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: index * 0.05,
+                      ease: "easeOut"
                     }}
-                    className="relative"
+                    className="flex-shrink-0"
+                    style={{ 
+                      width: `calc((100% - ${(getCurrentSlideProducts().length - 1) * 12}px) / ${getCurrentSlideProducts().length})`
+                    }}
                   >
                     <div
-                      className="relative cursor-pointer shadow-md overflow-hidden watch-buy-mobile-card"
-                      style={{
-                        aspectRatio: "9/16",
-                        background: "#f8f8f8",
+                      onClick={() => {
+                        if (!isDragging) {
+                          setSelectedVideo(productItem);
+                          setCurrentVideoIndex(index);
+                          setShowVideoModal(true);
+                          setIsPlaying(true);
+                        }
                       }}
+                      className="relative w-full"
                     >
-                      {/* Video thumbnail with play button overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center">
-                          <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-black border-b-[8px] border-b-transparent ml-1"></div>
+                      <div
+                        className="relative cursor-pointer shadow-md overflow-hidden watch-buy-mobile-card rounded-lg w-full"
+                        style={{
+                          aspectRatio: "9/16",
+                          background: "#f8f8f8",
+                        }}
+                      >
+                        {/* Video thumbnail with play button overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                          <div className="w-12 h-12 rounded-full bg-white bg-opacity-70 flex items-center justify-center">
+                            <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-black border-b-[8px] border-b-transparent ml-1"></div>
+                          </div>
                         </div>
+
+                        <FastMovingCard
+                          item={productItem}
+                          index={index}
+                          activeItem={0}
+                          handleAddtoCart={handleAddtoCart}
+                          isMobileCard={true}
+                        />
                       </div>
 
-                      <FastMovingCard
-                        item={productItem}
-                        index={index}
-                        activeItem={0}
-                        handleAddtoCart={handleAddtoCart}
-                        isMobileCard={true}
-                      />
-                    </div>
-
-                    {/* Product info below the card */}
-                    <div className="mt-2 px-0">
-                      <h3 className="text-sm font-medium line-clamp-1 mb-1">{productItem?.title}</h3>
-                      <div className="flex justify-between items-center">
-                        <p className="text-sm font-bold">₹{productItem.price}</p>
-                        <div className="flex gap-2">
-                        <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/shop/details/${productItem._id}`);
-                            }}
-                            className="w-8 h-8 bg-white border border-gray-300 text-black rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors shadow-sm"
-                            aria-label="View Details"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                      {/* Product info below the card */}
+                      <div className="mt-2">
+                        <h3 className="text-sm font-medium line-clamp-1 mb-1">{productItem?.title}</h3>
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm font-bold">₹{productItem.price}</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/shop/details/${productItem._id}`);
+                              }}
+                              className="w-8 h-8 bg-white border border-gray-300 text-black rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors shadow-sm"
+                              aria-label="View Details"
                             >
-                              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                              <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                          </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddtoCart(productItem);
-                          }}
-                          className="text-xs bg-black text-white p-1.5 rounded-full"
-                          aria-label="Add to Cart"
-                        >
-                          <ShoppingBag className="h-4 w-5" />
-                        </button>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                              </svg>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddtoCart(productItem);
+                              }}
+                              className="text-xs bg-black text-white p-1.5 rounded-full"
+                              aria-label="Add to Cart"
+                            >
+                              <ShoppingBag className="h-4 w-5" />
+                            </button>
+                          </div>
                         </div>
-
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </Slider>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
         {/* Custom Dots Indicator */}
-        <div className="custom-dots">
-          {products.slice(0, Math.min(products.length, 10)).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                // When using dots navigation, go directly to the selected slide
-                if (sliderRef.current) {
-                  sliderRef.current.slickGoTo(index);
-                }
-              }}
-              className={`custom-dot ${index === currentSlideIndex ? 'active' : ''}`}
-              aria-label={`Go to slide ${index + 1}`}
-            ></button>
-          ))}
-        </div>
+        {getTotalSlides() > 1 && (
+          <div className="custom-dots">
+            {Array.from({ length: getTotalSlides() }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  goToSlide(index);
+                  setIsAutoPlaying(false);
+                  setTimeout(() => setIsAutoPlaying(true), 5000);
+                }}
+                className={`custom-dot ${index === currentSlideIndex ? 'active' : ''}`}
+                aria-label={`Go to slide ${index + 1}`}
+              ></button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* VideoStacker Modal - When a video is clicked */}

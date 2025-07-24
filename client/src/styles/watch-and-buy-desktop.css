@@ -194,7 +194,7 @@
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Slider customization - Ensure exactly 5 cards start from left */
+/* Slider customization - Show 6 cards per row */
 .watch-buy-slider .slick-track {
   display: flex;
   margin-left: 0 !important;
@@ -204,10 +204,10 @@
 
 .watch-buy-slider .slick-slide {
   margin: 0;
-  padding: 0 8px; /* Use padding instead of margin for consistent sizing */
+  padding: 0 6px; /* Use padding instead of margin for consistent sizing */
   height: auto;
   box-sizing: border-box; /* Ensure padding is included in width calculation */
-  width: 20% !important; /* Exactly 5 cards (100% / 5) */
+  width: 16.67% !important; /* 6 cards (100% / 6 ≈ 16.67%) */
   float: left; /* Ensure left alignment */
 }
 
@@ -254,7 +254,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Additional fix for exact 5-card layout */
+/* Additional fix for 6-card layout */
 .watch-buy-slider .slick-slide {
   display: block;
   height: auto;
@@ -348,11 +348,13 @@
 
   /* Product info text for larger screens */
   .product-info-title {
-    font-size: 1.25rem !important;
+    font-size: 1.5rem !important;
+    line-height: 1.75rem !important;
   }
 
   .product-info-price {
-    font-size: 1.25rem !important;
+    font-size: 1.5rem !important;
+    line-height: 1.75rem !important;
   }
 }
 
@@ -378,17 +380,57 @@
 
   /* Product info text for extra large screens */
   .product-info-title {
-    font-size: 1.5rem !important;
+    font-size: 2rem !important;
+    line-height: 2.25rem !important;
   }
 
   .product-info-price {
-    font-size: 1.5rem !important;
+    font-size: 2rem !important;
+    line-height: 2.25rem !important;
   }
 
   /* Control buttons in modal view */
   .modal-control-button {
     width: 50px !important;
     height: 50px !important;
+  }
+}
+
+/* Ultra large screens (2560px+) */
+@media (min-width: 2560px) {
+  .big-arrow-left,
+  .big-arrow-right {
+    width: 110px;
+    height: 110px;
+  }
+
+  .big-arrow-left svg,
+  .big-arrow-right svg {
+    width: 50px;
+    height: 50px;
+  }
+
+  /* Video controls for ultra large screens */
+  .video-control-button {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  /* Product info text for ultra large screens */
+  .product-info-title {
+    font-size: 3rem !important;
+    line-height: 3.5rem !important;
+  }
+
+  .product-info-price {
+    font-size: 3rem !important;
+    line-height: 3.5rem !important;
+  }
+
+  /* Control buttons in modal view for ultra large screens */
+  .modal-control-button {
+    width: 80px !important;
+    height: 80px !important;
   }
 }
 

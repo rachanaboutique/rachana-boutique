@@ -175,13 +175,20 @@ const ProductSlider = ({
       }
     }
 
-    // Determine if we should navigate based on drag velocity or distance
-    const threshold = containerWidth.current * 0.2;
+    // Check if this is primarily a horizontal swipe
+    const horizontalDistance = Math.abs(info.offset.x);
+    const verticalDistance = Math.abs(info.offset.y);
+    
+    // Only trigger navigation if horizontal movement is greater than vertical movement
+    if (horizontalDistance > verticalDistance && horizontalDistance > 20) {
+      // Determine if we should navigate based on drag velocity or distance
+      const threshold = containerWidth.current * 0.2;
 
-    if (info.offset.x > threshold || (info.velocity.x > 0.5 && info.offset.x > 0)) {
-      goToPrevSlide();
-    } else if (info.offset.x < -threshold || (info.velocity.x < -0.5 && info.offset.x < 0)) {
-      goToNextSlide();
+      if (info.offset.x > threshold || (info.velocity.x > 0.5 && info.offset.x > 0)) {
+        goToPrevSlide();
+      } else if (info.offset.x < -threshold || (info.velocity.x < -0.5 && info.offset.x < 0)) {
+        goToNextSlide();
+      }
     }
 
     // Reset the x position
@@ -230,27 +237,28 @@ const ProductSlider = ({
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentIndex}
-                  initial={{ opacity: 0, x: direction * 50 }}
+                  initial={{ opacity: 0, x: direction * 100 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -direction * 50 }}
-                  transition={{ duration: 0.5 }}
+                  exit={{ opacity: 0, x: -direction * 100 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
                   className={`${isMobile ? "md:grid-cols-5 md:gap-5" : "grid grid-cols-5 gap-5"}`}
                 >
                   {/* Mobile view with exactly 2 cards visible */}
                   {isMobile && (
-                    <div className="flex space-x-3" style={{ width: "100%", touchAction: "pan-y" }}>
+                    <div className="flex" style={{ width: "100%", touchAction: "pan-y", gap: "12px" }}>
                       {getCurrentSlideProducts()?.map((product, index) => (
                         <motion.div
                           key={product._id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
+                          initial={{ opacity: 0, x: direction * 30 }}
+                          animate={{ opacity: 1, x: 0 }}
                           transition={{
-                            duration: 0.5,
-                            delay: index * 0.1,
-                            type: "spring",
-                            stiffness: 50,
+                            duration: 0.4,
+                            delay: index * 0.05,
+                            ease: "easeOut"
                           }}
-                          style={{ width: "calc(50% - 5px)" }}
+                          style={{ 
+                            width: `calc((100% - ${(getCurrentSlideProducts().length - 1) * 12}px) / ${getCurrentSlideProducts().length})`
+                          }}
                           className="flex-shrink-0 touch-none"
                         >
                           <ShoppingProductTile

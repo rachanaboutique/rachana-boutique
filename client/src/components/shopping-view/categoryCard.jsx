@@ -54,7 +54,7 @@ const CategoryCard = ({ categoryItem, index, variant = "default" }) => {
         <img
           src={categoryItem?.image}
           alt={categoryItem?.name}
-          className="w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-110"
+          className="w-full h-full object-cover object-top md:object-top transition-transform duration-700 group-hover:scale-110"
         />
       </div>
 
