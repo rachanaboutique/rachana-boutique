@@ -713,7 +713,12 @@ function ShoppingListing({ categorySlug }) {
 
               {/* Collection Description Section - Always visible */}
               <div className="mb-12 mt-8 p-6 bg-gray-50 rounded-lg">
-                <h2 className="text-2xl text-3xl font-semibold mb-4">{currentCategory ? `About Our ${currentCategory.name} Collection` : ''}</h2>
+                <h2 className="text-2xl text-3xl font-semibold mb-4">
+                  {currentCategory ? 
+                    `About Our ${currentCategory.name}${currentCategory.name.toLowerCase().includes('collection') ? '' : ' Collection'}` : 
+                    ''
+                  }
+                </h2>
                 <div className="prose max-w-none">
                   {currentCategory  &&
                       <p className="text-md md:text-lg mb-4">{getCategoryDescription || ""}</p>
