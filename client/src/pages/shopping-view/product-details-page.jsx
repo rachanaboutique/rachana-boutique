@@ -931,7 +931,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     <span className="font-bold text-gray-800 text-lg">Color Accuracy Notice</span>
                   </div>
                   <div className={`transition-transform duration-300 ${expandedFAQ['color'] ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                    <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -958,7 +958,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     <span className="font-bold text-gray-800 text-lg">Shipping Order Processing</span>
                   </div>
                   <div className={`transition-transform duration-300 ${expandedFAQ['shipping'] ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                    <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -985,7 +985,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     <span className="font-bold text-gray-800 text-lg">Wash Care Instructions</span>
                   </div>
                   <div className={`transition-transform duration-300 ${expandedFAQ['washcare'] ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                    <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -1012,7 +1012,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     <span className="font-bold text-gray-800 text-lg">Return & Exchange Policy</span>
                   </div>
                   <div className={`transition-transform duration-300 ${expandedFAQ['return'] ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                    <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -1100,7 +1100,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     <span className="font-bold text-gray-800 text-lg">Color Accuracy Notice</span>
                   </div>
                   <div className={`transition-transform duration-300 flex-shrink-0 ${expandedFAQ['color-mobile'] ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                    <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -1127,7 +1127,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     <span className="font-bold text-gray-800 text-lg">Shipping Order Processing</span>
                   </div>
                   <div className={`transition-transform duration-300 flex-shrink-0 ${expandedFAQ['shipping-mobile'] ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                    <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -1154,7 +1154,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     <span className="font-bold text-gray-800 text-lg">Wash Care Instructions</span>
                   </div>
                   <div className={`transition-transform duration-300 flex-shrink-0 ${expandedFAQ['washcare-mobile'] ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                    <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -1181,7 +1181,7 @@ function ProductDetailsPage({ open, setOpen }) {
                     <span className="font-bold text-gray-800 text-lg">Return & Exchange Policy</span>
                   </div>
                   <div className={`transition-transform duration-300 flex-shrink-0 ${expandedFAQ['return-mobile'] ? 'rotate-180' : ''}`}>
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
+                    <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${

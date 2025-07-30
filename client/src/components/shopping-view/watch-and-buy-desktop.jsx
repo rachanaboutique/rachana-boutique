@@ -331,9 +331,13 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const [videoCardHeight, setVideoCardHeight] = useState(600);
   const [videoCardWidth, setVideoCardWidth] = useState(320);
   const [modalArrowOffset, setModalArrowOffset] = useState(0);
+  const [scrollDirection, setScrollDirection] = useState('next'); // Track scroll direction: 'next' or 'prev'
+  const [forceRender, setForceRender] = useState(0); // Force re-render trigger
 
   // Ref to store last progress value for throttling
   const lastProgressRef = useRef(0);
+  // Ref to store current scroll direction for immediate access
+  const scrollDirectionRef = useRef('next');
 
   // Reference to the slider
   const sliderRef = useRef(null);
@@ -477,28 +481,46 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
   // Function to go to the next video (infinite loop)
   const goToNextVideo = useCallback(() => {
-    const newIndex = (currentVideoIndex + 1) % products.length;
-    setCurrentVideoIndex(newIndex);
-    setSelectedVideo(products[newIndex]);
-    // Ensure audio is unmuted for the new video
-    setIsMuted(false);
-    // Force unmute the active video player
-    forceUnmuteActiveVideo();
+    setScrollDirection('next');
+    scrollDirectionRef.current = 'next';
+    
+    // Force a small delay to ensure direction is set before state changes
+    setTimeout(() => {
+      const newIndex = (currentVideoIndex + 1) % products.length;
+      setCurrentVideoIndex(newIndex);
+      setSelectedVideo(products[newIndex]);
+      setForceRender(prev => prev + 1); // Force re-render
+      // Ensure audio is unmuted for the new video
+      setIsMuted(false);
+      // Force unmute the active video player
+      forceUnmuteActiveVideo();
+    }, 10);
   }, [currentVideoIndex, products, forceUnmuteActiveVideo]);
 
   // Function to go to the previous video (infinite loop)
   const goToPrevVideo = useCallback(() => {
-    const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
-    setCurrentVideoIndex(newIndex);
-    setSelectedVideo(products[newIndex]);
-    // Ensure audio is unmuted for the new video
-    setIsMuted(false);
-    // Force unmute the active video player
-    forceUnmuteActiveVideo();
+    setScrollDirection('prev');
+    scrollDirectionRef.current = 'prev';
+    
+    // Force a small delay to ensure direction is set before state changes
+    setTimeout(() => {
+      const newIndex = currentVideoIndex === 0 ? products.length - 1 : currentVideoIndex - 1;
+      setCurrentVideoIndex(newIndex);
+      setSelectedVideo(products[newIndex]);
+      setForceRender(prev => prev + 1); // Force re-render
+      // Ensure audio is unmuted for the new video
+      setIsMuted(false);
+      // Force unmute the active video player
+      forceUnmuteActiveVideo();
+    }, 10);
   }, [currentVideoIndex, products, forceUnmuteActiveVideo]);
 
   // Function to go to a specific video
-  const goToVideo = useCallback((index) => {
+  const goToVideo = useCallback((index, direction = null) => {
+    if (direction) {
+      setScrollDirection(direction);
+      scrollDirectionRef.current = direction;
+    }
     setCurrentVideoIndex(index);
     setSelectedVideo(products[index]);
     // Ensure audio is unmuted for the new video
@@ -506,6 +528,41 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
     // Force unmute the active video player
     forceUnmuteActiveVideo();
   }, [products, forceUnmuteActiveVideo]);
+
+  // Helper function to get video thumbnail URL
+  const getVideoThumbnail = useCallback((videoUrl) => {
+    if (!videoUrl) return null;
+    
+    // For Cloudinary videos, generate thumbnail URL
+    if (videoUrl.includes('cloudinary.com')) {
+      try {
+        // Extract public ID from Cloudinary URL
+        const uploadIndex = videoUrl.indexOf('/upload/');
+        if (uploadIndex === -1) return null;
+        
+        const afterUpload = videoUrl.substring(uploadIndex + 8);
+        const segments = afterUpload.split('/');
+        const lastSegment = segments[segments.length - 1];
+        const publicId = lastSegment.replace(/\.[^/.]+$/, '');
+        
+        // Generate thumbnail URL with Cloudinary transformations
+        return `https://res.cloudinary.com/dxfeyj7hl/video/upload/so_0,w_400,h_600,c_fill,q_auto,f_jpg/${publicId}.jpg`;
+      } catch (error) {
+        console.error('Error generating thumbnail:', error);
+        return null;
+      }
+    }
+    
+    return null;
+  }, []);
+
+  // Initialize direction only when modal first opens
+  useEffect(() => {
+    if (showVideoModal) {
+      setScrollDirection('next');
+      scrollDirectionRef.current = 'next';
+    }
+  }, [showVideoModal]); // Only depend on showVideoModal, not currentVideoIndex
 
   // Reset video state when modal opens or video changes
   useEffect(() => {
@@ -606,10 +663,19 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   // Handle video end - auto slide to next video with a slight delay
   const handleVideoEnd = useCallback(() => {
     // Simple delay before going to next video
+    // Auto-advance should always go forward, but preserve direction for UI
     setTimeout(() => {
-      goToNextVideo();
+      // Don't change direction on auto-advance, just move to next video
+      const newIndex = (currentVideoIndex + 1) % products.length;
+      setCurrentVideoIndex(newIndex);
+      setSelectedVideo(products[newIndex]);
+      setForceRender(prev => prev + 1);
+      // Keep the current direction instead of resetting to 'next'
+      // This way the UI state is preserved
+      setIsMuted(false);
+      forceUnmuteActiveVideo();
     }, 300);
-  }, [goToNextVideo]);
+  }, [currentVideoIndex, products, forceUnmuteActiveVideo]);
 
   // Check if we have products to display
   const hasWatchAndBuyProducts = products && products.length > 0;
@@ -876,13 +942,23 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                       onClick={(e) => {
                         e.stopPropagation();
                         if (position !== 0) {
+                          // Set scroll direction based on which side card was clicked
+                          // If clicking left card (position -1), we're going backward (prev)
+                          // If clicking right card (position 1), we're going forward (next)
+                          const newDirection = position === -1 ? "prev" : "next";
+                          
+                          // Set direction immediately in both state and ref
+                          setScrollDirection(newDirection);
+                          scrollDirectionRef.current = newDirection;
+
+                          
                           const direction = position === -1 ? "right" : "left";
                           const currentCard = document.querySelector(".video-card-container.z-20");
                           if (currentCard) {
                             currentCard.classList.add(`leaving-${direction}`);
                           }
                           setTimeout(() => {
-                            goToVideo(index);
+                            goToVideo(index, newDirection); // Pass direction to ensure it's set
                             setTimeout(() => {
                               const newCards = document.querySelectorAll(".video-card-container");
                               newCards.forEach((card) => {
@@ -920,17 +996,81 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
                             }
                         }
                       >
-                        {/* Video Player or Black Screen */}
+                        {/* Video Player, Paused Thumbnail, or Dark Screen */}
                         {position !== 0 ? (
-                          // Show black screen for side cards (position -1 and 1)
-                          <div className="w-full h-full bg-black flex items-center justify-center">
-                            <div className="text-white text-center opacity-50">
-                              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center">
-                                <Play className="w-8 h-8" />
-                              </div>
-                              <p className="text-sm">Click to play</p>
-                            </div>
-                          </div>
+                          // Side cards logic based on position and scroll direction
+                          (() => {
+                            // CORRECTED LOGIC BASED ON REQUIREMENTS:
+                            // When RIGHT arrow clicked (next): first card shows thumbnail, third card is dark
+                            // When LEFT arrow clicked (prev): third card shows thumbnail, first card is dark
+                            // Use ref for immediate access to current direction
+                            const currentDirection = scrollDirectionRef.current;
+                            const shouldShowThumbnail = 
+                              (currentDirection === 'next' && position === -1) || // Left card (first) shows thumbnail when RIGHT arrow clicked
+                              (currentDirection === 'prev' && position === 1);    // Right card (third) shows thumbnail when LEFT arrow clicked
+                            
+
+                            
+                            if (shouldShowThumbnail) {
+                              // Show paused video thumbnail
+                              const thumbnailUrl = getVideoThumbnail(productItem.videoUrl || productItem.video);
+                              return (
+                                <div className="w-full h-full relative">
+                                  {thumbnailUrl ? (
+                                    <div className="w-full h-full relative">
+                                      <img 
+                                        src={thumbnailUrl}
+                                        alt="Video thumbnail"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          // Fallback to dark screen if thumbnail fails to load
+                                          e.target.style.display = 'none';
+                                          e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                      />
+                                      {/* Fallback dark screen */}
+                                      <div className="w-full h-full bg-black flex items-center justify-center" style={{ display: 'none' }}>
+                                        <div className="text-white text-center opacity-50">
+                                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center">
+                                            <Play className="w-8 h-8" />
+                                          </div>
+                                          <p className="text-sm">Click to play</p>
+                                        </div>
+                                      </div>
+                                      {/* Paused overlay */}
+                                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                        <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center">
+                                          <Play className="w-8 h-8 text-white" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    // Fallback to dark screen if no thumbnail
+                                    <div className="w-full h-full bg-black flex items-center justify-center">
+                                      <div className="text-white text-center opacity-50">
+                                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center">
+                                          <Play className="w-8 h-8" />
+                                        </div>
+                                        <p className="text-sm">Click to play</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            } else {
+                              // Show dark screen for the opposite side
+                              return (
+                                <div className="w-full h-full bg-black flex items-center justify-center">
+                                  <div className="text-white text-center opacity-30">
+                                    <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-white/10 flex items-center justify-center">
+                                      <Play className="w-6 h-6" />
+                                    </div>
+                                    <p className="text-xs">Click to play</p>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          })()
                         ) : (
                           // Show video player only for center card (position 0)
                           productItem.videoUrl || productItem.video ? (

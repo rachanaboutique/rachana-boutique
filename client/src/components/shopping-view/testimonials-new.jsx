@@ -196,7 +196,7 @@ const Testimonials = () => {
 
   return (
     <div className='relative'>
-      <div className='w-full mx-auto relative pb-16'>
+      <div className='w-full mx-auto relative px-6'>
         {/* Navigation Arrows - Desktop Only */}
         {!isMobile && (
           <>
@@ -279,13 +279,15 @@ const TestimonialCard = ({ testimonial, index }) => {
     >
       <div className="bg-white p-8 border border-gray-200 shadow-sm h-full flex flex-col">
         {/* Quote icon */}
-        <div className="mb-6 text-gray-500">
+        <div className="mb-6 text-blue-400"> {/* Changed quote color to light blue */}
           <Quote size={32} />
         </div>
-
         {/* Review text */}
-        <p className="text-justify text-gray-800 mb-8 flex-grow leading-relaxed italic text-blue-600 text-lg">"{testimonial.review}"</p>
-
+        <p
+          className="text-justify text-gray-800 mb-8 flex-grow leading-relaxed italic font-medium text-lg" // Added font-medium for slight boldness
+        >
+          "{testimonial.review}"
+        </p>
         {/* Customer info */}
         <div className="flex items-center mt-auto pt-6 border-t border-gray-100">
           <div className="w-20 h-20 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
