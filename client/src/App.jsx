@@ -38,6 +38,12 @@ import AdminUsers from "./pages/admin-view/users";
 import AdminProductReview from "./pages/admin-view/review";
 import AdminContact from "./pages/admin-view/contact";
 import AdminNewsLetter from "./pages/admin-view/newsletter";
+import MetaPixelTracker from "./components/common/MetaPixelTracker";
+
+// Import Meta Pixel verification in development mode
+if (import.meta.env.DEV) {
+  import("./utils/metaPixelVerification.js");
+}
 
 
 
@@ -109,6 +115,10 @@ function App() {
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
+      {/* Meta Pixel Tracker - Automatically tracks page views and events */}
+      <MetaPixelTracker />
+
+
       <Routes>
         {/* Base Route */}
         <Route

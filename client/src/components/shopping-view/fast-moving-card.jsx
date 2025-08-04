@@ -5,6 +5,7 @@ import classNames from "classnames";
 import { Heart, ExternalLink, X, ShoppingBag, Loader, Play } from "lucide-react";
 import { useToast } from "../ui/use-toast";
 import { useInView } from "react-intersection-observer";
+import iosAutoplayManager from "../../utils/iosAutoplayManager";
 
 // Cloudinary Video Player Component
 const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
@@ -111,19 +112,28 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
             videoElement.playsInline = playsInline;
             videoElement.muted = isMuted;
 
+            // Enhanced configuration for iOS compatibility
             playerInstanceRef.current = cloudinaryRef.current.videoPlayer(videoElement, {
               cloud_name: 'dxfeyj7hl',
               controls: controls,
-              autoplay: autoplay,
-              muted: isMuted,
+              autoplay: false, // Always start with autoplay false for iOS compatibility
+              muted: true, // Always muted for autoplay to work on iOS
               loop: loop,
               fluid: true,
-              playsinline: playsInline,
+              playsinline: true, // Critical for iOS
               preload: 'metadata',
               transformation: {
                 quality: 'auto',
                 fetch_format: 'auto'
-              }
+              },
+              html5: {
+                vhs: {
+                  overrideNative: true // Important for consistent behavior
+                }
+              },
+              // Additional iOS-specific settings
+              webkit_playsinline: true,
+              allowsInlineMediaPlayback: true
             });
 
             // Set up event listeners
@@ -175,13 +185,31 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
     }
   }, [isCloudinaryLoaded, videoUrl, hasInitialized]); // Removed callback dependencies to prevent re-initialization
 
-  // Handle play/pause based on isPlaying prop
+  // Handle play/pause based on isPlaying prop with iOS autoplay handling
   useEffect(() => {
     if (!playerInstanceRef.current || !isPlayerReady) return;
 
     try {
       if (isPlaying) {
-        playerInstanceRef.current.play();
+        // For iOS, ensure we have user interaction before attempting autoplay
+        const playVideo = async () => {
+          try {
+            // Ensure video is muted for autoplay compatibility
+            playerInstanceRef.current.mute();
+
+            const playPromise = playerInstanceRef.current.play();
+            if (playPromise !== undefined) {
+              await playPromise;
+              console.log('Video autoplay successful');
+            }
+          } catch (error) {
+            console.warn('Autoplay failed, this is expected on iOS without user interaction:', error);
+            // On iOS, videos won't autoplay until user interaction
+            // This is normal behavior and not an error
+          }
+        };
+
+        playVideo();
       } else {
         playerInstanceRef.current.pause();
       }
@@ -247,11 +275,13 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
         loop={loop}
         muted={isMuted}
         playsInline={playsInline}
+        webkit-playsinline="true"
         controls={controls}
         poster={poster}
         onLoadedData={onLoadedData}
         onError={onError}
         preload="metadata"
+        x-webkit-airplay="allow"
       />
     );
   }
@@ -262,11 +292,15 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
         ref={videoRef}
         style={{ width: '100%', height: '100%' }}
         playsInline
+        webkit-playsinline="true"
         preload="metadata"
         muted
         onContextMenu={(e) => e.preventDefault()}
         suppressHydrationWarning={true}
         poster={poster}
+        // iOS-specific attributes
+        x-webkit-airplay="allow"
+        controls={false}
       />
       {!isPlayerReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
@@ -304,11 +338,27 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
   const [videoError, setVideoError] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
 
+  // iOS detection and autoplay handling using centralized manager
+  const [isIOS] = useState(iosAutoplayManager.isIOS);
+  const [hasUserInteracted, setHasUserInteracted] = useState(iosAutoplayManager.hasUserInteracted);
+
   // Listen for resize events to update mobile flag
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  // Subscribe to iOS autoplay manager updates
+  useEffect(() => {
+    const unsubscribe = iosAutoplayManager.subscribe((interacted) => {
+      setHasUserInteracted(interacted);
+    });
+
+    return unsubscribe;
   }, []);
 
   // When opening modal, reset video loading state
@@ -369,7 +419,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
               >
                 <CloudinaryVideoPlayer
                   videoUrl={item.video}
-                  isPlaying={inView && videoReady}
+                  isPlaying={inView && videoReady && (hasUserInteracted || !isIOS)}
                   isMuted={true}
                   loop={true}
                   controls={false}
@@ -390,6 +440,22 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
             ) : (
               <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                 <p className="text-gray-500">No image</p>
+              </div>
+            )}
+
+            {/* iOS Autoplay Notice */}
+            {isIOS && !hasUserInteracted && item?.video && (
+              <div
+                className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer z-20"
+                onClick={() => {
+                  iosAutoplayManager.forceEnable();
+                 
+                }}
+              >
+                <div className="bg-white/95 backdrop-blur-sm rounded-lg px-4 py-3 text-center shadow-lg">
+                  <div className="text-sm text-gray-800 font-medium mb-1">Tap to enable videos</div>
+                  <div className="text-xs text-gray-600">Videos will autoplay after this</div>
+                </div>
               </div>
             )}
 
@@ -436,7 +502,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
               >
                 <CloudinaryVideoPlayer
                   videoUrl={item.video}
-                  isPlaying={inView && videoReady}
+                  isPlaying={inView && videoReady && (hasUserInteracted || !isIOS)}
                   isMuted={true}
                   loop={true}
                   controls={false}
@@ -601,7 +667,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
                     onClick={(e) => handleAddToCartClick(e)}
                     className="w-full px-4 py-1.5 text-sm text-white rounded-md bg-black hover:bg-gray-800 border border-white/20 transform transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
                   >
-                     <ShoppingBag size={18} />
+                    <ShoppingBag size={18} />
                     Add to Cart
                   </button>
                 </div>

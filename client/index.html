@@ -92,6 +92,35 @@
   <meta name="product:condition" content="new" />
   <meta name="product:price:currency" content="INR" />
 
+  <!-- Meta Pixel Advanced Matching -->
+  <meta name="facebook-domain-verification" content="dummy_verification_code" />
+
+  <!-- Meta Pixel Code -->
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+
+    // Initialize Meta Pixel with advanced matching
+    fbq('init', '2456284341419492', {
+      em: 'auto', // Enable automatic advanced matching
+      external_id: 'auto'
+    });
+
+    // Track initial PageView
+    fbq('track', 'PageView');
+  </script>
+
+
+
   <!-- Structured Data for Organization -->
   <script type="application/ld+json">
   {
@@ -111,6 +140,7 @@
     }
   }
   </script>
+  <!-- End Meta Pixel Code -->
 
   <!-- Structured Data for WebSite -->
   <script type="application/ld+json">
@@ -276,6 +306,11 @@
 </head>
 
 <body>
+  <!-- Meta Pixel Code - noscript fallback -->
+  <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=2456284341419492&ev=PageView&noscript=1"
+  /></noscript>
+
   <noscript>
     <div style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
       <h1>Rachana Boutique - Premium Saree Collections</h1>
@@ -301,6 +336,7 @@
       </p>
     </div>
   </noscript>
+
 
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>

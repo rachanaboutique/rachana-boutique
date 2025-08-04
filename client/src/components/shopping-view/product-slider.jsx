@@ -256,8 +256,9 @@ const ProductSlider = ({
                             delay: index * 0.05,
                             ease: "easeOut"
                           }}
-                          style={{ 
-                            width: `calc((100% - ${(getCurrentSlideProducts().length - 1) * 12}px) / ${getCurrentSlideProducts().length})`
+                          style={{
+                            // Always use itemsPerSlide (2) for width calculation, not actual items in slide
+                            width: `calc((100% - ${(itemsPerSlide - 1) * 12}px) / ${itemsPerSlide})`
                           }}
                           className="flex-shrink-0 touch-none"
                         >
@@ -268,6 +269,18 @@ const ProductSlider = ({
                           />
                         </motion.div>
                       ))}
+
+                      {/* Add empty placeholder if we have fewer items than itemsPerSlide */}
+                      {getCurrentSlideProducts().length < itemsPerSlide && (
+                        <div
+                          style={{
+                            width: `calc((100% - ${(itemsPerSlide - 1) * 12}px) / ${itemsPerSlide})`
+                          }}
+                          className="flex-shrink-0"
+                        >
+                          {/* Empty space to maintain layout */}
+                        </div>
+                      )}
                     </div>
                   )}
 

@@ -538,13 +538,13 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     }
   }, [products.length]);
 
-  // Auto-play functionality
+  // Auto-play functionality with longer delay
   useEffect(() => {
     if (isAutoPlaying && !isDragging && products.length > 0) {
       autoPlayIntervalRef.current = setInterval(() => {
         console.log('Auto-play: moving to next slide');
         nextSlide();
-      }, 4000);
+      }, 8000); // Increased from 4000ms to 8000ms (8 seconds)
     }
 
     return () => {
