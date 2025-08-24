@@ -18,28 +18,41 @@ const getFilteredProducts = async (req, res) => {
     switch (sortBy) {
       case "price-lowtohigh":
         sort.price = 1;
-
         break;
       case "price-hightolow":
         sort.price = -1;
-
         break;
       case "title-atoz":
         sort.title = 1;
-
         break;
-
       case "title-ztoa":
         sort.title = -1;
-
         break;
-
+      case "productcode-atoz":
+        // Use collation for proper alphanumeric sorting
+        sort.productCode = 1;
+        break;
+      case "productcode-ztoa":
+        // Use collation for proper alphanumeric sorting
+        sort.productCode = -1;
+        break;
       default:
         sort.price = 1;
         break;
     }
 
-    const products = await Product.find(filters).sort(sort);
+    // Use collation for proper alphanumeric sorting when sorting by productCode
+    let query = Product.find(filters).sort(sort);
+
+    if (sortBy === "productcode-atoz" || sortBy === "productcode-ztoa") {
+      query = query.collation({
+        locale: 'en',
+        numericOrdering: true,
+        caseLevel: false
+      });
+    }
+
+    const products = await query;
 
     res.status(200).json({
       success: true,

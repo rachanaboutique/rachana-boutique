@@ -18,6 +18,9 @@ import ProductSlider from "@/components/shopping-view/product-slider";
 import { fetchAllProducts } from "@/store/admin/products-slice";
 import { Helmet } from "react-helmet-async";
 import { categoryMapping } from "@/config";
+import { useMetaPixelCart } from "@/hooks/useMetaPixelCart";
+import { addToTempCart } from "@/utils/tempCartManager";
+import { addToCartEvent } from "@/utils/metaPixelEvents";
 
 function ProductDetailsPage({ open, setOpen }) {
   const [reviewMsg, setReviewMsg] = useState("");
@@ -42,6 +45,7 @@ function ProductDetailsPage({ open, setOpen }) {
   // Using location key so that even if same productId is used, we can fetch fresh details.
   const location = useLocation();
   const navigate = useNavigate();
+  const { trackAddToCart } = useMetaPixelCart();
   const dispatch = useDispatch();
 
   const [slideDirection, setSlideDirection] = useState(null);
@@ -112,13 +116,60 @@ function ProductDetailsPage({ open, setOpen }) {
 
   const handleAddToCart = (currentProductId, totalStock) => {
     setIsAddingToCart(true);
+
     if (!isAuthenticated) {
-      toast({
-        title: "Please log in to add items to the cart!",
-        variant: "destructive",
-      });
-      // Reset the adding to cart state when user is not authenticated
-      setIsAddingToCart(false);
+      // Add to temporary cart and redirect to checkout
+      const tempCartItem = {
+        productId: currentProductId,
+        colorId: selectedColor?._id || null,
+        quantity: quantity,
+        productDetails: {
+          title: productDetails?.title,
+          price: productDetails?.price,
+          salePrice: productDetails?.salePrice,
+          image: productDetails?.image?.[0] || '',
+          category: productDetails?.category
+        }
+      };
+
+      const success = addToTempCart(tempCartItem);
+
+      if (success) {
+        // Track Meta Pixel AddToCart event
+        setTimeout(() => {
+          addToCartEvent({
+            content_ids: [currentProductId],
+            content_type: 'product',
+            value: productDetails?.salePrice || productDetails?.price || 0,
+            currency: 'INR',
+            content_name: productDetails?.title,
+            content_category: productDetails?.category,
+            num_items: quantity
+          });
+
+          console.log('Meta Pixel: AddToCart tracked from ProductDetails (temp cart)', {
+            productId: currentProductId,
+            quantity: quantity,
+            value: productDetails?.salePrice || productDetails?.price || 0
+          });
+        }, 100);
+
+        toast({
+          title: `${quantity} item${quantity > 1 ? 's' : ''} added to cart!`,
+          variant: "default",
+        });
+
+        // Just reset loading state, no redirect
+        setTimeout(() => {
+          setIsAddingToCart(false);
+        }, 800);
+      } else {
+        setIsAddingToCart(false);
+        toast({
+          title: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -194,6 +245,9 @@ function ProductDetailsPage({ open, setOpen }) {
       })
     ).then((data) => {
       if (data?.payload?.success) {
+        // Track Meta Pixel AddToCart event
+        trackAddToCart(currentProductId, selectedColor?._id, quantity);
+
         // Force a refresh of the cart items to ensure we have the latest data
         setIsAddingToCart(false);
         dispatch(fetchCartItems(user?.id)).then(() => {

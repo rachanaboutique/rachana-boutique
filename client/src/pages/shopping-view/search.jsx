@@ -8,6 +8,9 @@ import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
+import { useMetaPixelCart } from "@/hooks/useMetaPixelCart";
+import { addToTempCart } from "@/utils/tempCartManager";
+import { addToCartEvent } from "@/utils/metaPixelEvents";
 
 function SearchProducts() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,6 +29,7 @@ function SearchProducts() {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const { toast } = useToast();
+  const { trackAddToCart } = useMetaPixelCart();
 
   // Popular saree searches (including product codes)
   const popularSearches = [
@@ -120,10 +124,52 @@ function SearchProducts() {
   function handleAddtoCart(getCurrentProductId, totalStock, product) {
     // Check if user is authenticated
     if (!isAuthenticated) {
-      toast({
-        title: "Please log in to add items to the cart!",
-        variant: "destructive",
-      });
+      // Add to temporary cart and redirect to checkout
+      const tempCartItem = {
+        productId: getCurrentProductId,
+        colorId: product?.colors?.[0]?._id || null,
+        quantity: 1,
+        productDetails: {
+          title: product?.title,
+          price: product?.price,
+          salePrice: product?.salePrice,
+          image: product?.image?.[0] || '',
+          category: product?.category
+        }
+      };
+
+      const success = addToTempCart(tempCartItem);
+
+      if (success) {
+        // Track Meta Pixel AddToCart event
+        setTimeout(() => {
+          addToCartEvent({
+            content_ids: [getCurrentProductId],
+            content_type: 'product',
+            value: product?.salePrice || product?.price || 0,
+            currency: 'INR',
+            content_name: product?.title,
+            content_category: product?.category,
+            num_items: 1
+          });
+
+          console.log('Meta Pixel: AddToCart tracked from Search (temp cart)', {
+            productId: getCurrentProductId,
+            productName: product?.title,
+            value: product?.salePrice || product?.price || 0
+          });
+        }, 100);
+
+        toast({
+          title: "Item added to cart!",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -212,6 +258,9 @@ function SearchProducts() {
       })
     ).then((data) => {
       if (data?.payload?.success) {
+        // Track Meta Pixel AddToCart event
+        trackAddToCart(getCurrentProductId, colorId, 1);
+
         dispatch(fetchCartItems(user?.id));
         toast({
           title: "Product is added to cart",

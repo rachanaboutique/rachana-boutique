@@ -76,37 +76,54 @@ const AdminFeedback = () => {
         ) : error ? (
           <p className="text-red-500">Error: {error}</p>
         ) : filteredFeedbackList && filteredFeedbackList.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Feedback</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredFeedbackList.map((feedback) => (
-                <TableRow key={feedback._id}>
-                  <TableCell>{feedback?.user || "N/A"}</TableCell>
-                  <TableCell>{feedback?.email || "N/A"}</TableCell>
-                  <TableCell>{feedback?.feedback}</TableCell>
-                  <TableCell>
-                    {new Date(feedback.createdAt).toLocaleDateString("en-GB")}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleDeleteClick(feedback._id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[150px]">User</TableHead>
+                  <TableHead className="w-[200px]">Email</TableHead>
+                  <TableHead className="w-[300px] min-w-[300px]">Feedback</TableHead>
+                  <TableHead className="w-[120px]">Date</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredFeedbackList.map((feedback) => (
+                  <TableRow key={feedback._id}>
+                    <TableCell className="w-[150px]">
+                      <div className="truncate" title={feedback?.user || "N/A"}>
+                        {feedback?.user || "N/A"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[200px]">
+                      <div className="truncate" title={feedback?.email || "N/A"}>
+                        {feedback?.email || "N/A"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[300px] min-w-[300px]">
+                      <div className="max-w-[300px] break-words whitespace-pre-wrap text-sm leading-relaxed">
+                        {feedback?.feedback}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[120px]">
+                      <div className="text-sm">
+                        {new Date(feedback.createdAt).toLocaleDateString("en-GB")}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[100px]">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteClick(feedback._id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         ) : (
           <p className="text-center py-4">No feedback found.</p>
         )}

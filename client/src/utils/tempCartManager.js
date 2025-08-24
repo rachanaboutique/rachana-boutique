@@ -1,0 +1,280 @@
+/**
+ * Temporary Cart Manager
+ * 
+ * Manages cart items in localStorage for non-logged-in users
+ * Allows users to add items and proceed to checkout before signing in
+ */
+
+const TEMP_CART_KEY = 'tempCart';
+
+/**
+ * Get temporary cart items from localStorage
+ * @returns {Array} Array of cart items
+ */
+export const getTempCartItems = () => {
+  try {
+    const tempCart = localStorage.getItem(TEMP_CART_KEY);
+    return tempCart ? JSON.parse(tempCart) : [];
+  } catch (error) {
+    console.error('Error getting temp cart items:', error);
+    return [];
+  }
+};
+
+/**
+ * Add item to temporary cart in localStorage
+ * @param {Object} item - Cart item to add
+ * @param {string} item.productId - Product ID
+ * @param {string} item.colorId - Color ID (optional)
+ * @param {number} item.quantity - Quantity to add
+ * @param {Object} item.productDetails - Product details for display
+ */
+export const addToTempCart = (item) => {
+  try {
+    const tempCart = getTempCartItems();
+    
+    // Check if item already exists in temp cart
+    const existingItemIndex = tempCart.findIndex(
+      cartItem => cartItem.productId === item.productId && cartItem.colorId === item.colorId
+    );
+    
+    if (existingItemIndex > -1) {
+      // Update quantity if item exists
+      tempCart[existingItemIndex].quantity += item.quantity || 1;
+    } else {
+      // Add new item to temp cart
+      tempCart.push({
+        productId: item.productId,
+        colorId: item.colorId || null,
+        quantity: item.quantity || 1,
+        productDetails: item.productDetails || {},
+        addedAt: new Date().toISOString()
+      });
+    }
+    
+    localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
+    console.log('Item added to temp cart:', item);
+
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new CustomEvent('tempCartUpdated'));
+
+    return true;
+  } catch (error) {
+    console.error('Error adding to temp cart:', error);
+    return false;
+  }
+};
+
+/**
+ * Remove item from temporary cart
+ * @param {string} productId - Product ID to remove
+ * @param {string} colorId - Color ID (optional)
+ */
+export const removeFromTempCart = (productId, colorId = null) => {
+  try {
+    const tempCart = getTempCartItems();
+    const updatedCart = tempCart.filter(
+      item => !(item.productId === productId && item.colorId === colorId)
+    );
+    
+    localStorage.setItem(TEMP_CART_KEY, JSON.stringify(updatedCart));
+    console.log('Item removed from temp cart:', { productId, colorId });
+
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new CustomEvent('tempCartUpdated'));
+
+    return true;
+  } catch (error) {
+    console.error('Error removing from temp cart:', error);
+    return false;
+  }
+};
+
+/**
+ * Update item quantity in temporary cart
+ * @param {string} productId - Product ID
+ * @param {string} colorId - Color ID (optional)
+ * @param {number} quantity - New quantity
+ */
+export const updateTempCartQuantity = (productId, colorId = null, quantity) => {
+  try {
+    const tempCart = getTempCartItems();
+    const itemIndex = tempCart.findIndex(
+      item => item.productId === productId && item.colorId === colorId
+    );
+    
+    if (itemIndex > -1) {
+      if (quantity <= 0) {
+        // Remove item if quantity is 0 or less
+        tempCart.splice(itemIndex, 1);
+      } else {
+        tempCart[itemIndex].quantity = quantity;
+      }
+      
+      localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
+      console.log('Temp cart quantity updated:', { productId, colorId, quantity });
+
+      // Dispatch custom event to notify components
+      window.dispatchEvent(new CustomEvent('tempCartUpdated'));
+
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error updating temp cart quantity:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear temporary cart
+ */
+export const clearTempCart = () => {
+  try {
+    localStorage.removeItem(TEMP_CART_KEY);
+    console.log('Temp cart cleared');
+    return true;
+  } catch (error) {
+    console.error('Error clearing temp cart:', error);
+    return false;
+  }
+};
+
+/**
+ * Get temporary cart count
+ * @returns {number} Total number of items in temp cart
+ */
+export const getTempCartCount = () => {
+  const tempCart = getTempCartItems();
+  return tempCart.reduce((total, item) => total + item.quantity, 0);
+};
+
+/**
+ * Get temporary cart total value
+ * @returns {number} Total value of items in temp cart
+ */
+export const getTempCartTotal = () => {
+  const tempCart = getTempCartItems();
+  return tempCart.reduce((total, item) => {
+    const price = item.productDetails?.salePrice || item.productDetails?.price || 0;
+    return total + (price * item.quantity);
+  }, 0);
+};
+
+/**
+ * Change color of an item in temporary cart
+ * @param {string} productId - Product ID
+ * @param {string} oldColorId - Current color ID
+ * @param {string} newColorId - New color ID
+ * @param {Object} productDetails - Product details for the new color
+ */
+export const changeTempCartColor = (productId, oldColorId, newColorId, productDetails) => {
+  try {
+    const tempCart = getTempCartItems();
+    const itemIndex = tempCart.findIndex(
+      item => item.productId === productId && item.colorId === oldColorId
+    );
+
+    if (itemIndex === -1) {
+      console.error('Item not found in temp cart');
+      return false;
+    }
+
+    const currentItem = tempCart[itemIndex];
+
+    // Check if there's already an item with the new color
+    const existingNewColorIndex = tempCart.findIndex(
+      item => item.productId === productId && item.colorId === newColorId
+    );
+
+    if (existingNewColorIndex > -1) {
+      // Merge quantities
+      tempCart[existingNewColorIndex].quantity += currentItem.quantity;
+      // Remove the old color item
+      tempCart.splice(itemIndex, 1);
+    } else {
+      // Just update the color ID and product details
+      tempCart[itemIndex].colorId = newColorId;
+      tempCart[itemIndex].productDetails = { ...tempCart[itemIndex].productDetails, ...productDetails };
+    }
+
+    localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
+    console.log('Temp cart color changed:', { productId, oldColorId, newColorId });
+
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new CustomEvent('tempCartUpdated'));
+
+    return true;
+  } catch (error) {
+    console.error('Error changing temp cart color:', error);
+    return false;
+  }
+};
+
+/**
+ * Transfer temporary cart to user's actual cart after login
+ * @param {Function} addToCartFunction - Function to add items to actual cart
+ * @param {string} userId - User ID after login
+ */
+export const transferTempCartToUser = async (addToCartFunction, userId) => {
+  try {
+    const tempCart = getTempCartItems();
+    
+    if (tempCart.length === 0) {
+      return { success: true, message: 'No items to transfer' };
+    }
+    
+    const transferResults = [];
+    
+    // Transfer each item to user's cart
+    for (const item of tempCart) {
+      try {
+        const result = await addToCartFunction({
+          userId,
+          productId: item.productId,
+          quantity: item.quantity,
+          colorId: item.colorId
+        });
+        
+        transferResults.push({
+          productId: item.productId,
+          success: result?.payload?.success || false,
+          error: result?.error || null
+        });
+      } catch (error) {
+        transferResults.push({
+          productId: item.productId,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+    
+    // Clear temp cart after transfer attempt
+    clearTempCart();
+    
+    const successCount = transferResults.filter(r => r.success).length;
+    const failCount = transferResults.filter(r => !r.success).length;
+    
+    console.log('Temp cart transfer completed:', {
+      total: tempCart.length,
+      success: successCount,
+      failed: failCount
+    });
+    
+    return {
+      success: failCount === 0,
+      transferred: successCount,
+      failed: failCount,
+      results: transferResults
+    };
+    
+  } catch (error) {
+    console.error('Error transferring temp cart:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};

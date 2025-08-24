@@ -2,22 +2,27 @@ import Address from "@/components/shopping-view/address";
 import img from "../../assets/jamandi.png";
 import { useDispatch, useSelector } from "react-redux";
 import UserCartItemsContent from "@/components/shopping-view/cart-items-content";
+import TempCartItemsContent from "@/components/shopping-view/temp-cart-items-content";
 import { useState, useEffect } from "react";
 import { createNewOrder, capturePayment } from "@/store/shop/order-slice";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader } from "../../components/ui/loader";
 import { Helmet } from "react-helmet-async";
-import { ShoppingBag, MapPin, CreditCard } from "lucide-react";
+import { ShoppingBag, MapPin, CreditCard, LogIn } from "lucide-react";
+import { getTempCartItems, getTempCartTotal, clearTempCart, transferTempCartToUser } from "@/utils/tempCartManager";
+import { addToCart } from "@/store/shop/cart-slice";
 
 function ShoppingCheckout() {
   const { cartItems } = useSelector((state) => state.shopCart);
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { approvalURL } = useSelector((state) => state.shopOrder);
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymentStart] = useState(false);
   const [razorpayInstance, setRazorpayInstance] = useState(null);
   const { isPaymentLoading } = useSelector((state) => state.shopOrder);
+  const [tempCartItems, setTempCartItems] = useState([]);
+  const [isTransferringCart, setIsTransferringCart] = useState(false);
   const dispatch = useDispatch();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -46,6 +51,50 @@ function ShoppingCheckout() {
 
   // Format the total to 2 decimal places for display
   const formattedTotal = totalCartAmount.toFixed(2);
+
+  // Load temporary cart items on component mount
+  useEffect(() => {
+    const tempItems = getTempCartItems();
+    setTempCartItems(tempItems);
+  }, []);
+
+  // Calculate temporary cart total
+  const tempCartTotal = getTempCartTotal();
+
+  // Handle cart transfer when user logs in
+  const handleCartTransfer = async () => {
+    if (!isAuthenticated || tempCartItems.length === 0) return;
+
+    setIsTransferringCart(true);
+    try {
+      const result = await transferTempCartToUser(
+        (cartData) => dispatch(addToCart(cartData)),
+        user?.id
+      );
+
+      if (result.success) {
+        toast({
+          title: `${result.transferred} item${result.transferred > 1 ? 's' : ''} transferred to your cart!`,
+          variant: "default",
+        });
+        setTempCartItems([]);
+        // Refresh the page to show updated cart
+        window.location.reload();
+      } else {
+        toast({
+          title: `Transferred ${result.transferred} items. ${result.failed} failed.`,
+          variant: result.failed > 0 ? "destructive" : "default",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to transfer cart items. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTransferringCart(false);
+    }
+  };
 
   // Function to reset payment state
   const resetPaymentState = () => {
@@ -135,6 +184,10 @@ function ShoppingCheckout() {
               })
             ).then((captureResponse) => {
               if (captureResponse?.payload?.success) {
+                // Set payment success flags for protected route access
+                sessionStorage.setItem('paymentSuccess', 'true');
+                sessionStorage.setItem('recentPaymentTimestamp', Date.now().toString());
+
                 toast({
                   title: "Payment successful! Redirecting to the success page...",
                   variant: "success",
@@ -296,16 +349,94 @@ function ShoppingCheckout() {
               </div>
             </div>
 
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Side: Address Selection */}
-              <div className="bg-white border border-gray-200 p-6 md:p-8 rounded-md shadow-sm">
-                <h2 className="text-2xl font-light uppercase tracking-wide mb-4">Shipping Address</h2>
-                <div className="w-16 h-0.5 bg-black mb-6"></div>
-                <Address
-                  setCurrentSelectedAddress={setCurrentSelectedAddress}
-                  selectedId={currentSelectedAddress}
-                />
+            {/* Sign In Section for Non-Authenticated Users */}
+            {!isAuthenticated && tempCartItems.length > 0 && (
+              <div className="mb-8 bg-white border border-gray-200 p-6 md:p-8 rounded-md shadow-sm">
+                <div className="text-center">
+                  <LogIn className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                  <h2 className="text-2xl font-light uppercase tracking-wide mb-4 text-gray-900">
+                    Sign In to Continue
+                  </h2>
+                  <div className="w-16 h-0.5 bg-black mx-auto mb-6"></div>
+                  <p className="text-gray-700 mb-6">
+                    You have {tempCartItems.length} item{tempCartItems.length > 1 ? 's' : ''} in your cart.
+                    Please sign in to complete your purchase.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                      onClick={() => navigate('/auth/login')}
+                      className="px-8 py-3 bg-black text-white hover:bg-gray-800 transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => navigate('/auth/register')}
+                      className="px-8 py-3 border-2 border-black text-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                    >
+                      Create Account
+                    </button>
+                  </div>
+                  <div className="mt-6 p-4 bg-gray-50 border border-gray-200">
+                    <h3 className="font-medium text-gray-900 mb-4">Your Cart Items:</h3>
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                      {tempCartItems.map((item, index) => (
+                        <TempCartItemsContent
+                          key={`checkout-temp-${item.productId}-${item.colorId || 'default'}-${index}`}
+                          tempItem={item}
+                          onUpdate={() => {
+                            // Refresh temp cart items
+                            const updatedItems = getTempCartItems();
+                            setTempCartItems(updatedItems);
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div className="border-t border-gray-300 pt-4 mt-4">
+                      <div className="flex justify-between text-lg font-medium text-gray-900">
+                        <span>Total:</span>
+                        <span>₹{tempCartTotal.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Cart Transfer Section for Authenticated Users with Temp Cart */}
+            {isAuthenticated && tempCartItems.length > 0 && (
+              <div className="mb-8 bg-white border border-gray-200 p-6 md:p-8 rounded-md shadow-sm">
+                <div className="text-center">
+                  <ShoppingBag className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                  <h2 className="text-2xl font-light uppercase tracking-wide mb-4 text-gray-900">
+                    Transfer Cart Items
+                  </h2>
+                  <div className="w-16 h-0.5 bg-black mx-auto mb-6"></div>
+                  <p className="text-gray-700 mb-6">
+                    You have {tempCartItems.length} item{tempCartItems.length > 1 ? 's' : ''} in your temporary cart.
+                    Transfer them to your account to proceed with checkout.
+                  </p>
+                  <button
+                    onClick={handleCartTransfer}
+                    disabled={isTransferringCart}
+                    className="px-8 py-3 bg-black text-white hover:bg-gray-800 disabled:bg-gray-400 transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+                  >
+                    {isTransferringCart ? 'Transferring...' : 'Transfer Items to Cart'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Main Content - Only show if authenticated or no temp cart */}
+            {(isAuthenticated && tempCartItems.length === 0) && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Side: Address Selection */}
+                <div className="bg-white border border-gray-200 p-6 md:p-8 rounded-md shadow-sm">
+                  <h2 className="text-2xl font-light uppercase tracking-wide mb-4">Shipping Address</h2>
+                  <div className="w-16 h-0.5 bg-black mb-6"></div>
+                  <Address
+                    setCurrentSelectedAddress={setCurrentSelectedAddress}
+                    selectedId={currentSelectedAddress}
+                  />
 
               </div>
 
@@ -359,6 +490,7 @@ function ShoppingCheckout() {
                 </div>
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>

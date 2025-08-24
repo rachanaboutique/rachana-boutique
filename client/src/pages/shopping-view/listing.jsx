@@ -14,6 +14,9 @@ import { Helmet } from "react-helmet-async";
 import { fetchCategories } from "@/store/shop/categories-slice";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import banner from '@/assets/allproducts.png';
+import { useMetaPixelCart } from "@/hooks/useMetaPixelCart";
+import { addToTempCart } from "@/utils/tempCartManager";
+import { addToCartEvent } from "@/utils/metaPixelEvents";
 
 function ShoppingListing({ categorySlug }) {
   const dispatch = useDispatch();
@@ -29,6 +32,7 @@ function ShoppingListing({ categorySlug }) {
   const { toast } = useToast();
   const categorySearchParam = searchParams.get("category");
   const [currentCategory, setCurrentCategory] = useState(null);
+  const { trackAddToCart } = useMetaPixelCart();
 
 
   // Use category mapping from config imported at the top
@@ -122,11 +126,62 @@ function ShoppingListing({ categorySlug }) {
       });
     }
 
-    // Apply sorting
+    // Apply sorting only if backend sorting is not working properly
+    // Backend sorting is applied via fetchAllFilteredProducts with sortParams
+    // Frontend sorting is kept as fallback for client-side filtering
     if (sort === "price-lowtohigh") {
       updatedProducts.sort((a, b) => a.salePrice - b.salePrice);
     } else if (sort === "price-hightolow") {
       updatedProducts.sort((a, b) => b.salePrice - a.salePrice);
+    }
+
+    // For product code sorting, let's rely primarily on backend sorting
+    // and only apply frontend sorting if needed for client-side filtering
+    if (sort === "productcode-atoz" || sort === "productcode-ztoa") {
+      // Check if products are already sorted by backend
+      const isAlreadySorted = updatedProducts.length > 1 &&
+        updatedProducts.every((product, index) => {
+          if (index === 0) return true;
+          const currentCode = (product.productCode || '').toString().trim();
+          const prevCode = (updatedProducts[index - 1].productCode || '').toString().trim();
+
+          if (sort === "productcode-atoz") {
+            return !currentCode || !prevCode || currentCode >= prevCode;
+          } else {
+            return !currentCode || !prevCode || currentCode <= prevCode;
+          }
+        });
+
+      // Only apply frontend sorting if backend sorting didn't work
+      if (!isAlreadySorted) {
+        console.log('Applying frontend product code sorting as fallback');
+
+        if (sort === "productcode-atoz") {
+          updatedProducts.sort((a, b) => {
+            const codeA = (a.productCode || '').toString().trim();
+            const codeB = (b.productCode || '').toString().trim();
+
+            if (!codeA && !codeB) return 0;
+            if (!codeA) return 1;
+            if (!codeB) return -1;
+
+            return codeA.localeCompare(codeB, 'en', { numeric: true });
+          });
+        } else if (sort === "productcode-ztoa") {
+          updatedProducts.sort((a, b) => {
+            const codeA = (a.productCode || '').toString().trim();
+            const codeB = (b.productCode || '').toString().trim();
+
+            if (!codeA && !codeB) return 0;
+            if (!codeA) return 1;
+            if (!codeB) return -1;
+
+            return codeB.localeCompare(codeA, 'en', { numeric: true });
+          });
+        }
+      } else {
+        console.log('Backend product code sorting is working correctly');
+      }
     }
 
     return updatedProducts;
@@ -250,11 +305,55 @@ function ShoppingListing({ categorySlug }) {
 
     // Check if user is authenticated
     if (!isAuthenticated) {
-      toast({
-        title: "Please log in to add items to the cart!",
-        variant: "destructive",
-      });
-      return Promise.reject("Not authenticated");
+      // Add to temporary cart and redirect to checkout
+      const tempCartItem = {
+        productId: productId,
+        colorId: product?.colors?.[0]?._id || null,
+        quantity: 1,
+        productDetails: {
+          title: product?.title,
+          price: product?.price,
+          salePrice: product?.salePrice,
+          image: product?.image?.[0] || '',
+          category: product?.category
+        }
+      };
+
+      const success = addToTempCart(tempCartItem);
+
+      if (success) {
+        // Track Meta Pixel AddToCart event
+        setTimeout(() => {
+          addToCartEvent({
+            content_ids: [productId],
+            content_type: 'product',
+            value: product?.salePrice || product?.price || 0,
+            currency: 'INR',
+            content_name: product?.title,
+            content_category: product?.category,
+            num_items: 1
+          });
+
+          console.log('Meta Pixel: AddToCart tracked from Listing (temp cart)', {
+            productId: productId,
+            productName: product?.title,
+            value: product?.salePrice || product?.price || 0
+          });
+        }, 100);
+
+        toast({
+          title: "Item added to cart!",
+          variant: "default",
+        });
+
+        return Promise.resolve({ success: true });
+      } else {
+        toast({
+          title: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+        });
+        return Promise.reject("Failed to add to temp cart");
+      }
     }
 
     // Check if product is in stock
@@ -331,6 +430,9 @@ function ShoppingListing({ categorySlug }) {
       })
     ).then((data) => {
       if (data?.payload?.success) {
+        // Track Meta Pixel AddToCart event
+        trackAddToCart(productId, colorId, 1);
+
         // Force a refresh of the cart items to ensure we have the latest data
         return dispatch(fetchCartItems(user?.id)).then(() => {
           toast({
@@ -341,7 +443,7 @@ function ShoppingListing({ categorySlug }) {
       }
       return data;
     });
-  }, [isAuthenticated, cartItems.items, dispatch, user?.id, toast]);
+  }, [isAuthenticated, cartItems.items, dispatch, user?.id, toast, trackAddToCart]);
 
   // Memoize the handleGetProductDetails function
   const handleGetProductDetails = useCallback((getCurrentProductId) => {

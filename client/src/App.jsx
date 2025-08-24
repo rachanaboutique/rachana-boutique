@@ -39,6 +39,7 @@ import AdminProductReview from "./pages/admin-view/review";
 import AdminContact from "./pages/admin-view/contact";
 import AdminNewsLetter from "./pages/admin-view/newsletter";
 import MetaPixelTracker from "./components/common/MetaPixelTracker";
+import ProtectedPaymentRoute from "./components/common/ProtectedPaymentRoute";
 
 // Import Meta Pixel verification in development mode
 if (import.meta.env.DEV) {
@@ -200,7 +201,11 @@ function App() {
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
           <Route path="paypal-return" element={<PaypalReturnPage />} />
-          <Route path="payment-success" element={<PaymentSuccessPage />} />
+          <Route path="payment-success" element={
+            <ProtectedPaymentRoute>
+              <PaymentSuccessPage />
+            </ProtectedPaymentRoute>
+          } />
           <Route path="search" element={<SearchProducts />} />
           <Route path="contact" element={<Contact />} />
         </Route>

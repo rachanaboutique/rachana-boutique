@@ -20,6 +20,9 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Loader } from "@/components/ui/loader";
 import { Helmet } from "react-helmet-async";
 import newArrivalsBanner from "@/assets/newarrivals.png";
+import { useMetaPixelCart } from "@/hooks/useMetaPixelCart";
+import { addToTempCart } from "@/utils/tempCartManager";
+import { addToCartEvent } from "@/utils/metaPixelEvents";
 
 function NewArrivals() {
   const dispatch = useDispatch();
@@ -33,6 +36,7 @@ function NewArrivals() {
   const [sort, setSort] = useState(null);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { trackAddToCart } = useMetaPixelCart();
 
   const categorySearchParam = searchParams.get("category");
 
@@ -65,11 +69,55 @@ function NewArrivals() {
 
       // Check if user is authenticated
       if (!isAuthenticated) {
-        toast({
-          title: "Please log in to add items to the cart!",
-          variant: "destructive",
-        });
-        return Promise.reject("Not authenticated");
+        // Add to temporary cart and redirect to checkout
+        const tempCartItem = {
+          productId: productId,
+          colorId: product?.colors?.[0]?._id || null,
+          quantity: 1,
+          productDetails: {
+            title: product?.title,
+            price: product?.price,
+            salePrice: product?.salePrice,
+            image: product?.image?.[0] || '',
+            category: product?.category
+          }
+        };
+
+        const success = addToTempCart(tempCartItem);
+
+        if (success) {
+          // Track Meta Pixel AddToCart event
+          setTimeout(() => {
+            addToCartEvent({
+              content_ids: [productId],
+              content_type: 'product',
+              value: product?.salePrice || product?.price || 0,
+              currency: 'INR',
+              content_name: product?.title,
+              content_category: product?.category,
+              num_items: 1
+            });
+
+            console.log('Meta Pixel: AddToCart tracked from NewArrivals (temp cart)', {
+              productId: productId,
+              productName: product?.title,
+              value: product?.salePrice || product?.price || 0
+            });
+          }, 100);
+
+          toast({
+            title: "Item added to cart!",
+            variant: "default",
+          });
+
+          return Promise.resolve({ success: true });
+        } else {
+          toast({
+            title: "Failed to add item to cart. Please try again.",
+            variant: "destructive",
+          });
+          return Promise.reject("Failed to add to temp cart");
+        }
       }
 
       // Check if product is in stock
@@ -146,6 +194,9 @@ function NewArrivals() {
         })
       ).then((data) => {
         if (data?.payload?.success) {
+          // Track Meta Pixel AddToCart event
+          trackAddToCart(productId, colorId, 1);
+
           // Force a refresh of the cart items to ensure we have the latest data
           return dispatch(fetchCartItems(user?.id)).then(() => {
             toast({

@@ -4,7 +4,10 @@ import { X, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
 import UserCartItemsContent from "./cart-items-content";
+import TempCartItemsContent from "./temp-cart-items-content";
 import { memo } from "react";
+import { useSelector } from "react-redux";
+import { getTempCartItems, getTempCartTotal, getTempCartCount } from "@/utils/tempCartManager";
 
 // Custom overlay component
 const CartOverlay = memo(({ isOpen, onClose }) => {
@@ -28,19 +31,34 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
 }) {
   const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [tempCartItems, setTempCartItems] = useState([]);
   const drawerRef = useRef(null);
   const prevCartLength = useRef(cartItems.length);
+
+  // Get authentication status
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   // Track if this is the initial load or a subsequent update
   const isInitialLoad = useRef(true);
 
-  // Reset initial load flag when drawer opens
+  // Function to refresh temporary cart items
+  const refreshTempCart = () => {
+    if (!isAuthenticated) {
+      const tempItems = getTempCartItems();
+      setTempCartItems(tempItems);
+    }
+  };
+
+  // Load temporary cart items when drawer opens
   useEffect(() => {
     if (isOpen) {
       // If drawer is opening, mark as initial load
       isInitialLoad.current = true;
+
+      // Load temporary cart items for non-authenticated users
+      refreshTempCart();
     }
-  }, [isOpen]);
+  }, [isOpen, isAuthenticated]);
 
   // Track cart updates with debounce to prevent flickering
   // Only show loading state if it persists for more than a short delay
@@ -84,52 +102,94 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
 
   // Calculate total with proper type conversion and error handling
   // Use useMemo to prevent recalculation on every render
-  const { formattedTotal } = useMemo(() => {
-    if (!cartItems || cartItems.length === 0) return { totalCartAmount: 0, formattedTotal: "0.00" };
+  const { formattedTotal, totalItems } = useMemo(() => {
+    // Calculate regular cart total
+    const cartTotal = cartItems && cartItems.length > 0
+      ? cartItems.reduce((sum, currentItem) => {
+          // Get the price (sale price if available, otherwise regular price)
+          const itemPrice = currentItem?.salePrice > 0
+            ? parseFloat(currentItem.salePrice)
+            : parseFloat(currentItem?.price || 0);
 
-    const total = cartItems.reduce((sum, currentItem) => {
-      // Get the price (sale price if available, otherwise regular price)
-      const itemPrice = currentItem?.salePrice > 0
-        ? parseFloat(currentItem.salePrice)
-        : parseFloat(currentItem?.price || 0);
+          // Get the quantity with fallback to 0
+          const itemQuantity = parseInt(currentItem?.quantity || 0, 10);
 
-      // Get the quantity with fallback to 0
-      const itemQuantity = parseInt(currentItem?.quantity || 0, 10);
+          // Calculate item total and add to sum
+          return sum + (itemPrice * itemQuantity);
+        }, 0)
+      : 0;
 
-      // Calculate item total and add to sum
-      return sum + (itemPrice * itemQuantity);
-    }, 0);
+    // Calculate temporary cart total for non-authenticated users
+    const tempTotal = !isAuthenticated ? getTempCartTotal() : 0;
+
+    // Combine totals
+    const total = cartTotal + tempTotal;
+    const itemCount = cartItems.length + tempCartItems.length;
 
     return {
       totalCartAmount: total,
-      formattedTotal: total.toFixed(2)
+      formattedTotal: total.toFixed(2),
+      totalItems: itemCount
     };
-  }, [cartItems]);
+  }, [cartItems, tempCartItems, isAuthenticated]);
 
   // Memoize the checkout handler to prevent unnecessary re-renders
   const handleCheckout = useMemo(() => {
     return () => {
-      // If we have items in the cart, proceed to checkout
-      if (cartItems.length > 0) {
+      // If we have items in the cart (regular or temporary), proceed to checkout
+      if (cartItems.length > 0 || tempCartItems.length > 0) {
         navigate("/shop/checkout");
         onClose();
       }
     };
-  }, [navigate, onClose, cartItems.length]);
+  }, [navigate, onClose, cartItems.length, tempCartItems.length]);
 
   // Memoize cart items to prevent unnecessary re-renders
   const cartItemElements = useMemo(() => {
-    if (!cartItems || cartItems.length === 0) {
-      return <p className="text-center">Your cart is empty</p>;
+    const hasRegularItems = cartItems && cartItems.length > 0;
+    const hasTempItems = tempCartItems && tempCartItems.length > 0;
+
+    if (!hasRegularItems && !hasTempItems) {
+      return <p className="text-center text-gray-500">Your cart is empty</p>;
     }
 
-    return cartItems.map((item) => (
-      <UserCartItemsContent
-        key={`${item.productId}-${item.colors?._id || 'default'}`}
-        cartItem={item}
-      />
-    ));
-  }, [cartItems]);
+    const elements = [];
+
+    // Add regular cart items for authenticated users
+    if (hasRegularItems) {
+      cartItems.forEach((item) => {
+        elements.push(
+          <UserCartItemsContent
+            key={`${item.productId}-${item.colors?._id || 'default'}`}
+            cartItem={item}
+          />
+        );
+      });
+    }
+
+    // Add temporary cart items for non-authenticated users
+    if (hasTempItems && !isAuthenticated) {
+      if (hasRegularItems) {
+        elements.push(
+          <div key="temp-cart-header" className="border-t pt-4 mt-4">
+            <p className="text-sm text-gray-600 mb-3">Temporary items:</p>
+          </div>
+        );
+      }
+
+      tempCartItems.forEach((item, index) => {
+        elements.push(
+          <TempCartItemsContent
+            key={`temp-${item.productId}-${item.colorId || 'default'}-${index}`}
+            tempItem={item}
+            onUpdate={refreshTempCart}
+          />
+        );
+      });
+    }
+
+    return elements;
+  }, [cartItems, tempCartItems, isAuthenticated]);
 
   // Close on escape key
   useEffect(() => {
@@ -225,11 +285,11 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
         {/* Checkout Button */}
         <button
           onClick={handleCheckout}
-          disabled={cartItems.length === 0}
+          disabled={cartItems.length === 0 && tempCartItems.length === 0}
           className="w-full mt-6 px-6 py-3 border-2 border-black bg-black text-white hover:bg-white hover:text-black transition-colors duration-300 uppercase tracking-wider text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {/* Only show loading state in the button when we're actually processing a checkout */}
-          {isUpdating && cartItems.length > 0 ? (
+          {isUpdating && (cartItems.length > 0 || tempCartItems.length > 0) ? (
             <span className="flex items-center justify-center">
               <div className="mr-2 h-4 w-4 border-2 border-t-white border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
               Checkout

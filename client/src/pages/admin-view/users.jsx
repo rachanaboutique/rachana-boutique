@@ -46,13 +46,37 @@ const AdminUsers = () => {
 
   const confirmDelete = () => {
     if (selectedUser) {
-      dispatch(deleteUser(selectedUser._id)).then((data) => {
-        if (data?.payload?.success) {
-          toast({ title: "User deleted successfully" });
+      dispatch(deleteUser(selectedUser._id))
+        .then((data) => {
+          if (data?.payload?.success) {
+            toast({
+              title: "User deleted successfully",
+              variant: "default"
+            });
+            dispatch(getAllUsers());
+          } else {
+            toast({
+              title: "Failed to delete user",
+              variant: "destructive"
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Delete user error:", error);
+          toast({
+            title: "Error deleting user",
+            variant: "destructive"
+          });
+        })
+        .finally(() => {
+          // Always close modal and reset state regardless of success/failure
           setModalOpen(false);
-          dispatch(getAllUsers());
-        }
-      });
+          setSelectedUser(null);
+        });
+    } else {
+      // If no user selected, just close the modal
+      setModalOpen(false);
+      setSelectedUser(null);
     }
   };
 
@@ -65,13 +89,39 @@ const AdminUsers = () => {
 
   const confirmUpdate = () => {
     if (selectedUser && newRole) {
-      dispatch(updateUser({ id: selectedUser._id, role: newRole })).then((data) => {
-        if (data?.payload?.success) {
-          toast({ title: "User role updated successfully" });
+      dispatch(updateUser({ id: selectedUser._id, role: newRole }))
+        .then((data) => {
+          if (data?.payload?.success) {
+            toast({
+              title: "User role updated successfully",
+              variant: "default"
+            });
+            dispatch(getAllUsers());
+          } else {
+            toast({
+              title: "Failed to update user role",
+              variant: "destructive"
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Update user error:", error);
+          toast({
+            title: "Error updating user role",
+            variant: "destructive"
+          });
+        })
+        .finally(() => {
+          // Always close sheet and reset state regardless of success/failure
           setIsSheetOpen(false);
-          dispatch(getAllUsers());
-        }
-      });
+          setSelectedUser(null);
+          setNewRole("");
+        });
+    } else {
+      // If validation fails, just close the sheet
+      setIsSheetOpen(false);
+      setSelectedUser(null);
+      setNewRole("");
     }
   };
 
@@ -179,9 +229,12 @@ const AdminUsers = () => {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={isModalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedUser(null);
+        }}
         onConfirm={confirmDelete}
-        message="Are you sure you want to delete this user?"
+        message={`Are you sure you want to delete user "${selectedUser?.userName || 'this user'}"?`}
       />
     </Card>
   );

@@ -33,12 +33,14 @@ import { fetchCartItems, resetCart } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
 import { FaWhatsapp } from "react-icons/fa";
 import { useToast } from "../ui/use-toast";
+import { getTempCartCount } from "@/utils/tempCartManager";
 
 function ShoppingHeader() {
   const { isAuthenticated } = useSelector((state) => state.auth);
   const { cartItems, isLoading: cartIsLoading } = useSelector((state) => state.shopCart);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [openCartSheet, setOpenCartSheet] = useState(false);
+  const [tempCartCount, setTempCartCount] = useState(0);
   // Use a ref to track the last time the cart sheet state was changed
   const lastCartSheetToggleTime = useRef(0);
   const { toast } = useToast();
@@ -175,9 +177,9 @@ const messages = [
             }}
           >
             <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
-            {cartItems?.length > 0 && (
+            {((cartItems?.length || 0) + tempCartCount) > 0 && (
               <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                {cartItems.length}
+                {(cartItems?.length || 0) + tempCartCount}
               </span>
             )}
             <span className="sr-only">Shopping Bag</span>
@@ -276,6 +278,45 @@ const messages = [
       dispatch(fetchCartItems(user.id));
     }
   }, [user?.id, dispatch]);
+
+  // Update temporary cart count for non-authenticated users
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const updateTempCartCount = () => {
+        const count = getTempCartCount();
+        setTempCartCount(count);
+      };
+
+      // Update count initially
+      updateTempCartCount();
+
+      // Listen for localStorage changes (when items are added/removed)
+      const handleStorageChange = (e) => {
+        if (e.key === 'tempCart') {
+          updateTempCartCount();
+        }
+      };
+
+      // Listen for custom temp cart update events
+      const handleTempCartUpdate = () => {
+        updateTempCartCount();
+      };
+
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('tempCartUpdated', handleTempCartUpdate);
+
+      // Also update on focus (in case user modified cart in another tab)
+      window.addEventListener('focus', updateTempCartCount);
+
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('tempCartUpdated', handleTempCartUpdate);
+        window.removeEventListener('focus', updateTempCartCount);
+      };
+    } else {
+      setTempCartCount(0);
+    }
+  }, [isAuthenticated]);
 
   // Separate effect to handle cart drawer opening
   useEffect(() => {
@@ -418,9 +459,9 @@ const messages = [
                 }}
               >
                 <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
-                {cartItems?.length > 0 && (
+                {((cartItems?.length || 0) + tempCartCount) > 0 && (
                   <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {cartItems.length}
+                    {(cartItems?.length || 0) + tempCartCount}
                   </span>
                 )}
                 <span className="sr-only">Shopping Bag</span>

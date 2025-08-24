@@ -210,6 +210,8 @@ export const filterOptions = {
 export const sortOptions = [
   { id: "price-lowtohigh", label: "Price: Low to High" },
   { id: "price-hightolow", label: "Price: High to Low" },
+  { id: "productcode-atoz", label: "Product Code: A to Z" },
+  { id: "productcode-ztoa", label: "Product Code: Z to A" },
 /*   { id: "title-atoz", label: "Title: A to Z" },
   { id: "title-ztoa", label: "Title: Z to A" }, */
 ];

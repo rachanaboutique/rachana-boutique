@@ -20,9 +20,7 @@ import { useSelector } from 'react-redux';
 import {
   pageViewEvent,
   viewContentEvent,
-  addToCartEvent,
   initiateCheckoutEvent,
-  purchaseEvent,
   categoryViewEvent,
   searchEvent
 } from '../../utils/metaPixelEvents';
@@ -102,16 +100,8 @@ const MetaPixelTracker = () => {
       }
       
       // Payment Success/Thank You Page: /shop/payment-success
-      else if (pathname === '/shop/payment-success') {
-        purchaseEvent({
-          content_type: 'product'
-          // Note: You can enhance this with actual order data
-          // content_ids: orderItems.map(item => item.id),
-          // value: orderTotal,
-          // currency: 'INR',
-          // num_items: orderItems.length
-        });
-      }
+      // Note: Purchase tracking is handled directly in PaymentSuccessPage component
+      // to avoid duplicate events and ensure proper order data is included
       
       // Category Pages
       else if (pathname.startsWith('/shop/collections/')) {

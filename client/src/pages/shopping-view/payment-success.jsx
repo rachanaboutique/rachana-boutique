@@ -1,9 +1,87 @@
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { CheckCircle, Package, Home, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { purchaseEvent } from "@/utils/metaPixelEvents";
+import { getOrderDetails } from "@/store/shop/order-slice";
 
 function PaymentSuccessPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { orderDetails } = useSelector((state) => state.shopOrder);
+  const [purchaseTracked, setPurchaseTracked] = useState(false);
+
+  // Enhanced purchase tracking with order details fetching
+  useEffect(() => {
+    const trackPurchaseEvent = async () => {
+      // Prevent duplicate tracking
+      if (purchaseTracked) return;
+
+      let finalOrderDetails = orderDetails;
+
+      // If no order details in state, try to get from session storage
+      if (!finalOrderDetails || !finalOrderDetails.orderItems) {
+        const sessionOrderId = sessionStorage.getItem('currentOrderId');
+        if (sessionOrderId) {
+          try {
+            const orderIdParsed = JSON.parse(sessionOrderId);
+            const orderResponse = await dispatch(getOrderDetails(orderIdParsed));
+            if (orderResponse?.payload?.success) {
+              finalOrderDetails = orderResponse.payload.data;
+            }
+          } catch (error) {
+            console.error('Error fetching order details:', error);
+          }
+        }
+      }
+
+      // Track purchase with comprehensive data
+      if (finalOrderDetails && finalOrderDetails.orderItems && finalOrderDetails.orderItems.length > 0) {
+        const totalValue = finalOrderDetails.totalAmount || 0;
+        const contentIds = finalOrderDetails.orderItems.map(item => item.productId);
+        const numItems = finalOrderDetails.orderItems.reduce((total, item) => total + item.quantity, 0);
+
+        purchaseEvent({
+          content_ids: contentIds,
+          content_type: 'product',
+          value: totalValue,
+          currency: 'INR',
+          num_items: numItems,
+          transaction_id: finalOrderDetails._id
+        });
+
+        console.log('Meta Pixel: Purchase event tracked with full details', {
+          orderId: finalOrderDetails._id,
+          totalValue,
+          numItems,
+          contentIds,
+          orderItems: finalOrderDetails.orderItems
+        });
+      } else {
+        // Fallback purchase tracking
+        purchaseEvent({
+          content_type: 'product',
+          currency: 'INR',
+          value: 0
+        });
+
+        console.log('Meta Pixel: Purchase event tracked (fallback - no order details)');
+      }
+
+      setPurchaseTracked(true);
+
+      // Clean up session storage after successful tracking
+      setTimeout(() => {
+        sessionStorage.removeItem('currentOrderId');
+      }, 5000);
+    };
+
+    // Track purchase event with a delay to ensure all data is loaded and page is ready
+    const timeoutId = setTimeout(trackPurchaseEvent, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [orderDetails, dispatch, purchaseTracked]);
 
   return (
     <>

@@ -4,6 +4,8 @@ import { Heart, ShoppingBag, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useToast } from "../../components/ui/use-toast";
+import { addToCartEvent } from "@/utils/metaPixelEvents";
+import { addToTempCart } from "@/utils/tempCartManager";
 
 const ShoppingProductTile = ({
   product,
@@ -39,24 +41,97 @@ const ShoppingProductTile = ({
     navigate(`/shop/details/${productId}`);
   };
 
-  // Handle add to cart with authentication check
+  // Handle add to cart with new flow for non-authenticated users
   const handleAddToCartClick = (e) => {
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      toast({
-        title: "Please log in to add items to the cart!",
-        variant: "destructive",
-      });
+      // Add to temporary cart and redirect to checkout
+      setIsAddingToCart(true);
+
+      const tempCartItem = {
+        productId: product._id,
+        colorId: product.colors?.[0]?._id || null, // Use first available color or null
+        quantity: 1,
+        productDetails: {
+          title: product.title,
+          price: product.price,
+          salePrice: product.salePrice,
+          image: product.image?.[0] || '',
+          category: product.category
+        }
+      };
+
+      const success = addToTempCart(tempCartItem);
+
+      if (success) {
+        // Track Meta Pixel AddToCart event
+        setTimeout(() => {
+          addToCartEvent({
+            content_ids: [product._id],
+            content_type: 'product',
+            value: product.salePrice || product.price || 0,
+            currency: 'INR',
+            content_name: product.title,
+            content_category: product.category,
+            num_items: 1
+          });
+
+          console.log('Meta Pixel: AddToCart tracked from ProductTile (temp cart)', {
+            productId: product._id,
+            productName: product.title,
+            value: product.salePrice || product.price || 0
+          });
+        }, 100);
+
+        toast({
+          title: "Item added to cart!",
+          variant: "default",
+        });
+
+        // Just reset loading state, no redirect
+        setTimeout(() => {
+          setIsAddingToCart(false);
+        }, 800);
+      } else {
+        setIsAddingToCart(false);
+        toast({
+          title: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+        });
+      }
     } else {
-      // Set loading state
+      // Existing flow for authenticated users
       setIsAddingToCart(true);
 
       // Pass the product to the cart handler
       try {
         // Call the cart handler and handle the promise
         Promise.resolve(handleAddtoCart(product))
-          .then(() => {
+          .then((result) => {
+            // Track Meta Pixel AddToCart event if successful
+            if (result?.payload?.success || result?.success !== false) {
+              // Add a small delay to ensure the cart action is fully complete
+              setTimeout(() => {
+                // Fire Meta Pixel AddToCart event
+                addToCartEvent({
+                  content_ids: [product._id],
+                  content_type: 'product',
+                  value: product.salePrice || product.price || 0,
+                  currency: 'INR',
+                  content_name: product.title,
+                  content_category: product.category,
+                  num_items: 1
+                });
+
+                console.log('Meta Pixel: AddToCart tracked from ProductTile', {
+                  productId: product._id,
+                  productName: product.title,
+                  value: product.salePrice || product.price || 0
+                });
+              }, 100); // Small delay to ensure proper event timing
+            }
+
             // Reset loading state after a short delay to ensure the animation is visible
             setTimeout(() => {
               setIsAddingToCart(false);

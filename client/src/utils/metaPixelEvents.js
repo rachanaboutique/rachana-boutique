@@ -55,12 +55,30 @@ export const viewContentEvent = (params = {}) => {
  */
 export const addToCartEvent = (params = {}) => {
   if (isFbqAvailable()) {
+    // Ensure required parameters are present and valid
     const eventData = {
       content_type: 'product',
       currency: 'INR',
       ...params
     };
-    
+
+    // Validate content_ids is an array
+    if (eventData.content_ids && !Array.isArray(eventData.content_ids)) {
+      eventData.content_ids = [eventData.content_ids];
+    }
+
+    // Ensure value is a number
+    if (eventData.value && typeof eventData.value === 'string') {
+      eventData.value = parseFloat(eventData.value);
+    }
+
+    // Remove undefined/null values
+    Object.keys(eventData).forEach(key => {
+      if (eventData[key] === undefined || eventData[key] === null) {
+        delete eventData[key];
+      }
+    });
+
     window.fbq('track', 'AddToCart', eventData);
     console.log('Meta Pixel: AddToCart tracked', eventData);
   }
@@ -99,12 +117,41 @@ export const initiateCheckoutEvent = (params = {}) => {
  */
 export const purchaseEvent = (params = {}) => {
   if (isFbqAvailable()) {
+    // Ensure required parameters are present and valid
     const eventData = {
       content_type: 'product',
       currency: 'INR',
       ...params
     };
-    
+
+    // Validate content_ids is an array
+    if (eventData.content_ids && !Array.isArray(eventData.content_ids)) {
+      eventData.content_ids = [eventData.content_ids];
+    }
+
+    // Ensure value is a number and greater than 0
+    if (eventData.value) {
+      if (typeof eventData.value === 'string') {
+        eventData.value = parseFloat(eventData.value);
+      }
+      // Ensure value is positive
+      if (eventData.value <= 0) {
+        eventData.value = 0.01; // Minimum value for Facebook
+      }
+    }
+
+    // Ensure num_items is a positive integer
+    if (eventData.num_items) {
+      eventData.num_items = Math.max(1, parseInt(eventData.num_items));
+    }
+
+    // Remove undefined/null values
+    Object.keys(eventData).forEach(key => {
+      if (eventData[key] === undefined || eventData[key] === null) {
+        delete eventData[key];
+      }
+    });
+
     window.fbq('track', 'Purchase', eventData);
     console.log('Meta Pixel: Purchase tracked', eventData);
   }
@@ -210,3 +257,46 @@ export const wishlistAddEvent = (productId) => {
     console.log('Meta Pixel: AddToWishlist tracked', productId);
   }
 };
+
+/**
+ * Test function to manually fire events for debugging
+ * Call this from browser console to test if events are working
+ */
+export const testMetaPixelEvents = () => {
+  console.log('🧪 Testing Meta Pixel Events...');
+
+  if (!isFbqAvailable()) {
+    console.error('❌ Meta Pixel not available');
+    return;
+  }
+
+  // Test AddToCart
+  console.log('Testing AddToCart event...');
+  addToCartEvent({
+    content_ids: ['test_product_123'],
+    value: 99.99,
+    currency: 'INR',
+    content_name: 'Test Product',
+    num_items: 1
+  });
+
+  // Test Purchase
+  setTimeout(() => {
+    console.log('Testing Purchase event...');
+    purchaseEvent({
+      content_ids: ['test_product_123', 'test_product_456'],
+      value: 199.98,
+      currency: 'INR',
+      num_items: 2,
+      transaction_id: 'test_order_789'
+    });
+  }, 2000);
+
+  console.log('✅ Test events fired. Check Meta Pixel Helper and Events Manager.');
+};
+
+// Make test function available globally for debugging
+if (typeof window !== 'undefined') {
+  window.testMetaPixelEvents = testMetaPixelEvents;
+  console.log('💡 Test function available: window.testMetaPixelEvents()');
+}
