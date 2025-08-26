@@ -3,12 +3,13 @@ const User = require("../../models/User");
 const sendEmail = require("../../helpers/send-email");
 const getAllOrdersOfAllUsers = async (req, res) => {
   try {
-    const orders = await Order.find({});
+    // Filter orders by payment status "paid"
+    const orders = await Order.find({ paymentStatus: "paid" });
 
     if (!orders.length) {
       return res.status(404).json({
         success: false,
-        message: "No orders found!",
+        message: "No paid orders found!",
       });
     }
 

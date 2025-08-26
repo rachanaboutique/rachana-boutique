@@ -5,11 +5,14 @@ const Category = require("../../models/Category");
 
 const getDashboardSummary = async (req, res) => {
   try {
+    // Filter by payment status "paid" for total sales
     const totalSales = await Order.aggregate([
+      { $match: { paymentStatus: "paid" } },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]);
 
-    const totalOrders = await Order.countDocuments();
+    // Filter by payment status "paid" for total orders
+    const totalOrders = await Order.countDocuments({ paymentStatus: "paid" });
     const totalProducts = await Product.countDocuments();
     const totalUsers = await User.countDocuments();
 
@@ -29,7 +32,9 @@ const getSalesChart = async (req, res) => {
   try {
     const currentYear = new Date().getFullYear();
 
+    // Filter by payment status "paid" for sales chart
     const salesData = await Order.aggregate([
+      { $match: { paymentStatus: "paid" } },
       {
         $group: {
           _id: {
@@ -74,9 +79,10 @@ const getOrderStatus = async (req, res) => {
         { id: "delivered", label: "Delivered" },
         { id: "rejected", label: "Rejected" },
       ];
-  
-      // Fetch counts from the database
+
+      // Fetch counts from the database, filter by payment status "paid"
       const statusCounts = await Order.aggregate([
+        { $match: { paymentStatus: "paid" } },
         { $group: { _id: "$orderStatus", count: { $sum: 1 } } },
       ]);
   

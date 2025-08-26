@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader } from "../../components/ui/loader";
 import { Helmet } from "react-helmet-async";
 import { ShoppingBag, MapPin, CreditCard, LogIn } from "lucide-react";
-import { getTempCartItems, getTempCartTotal, clearTempCart, transferTempCartToUser } from "@/utils/tempCartManager";
+import { getTempCartItems, getTempCartTotal, clearTempCart, copyTempCartToUser } from "@/utils/tempCartManager";
 import { addToCart } from "@/store/shop/cart-slice";
 
 function ShoppingCheckout() {
@@ -61,20 +61,20 @@ function ShoppingCheckout() {
   // Calculate temporary cart total
   const tempCartTotal = getTempCartTotal();
 
-  // Handle cart transfer when user logs in
+  // Handle cart copy when user logs in
   const handleCartTransfer = async () => {
     if (!isAuthenticated || tempCartItems.length === 0) return;
 
     setIsTransferringCart(true);
     try {
-      const result = await transferTempCartToUser(
+      const result = await copyTempCartToUser(
         (cartData) => dispatch(addToCart(cartData)),
         user?.id
       );
 
       if (result.success) {
         toast({
-          title: `${result.transferred} item${result.transferred > 1 ? 's' : ''} transferred to your cart!`,
+          title: `${result.copied} item${result.copied > 1 ? 's' : ''} copied to your cart!`,
           variant: "default",
         });
         setTempCartItems([]);
@@ -82,13 +82,13 @@ function ShoppingCheckout() {
         window.location.reload();
       } else {
         toast({
-          title: `Transferred ${result.transferred} items. ${result.failed} failed.`,
+          title: `Copied ${result.copied} items. ${result.failed} failed.`,
           variant: result.failed > 0 ? "destructive" : "default",
         });
       }
     } catch (error) {
       toast({
-        title: "Failed to transfer cart items. Please try again.",
+        title: "Failed to copy cart items. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -408,19 +408,19 @@ function ShoppingCheckout() {
                 <div className="text-center">
                   <ShoppingBag className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                   <h2 className="text-2xl font-light uppercase tracking-wide mb-4 text-gray-900">
-                    Transfer Cart Items
+                    Copy Cart Items
                   </h2>
                   <div className="w-16 h-0.5 bg-black mx-auto mb-6"></div>
                   <p className="text-gray-700 mb-6">
                     You have {tempCartItems.length} item{tempCartItems.length > 1 ? 's' : ''} in your temporary cart.
-                    Transfer them to your account to proceed with checkout.
+                    Copy them to your account to proceed with checkout.
                   </p>
                   <button
                     onClick={handleCartTransfer}
                     disabled={isTransferringCart}
                     className="px-8 py-3 bg-black text-white hover:bg-gray-800 disabled:bg-gray-400 transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
                   >
-                    {isTransferringCart ? 'Transferring...' : 'Transfer Items to Cart'}
+                    {isTransferringCart ? 'Copying...' : 'Copy Items to Cart'}
                   </button>
                 </div>
               </div>

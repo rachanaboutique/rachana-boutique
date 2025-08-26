@@ -2,10 +2,13 @@ import CommonForm from "@/components/common/form";
 import { useToast } from "@/components/ui/use-toast";
 import { loginFormControls } from "@/config";
 import { loginUser } from "@/store/auth-slice";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/main-logo.png";
+import { getTempCartItems, copyTempCartToUser } from "@/utils/tempCartManager";
+import { addToCart } from "@/store/shop/cart-slice";
+import { startCartCopy, completeCartCopy, hasCartCopyCompleted } from "@/utils/cartCopyManager";
 
 const initialState = {
   email: "",
@@ -15,8 +18,13 @@ const initialState = {
 function AuthLogin() {
   const [formData, setFormData] = useState(initialState);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Flag to prevent duplicate cart copying
+  const hasCopiedCart = useRef(false);
 
   // Validate the form: both email and password must be provided
   useEffect(() => {
@@ -27,7 +35,7 @@ function AuthLogin() {
     }
   }, [formData.email, formData.password]);
 
-  function onSubmit(event) {
+  async function onSubmit(event) {
     event.preventDefault();
 
     // Ensure both fields are filled before dispatching
@@ -40,11 +48,68 @@ function AuthLogin() {
       return;
     }
 
-    dispatch(loginUser(formData)).then((data) => {
+    // Check if there are temporary cart items before login
+    const tempCartItems = getTempCartItems();
+    const hasTempItems = tempCartItems.length > 0;
+
+    dispatch(loginUser(formData)).then(async (data) => {
       if (data?.payload?.success) {
+        const user = data?.payload?.user;
+
+        // Show initial login success message
         toast({
           title: data?.payload?.message,
         });
+
+        // Copy temporary cart items if they exist and haven't been copied yet
+        if (hasTempItems && user?.id && !hasCartCopyCompleted(user.id)) {
+          // Use global state manager to prevent duplicate copying
+          if (startCartCopy(user.id)) {
+            setIsCopying(true);
+
+            try {
+              const copyResult = await copyTempCartToUser(
+                (cartData) => dispatch(addToCart(cartData)),
+                user.id
+              );
+
+              if (copyResult.success) {
+                completeCartCopy(user.id, true);
+                if (copyResult.copied > 0) {
+                  toast({
+                    title: "Cart items copied!",
+                    description: `${copyResult.copied} item${copyResult.copied > 1 ? 's' : ''} added to your cart.`,
+                  });
+                }
+              } else {
+                completeCartCopy(user.id, false);
+                toast({
+                  title: "Some items couldn't be copied",
+                  description: `${copyResult.copied || 0} items copied, ${copyResult.failed || 0} failed.`,
+                  variant: "destructive",
+                });
+              }
+            } catch (error) {
+              console.error('Error copying cart:', error);
+              completeCartCopy(user.id, false);
+              toast({
+                title: "Cart copy failed",
+                description: "Your temporary cart items couldn't be copied. Please add them again.",
+                variant: "destructive",
+              });
+            } finally {
+              setIsCopying(false);
+            }
+          }
+        }
+
+        // Navigate back to checkout if user was there, otherwise to shop
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/checkout')) {
+          navigate('/shop/checkout');
+        } else {
+          navigate('/shop/home');
+        }
       } else {
         toast({
           title: data?.payload?.message,
@@ -76,12 +141,12 @@ function AuthLogin() {
 
       <CommonForm
         formControls={loginFormControls}
-        buttonText={"Sign In"}
+        buttonText={isCopying ? "Copying Cart..." : "Sign In"}
         formData={formData}
         setFormData={setFormData}
         onSubmit={onSubmit}
-        // Disable the submit/login button if the form isn't valid
-        disabled={!isFormValid}
+        // Disable the submit/login button if the form isn't valid or if copying
+        disabled={!isFormValid || isCopying}
       />
       <div className="text-center">
         <Link className="text-sm text-primary hover:underline" to="/auth/forgot-password">

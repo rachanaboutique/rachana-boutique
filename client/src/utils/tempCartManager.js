@@ -213,21 +213,21 @@ export const changeTempCartColor = (productId, oldColorId, newColorId, productDe
 };
 
 /**
- * Transfer temporary cart to user's actual cart after login
+ * Copy temporary cart items to user's actual cart after login
  * @param {Function} addToCartFunction - Function to add items to actual cart
  * @param {string} userId - User ID after login
  */
-export const transferTempCartToUser = async (addToCartFunction, userId) => {
+export const copyTempCartToUser = async (addToCartFunction, userId) => {
   try {
     const tempCart = getTempCartItems();
-    
+
     if (tempCart.length === 0) {
-      return { success: true, message: 'No items to transfer' };
+      return { success: true, message: 'No items to copy' };
     }
-    
-    const transferResults = [];
-    
-    // Transfer each item to user's cart
+
+    const copyResults = [];
+
+    // Copy each item to user's cart (don't clear temp cart)
     for (const item of tempCart) {
       try {
         const result = await addToCartFunction({
@@ -236,45 +236,52 @@ export const transferTempCartToUser = async (addToCartFunction, userId) => {
           quantity: item.quantity,
           colorId: item.colorId
         });
-        
-        transferResults.push({
+
+        copyResults.push({
           productId: item.productId,
           success: result?.payload?.success || false,
           error: result?.error || null
         });
       } catch (error) {
-        transferResults.push({
+        copyResults.push({
           productId: item.productId,
           success: false,
           error: error.message
         });
       }
     }
-    
-    // Clear temp cart after transfer attempt
-    clearTempCart();
-    
-    const successCount = transferResults.filter(r => r.success).length;
-    const failCount = transferResults.filter(r => !r.success).length;
-    
-    console.log('Temp cart transfer completed:', {
+
+    // Only clear temp cart after successful copy of all items
+    const successCount = copyResults.filter(r => r.success).length;
+    const failCount = copyResults.filter(r => !r.success).length;
+
+    if (failCount === 0) {
+      // All items copied successfully, clear temp cart
+      clearTempCart();
+    }
+
+    console.log('Temp cart copy completed:', {
       total: tempCart.length,
       success: successCount,
-      failed: failCount
+      failed: failCount,
+      tempCartCleared: failCount === 0
     });
-    
+
     return {
       success: failCount === 0,
-      transferred: successCount,
+      copied: successCount,
       failed: failCount,
-      results: transferResults
+      results: copyResults
     };
-    
+
   } catch (error) {
-    console.error('Error transferring temp cart:', error);
+    console.error('Error copying temp cart:', error);
     return {
       success: false,
       error: error.message
     };
   }
 };
+
+// Keep the old function for backward compatibility but mark as deprecated
+export const transferTempCartToUser = copyTempCartToUser;

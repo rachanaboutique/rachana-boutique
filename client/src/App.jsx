@@ -40,6 +40,9 @@ import AdminContact from "./pages/admin-view/contact";
 import AdminNewsLetter from "./pages/admin-view/newsletter";
 import MetaPixelTracker from "./components/common/MetaPixelTracker";
 import ProtectedPaymentRoute from "./components/common/ProtectedPaymentRoute";
+import { getTempCartItems, copyTempCartToUser } from "./utils/tempCartManager";
+import { addToCart } from "./store/shop/cart-slice";
+import { startCartCopy, completeCartCopy, hasCartCopyCompleted, resetCartCopyState } from "./utils/cartCopyManager";
 
 // Import Meta Pixel verification in development mode
 if (import.meta.env.DEV) {
@@ -52,6 +55,7 @@ function App() {
   const { user, isAuthenticated, isLoading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const videoObserverRef = useRef(null);
+  const hasCopiedCart = useRef(false);
 
   // Prevent context menu on all video elements
   useLayoutEffect(() => {
@@ -111,6 +115,52 @@ function App() {
 
     validateToken();
   }, [dispatch]);
+
+  // Handle cart copy when user becomes authenticated (backup system)
+  useEffect(() => {
+    const handleCartCopy = async () => {
+      // Only copy if user just became authenticated and we haven't copied yet
+      // This is a backup system - the login page should handle most cases
+      if (isAuthenticated && user?.id && !hasCartCopyCompleted(user.id) && !isLoading) {
+        const tempCartItems = getTempCartItems();
+
+        if (tempCartItems.length > 0) {
+          // Add a small delay to avoid conflicts with login page copying
+          setTimeout(async () => {
+            // Double-check that copying hasn't happened yet using global state
+            if (!hasCartCopyCompleted(user.id) && startCartCopy(user.id)) {
+              try {
+                console.log('Auto-copying cart items for authenticated user (backup system)');
+                const copyResult = await copyTempCartToUser(
+                  (cartData) => dispatch(addToCart(cartData)),
+                  user.id
+                );
+
+                if (copyResult.success && copyResult.copied > 0) {
+                  completeCartCopy(user.id, true);
+                  console.log(`Successfully copied ${copyResult.copied} items to user cart`);
+                } else {
+                  completeCartCopy(user.id, false);
+                }
+              } catch (error) {
+                console.error('Error auto-copying cart:', error);
+                completeCartCopy(user.id, false);
+              }
+            }
+          }, 2000); // 2 second delay to avoid conflicts with login page
+        }
+      }
+    };
+
+    handleCartCopy();
+  }, [isAuthenticated, user?.id, isLoading, dispatch]);
+
+  // Reset copy state when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      resetCartCopyState();
+    }
+  }, [isAuthenticated]);
 
   if (isLoading) return <Loader />;
 

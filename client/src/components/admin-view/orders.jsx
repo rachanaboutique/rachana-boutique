@@ -60,18 +60,22 @@ function AdminOrdersView() {
     : [];
 
   return (
-    
+
    <>
     {isLoading ? (
       <div className="flex items-center justify-center w-full mt-36 mb-1">
-      
+
         <span className="text-lg whitespace-nowrap px-2">Loading orders...</span>
-       
+
       </div>
     ) : (
     <Card>
       <CardHeader>
-        <CardTitle>All Orders</CardTitle>
+        <CardTitle>All Orders (Paid Only)</CardTitle>
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Badge className="bg-green-500 text-white">Payment Status: Paid</Badge>
+          <span>Showing only orders with confirmed payments</span>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="mb-4 w-1/3">
@@ -89,6 +93,7 @@ function AdminOrdersView() {
               <TableHead>Order ID</TableHead>
               <TableHead>Order Date</TableHead>
               <TableHead>Order Status</TableHead>
+              <TableHead>Payment Status</TableHead>
               <TableHead>Order Price</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -122,6 +127,19 @@ function AdminOrdersView() {
                         {orderItem?.orderStatus}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={`py-1 px-3 ${
+                          orderItem?.paymentStatus === "paid"
+                            ? "bg-green-500"
+                            : orderItem?.paymentStatus === "pending"
+                            ? "bg-yellow-500"
+                            : "bg-red-600"
+                        }`}
+                      >
+                        {orderItem?.paymentStatus}
+                      </Badge>
+                    </TableCell>
                     <TableCell>₹{orderItem?.totalAmount}</TableCell>
                     <TableCell>
                       <Dialog
@@ -145,7 +163,7 @@ function AdminOrdersView() {
                 ))
               : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">No orders found.</TableCell>
+                  <TableCell colSpan={6} className="text-center">No paid orders found.</TableCell>
                 </TableRow>
               )}
           </TableBody>
