@@ -31,16 +31,17 @@ function SearchProducts() {
   const { toast } = useToast();
   const { trackAddToCart } = useMetaPixelCart();
 
-  // Popular saree searches (including product codes)
+  // Popular saree searches
   const popularSearches = [
-    "Colourful Elegance",
-    "Multicolour Frenzy",
-    "Purple Garden",
-    "Traditional Elegance",
-    "TC010",
-    "Red Loctus",
-    "Blue Elephant",
-    "Polka Dots"
+    "Kora Organza Saree",
+    "Kalamkari Cotton Saree",
+    "Kathan silk Saree",
+    "Warm Silk Saree",
+    "Masline Jamdani Saree",
+    "Organza Embroidery Saree",
+    "Tissue Silk Saree",
+    "Chiniya Silk Saree",
+    "Mul Cotton Saree"
   ];
 
   // Update search results with a small delay to prevent UI flicker
@@ -99,7 +100,9 @@ function SearchProducts() {
 
       return () => clearTimeout(timer);
     } else {
+      // Clear suggestions and loading state when search is empty
       setSuggestions([]);
+      setIsLoading(false);
       setSearchParams({});
     }
   }, [keyword, productList, setSearchParams]);
@@ -134,7 +137,8 @@ function SearchProducts() {
           price: product?.price,
           salePrice: product?.salePrice,
           image: product?.image?.[0] || '',
-          category: product?.category
+          category: product?.category,
+          productCode: product?.productCode || null
         }
       };
 
@@ -215,8 +219,8 @@ function SearchProducts() {
       let currentCartItems = cartItems.items || [];
       const itemIndex = currentCartItems.findIndex(
         (item) => item.productId === getCurrentProductId &&
-                  item.colors &&
-                  item.colors._id === colorId
+          item.colors &&
+          item.colors._id === colorId
       );
 
       if (itemIndex > -1) {

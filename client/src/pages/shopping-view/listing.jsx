@@ -315,7 +315,8 @@ function ShoppingListing({ categorySlug }) {
           price: product?.price,
           salePrice: product?.salePrice,
           image: product?.image?.[0] || '',
-          category: product?.category
+          category: product?.category,
+          productCode: product?.productCode || null
         }
       };
 

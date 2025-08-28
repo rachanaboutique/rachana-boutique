@@ -33,7 +33,7 @@ import { fetchCartItems, resetCart } from "@/store/shop/cart-slice";
 import { Label } from "../ui/label";
 import { FaWhatsapp } from "react-icons/fa";
 import { useToast } from "../ui/use-toast";
-import { getTempCartCount } from "@/utils/tempCartManager";
+import { getTempCartCount, resetTempCartCopyFlag } from "@/utils/tempCartManager";
 
 function ShoppingHeader() {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -116,6 +116,11 @@ const messages = [
     }, [isAuthenticated, user, dispatch]);
 
     function handleLogout() {
+      // Reset temp cart copy flag for current user
+      if (user?.id) {
+        resetTempCartCopyFlag(user.id);
+      }
+
       // First explicitly reset the cart
       dispatch(resetCart());
 
@@ -126,6 +131,11 @@ const messages = [
           if (result.success) {
             // Reset hasInitiallyFetchedCart ref to ensure cart is refetched on next login
             hasInitiallyFetchedCart.current = false;
+
+            // Trigger temp cart update event to refresh cart drawer
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('tempCartUpdated'));
+            }, 100);
 
             toast({
               title: "Logged out successfully",

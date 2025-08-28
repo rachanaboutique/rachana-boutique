@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import classNames from "classnames";
 import { Heart, ExternalLink, X, ShoppingBag, Loader, Play } from "lucide-react";
 import { useToast } from "../ui/use-toast";
+import { addToTempCart } from "@/utils/tempCartManager";
 import { useInView } from "react-intersection-observer";
 import iosAutoplayManager from "../../utils/iosAutoplayManager";
 
@@ -382,12 +383,36 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
     }
 
     if (!isAuthenticated) {
-      toast({
-        title: "Please log in to add items to the cart!",
-        variant: "destructive"
-      });
+      // Add to temporary cart for non-authenticated users
+      const tempCartItem = {
+        productId: item._id,
+        colorId: item?.colors?.[0]?._id || null,
+        quantity: 1,
+        productDetails: {
+          title: item?.title,
+          price: item?.price,
+          salePrice: item?.salePrice,
+          image: item?.image?.[0] || '',
+          category: item?.category,
+          productCode: item?.productCode || null
+        }
+      };
+
+      const success = addToTempCart(tempCartItem);
+
+      if (success) {
+        toast({
+          title: "Item added to cart!",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Failed to add item to cart",
+          variant: "destructive",
+        });
+      }
     } else {
-      // Pass the entire item to the handler
+      // Pass the entire item to the handler for authenticated users
       handleAddtoCart(item);
     }
   };

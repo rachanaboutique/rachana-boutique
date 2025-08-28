@@ -3,41 +3,51 @@ import { Navigate, useLocation } from "react-router-dom";
 function CheckAuth({ isAuthenticated, user, children }) {
   const location = useLocation();
 
-  // Root path is now handled directly in App.jsx by rendering ShoppingHome
-  // No need to redirect from root path anymore
+  // Define protected routes that require authentication
+  const protectedRoutes = ["/admin", "/shop/account", "/shop/checkout"];
+  const authRoutes = ["/auth/login", "/auth/register", "/auth/forgot-password", "/auth/reset-password"];
+  const publicShopRoutes = ["/shop/home", "/shop/details", "/shop/collections", "/shop/new-arrivals", "/shop/search", "/shop/contact"];
 
-  if (
-    !isAuthenticated &&
-    !(location.pathname.includes("/login") || location.pathname.includes("/register") || location.pathname.includes("/forgot-password") || location.pathname.includes("/reset-password") || location.pathname.includes("/shop/home"))
-  ) {
-    return <Navigate to="/auth/login" />;
+  // Check if current path requires authentication
+  const requiresAuth = protectedRoutes.some(route => location.pathname.startsWith(route));
+  const isAuthRoute = authRoutes.some(route => location.pathname.startsWith(route));
+  const isPublicShopRoute = publicShopRoutes.some(route => location.pathname.startsWith(route));
+
+  // Redirect unauthenticated users trying to access protected routes
+  if (!isAuthenticated && requiresAuth) {
+    // Store the intended destination for redirect after login
+    const redirectTo = location.pathname + location.search;
+    return <Navigate to={`/auth/login?redirect=${encodeURIComponent(redirectTo)}`} replace />;
   }
 
-  if (
-    isAuthenticated &&
-    (location.pathname.includes("/login") || location.pathname.includes("/register"))
-  ) {
+  // Allow unauthenticated users to access public routes
+  if (!isAuthenticated && (isAuthRoute || isPublicShopRoute || location.pathname === "/")) {
+    return <>{children}</>;
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (isAuthenticated && isAuthRoute) {
     return user?.role === "admin" ? (
-      <Navigate to="/admin/dashboard" />
+      <Navigate to="/admin/dashboard" replace />
     ) : (
-      <Navigate to="/shop/home" />
+      <Navigate to="/shop/home" replace />
     );
   }
 
-  if (
-    isAuthenticated &&
-    user?.role !== "admin" &&
-    location.pathname.includes("/admin")
-  ) {
-    return <Navigate to="/unauth-page" />;
+  // Protect admin routes - only admin users can access
+  if (isAuthenticated && location.pathname.startsWith("/admin")) {
+    if (user?.role !== "admin") {
+      return <Navigate to="/unauth-page" replace />;
+    }
   }
 
+  // Redirect admin users away from shop routes (except public ones)
   if (
     isAuthenticated &&
     user?.role === "admin" &&
-    location.pathname.includes("/shop")
+    (location.pathname.startsWith("/shop/account") || location.pathname.startsWith("/shop/checkout"))
   ) {
-    return <Navigate to="/admin/dashboard" />;
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return <>{children}</>;

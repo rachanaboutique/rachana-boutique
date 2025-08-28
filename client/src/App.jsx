@@ -14,6 +14,7 @@ import ShoppingListing from "./pages/shopping-view/listing";
 import ShoppingCheckout from "./pages/shopping-view/checkout";
 import ShoppingAccount from "./pages/shopping-view/account";
 import CheckAuth from "./components/common/check-auth";
+import AdminProtectedRoute from "./components/common/AdminProtectedRoute";
 import UnauthPage from "./pages/unauth-page";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useLayoutEffect, useRef } from "react";
@@ -204,9 +205,9 @@ function App() {
         <Route
           path="/admin"
           element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+            <AdminProtectedRoute>
               <AdminLayout />
-            </CheckAuth>
+            </AdminProtectedRoute>
           }
         >
           <Route path="dashboard" element={<AdminDashboard />} />

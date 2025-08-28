@@ -116,11 +116,17 @@ const sendShippingEmail = async (order, trackingNumber) => {
     const orderItemsHtml = order.cartItems.map(item => `
       <tr style="border-bottom: 1px solid #eee;">
         <td style="padding: 12px 8px; text-align: left;">
-          <div style="display: flex; align-items: center;">
-            <img src="${item.image}" alt="${item.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="${item.image || ''}" alt="${item.title || ''}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
             <div>
-              <p style="margin: 0; font-weight: 500; color: #2c3315;">${item.title}</p>
-              ${item.colors ? `<p style="margin: 2px 0 0 0; font-size: 12px; color: #666;">Color: ${item.colors.title}</p>` : ''}
+              <p style="margin: 0; font-weight: 500; color: #2c3315;">${item.title || ''}</p>
+              ${item.productCode ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #888; font-family: monospace;">Code: ${item.productCode}</p>` : ''}
+              ${item.colors && item.colors.title ? `
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                  ${item.colors.image ? `<img src="${item.colors.image}" alt="${item.colors.title}" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px;">` : ''}
+                  <span style="font-size: 12px; color: #666;">Color: ${item.colors.title}</span>
+                </div>
+              ` : ''}
             </div>
           </div>
         </td>

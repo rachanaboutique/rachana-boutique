@@ -87,6 +87,14 @@ function AuthRegister() {
         onSubmit={onSubmit}
         disabled={!isFormValid}
       />
+      <div className="text-center mt-4">
+        <Link
+          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+          to="/shop/home"
+        >
+          ← Go to Home
+        </Link>
+      </div>
     </div>
   );
 }

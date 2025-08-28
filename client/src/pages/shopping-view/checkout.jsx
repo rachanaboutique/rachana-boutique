@@ -9,10 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader } from "../../components/ui/loader";
 import { Helmet } from "react-helmet-async";
-import { ShoppingBag, MapPin, CreditCard, LogIn } from "lucide-react";
-import { getTempCartItems, getTempCartTotal, clearTempCart, copyTempCartToUser } from "@/utils/tempCartManager";
+import { MapPin, CreditCard, LogIn } from "lucide-react";
+import { getTempCartItems, getTempCartTotal, clearTempCart } from "@/utils/tempCartManager";
 import { addToCart } from "@/store/shop/cart-slice";
-
+import { ShoppingCart as ShoppingBag } from "lucide-react";
 function ShoppingCheckout() {
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -22,7 +22,7 @@ function ShoppingCheckout() {
   const [razorpayInstance, setRazorpayInstance] = useState(null);
   const { isPaymentLoading } = useSelector((state) => state.shopOrder);
   const [tempCartItems, setTempCartItems] = useState([]);
-  const [isTransferringCart, setIsTransferringCart] = useState(false);
+
   const dispatch = useDispatch();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -61,40 +61,7 @@ function ShoppingCheckout() {
   // Calculate temporary cart total
   const tempCartTotal = getTempCartTotal();
 
-  // Handle cart copy when user logs in
-  const handleCartTransfer = async () => {
-    if (!isAuthenticated || tempCartItems.length === 0) return;
 
-    setIsTransferringCart(true);
-    try {
-      const result = await copyTempCartToUser(
-        (cartData) => dispatch(addToCart(cartData)),
-        user?.id
-      );
-
-      if (result.success) {
-        toast({
-          title: `${result.copied} item${result.copied > 1 ? 's' : ''} copied to your cart!`,
-          variant: "default",
-        });
-        setTempCartItems([]);
-        // Refresh the page to show updated cart
-        window.location.reload();
-      } else {
-        toast({
-          title: `Copied ${result.copied} items. ${result.failed} failed.`,
-          variant: result.failed > 0 ? "destructive" : "default",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Failed to copy cart items. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTransferringCart(false);
-    }
-  };
 
   // Function to reset payment state
   const resetPaymentState = () => {
@@ -134,6 +101,7 @@ function ShoppingCheckout() {
         image: item?.image[0],
         price: item?.salePrice > 0 ? item?.salePrice : item?.price,
         quantity: item?.quantity,
+        productCode: item?.productCode || null,
         colors: item?.colors ? {
           _id: item.colors._id,
           title: item.colors.title,
@@ -402,32 +370,10 @@ function ShoppingCheckout() {
               </div>
             )}
 
-            {/* Cart Transfer Section for Authenticated Users with Temp Cart */}
-            {isAuthenticated && tempCartItems.length > 0 && (
-              <div className="mb-8 bg-white border border-gray-200 p-6 md:p-8 rounded-md shadow-sm">
-                <div className="text-center">
-                  <ShoppingBag className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                  <h2 className="text-2xl font-light uppercase tracking-wide mb-4 text-gray-900">
-                    Copy Cart Items
-                  </h2>
-                  <div className="w-16 h-0.5 bg-black mx-auto mb-6"></div>
-                  <p className="text-gray-700 mb-6">
-                    You have {tempCartItems.length} item{tempCartItems.length > 1 ? 's' : ''} in your temporary cart.
-                    Copy them to your account to proceed with checkout.
-                  </p>
-                  <button
-                    onClick={handleCartTransfer}
-                    disabled={isTransferringCart}
-                    className="px-8 py-3 bg-black text-white hover:bg-gray-800 disabled:bg-gray-400 transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
-                  >
-                    {isTransferringCart ? 'Copying...' : 'Copy Items to Cart'}
-                  </button>
-                </div>
-              </div>
-            )}
 
-            {/* Main Content - Only show if authenticated or no temp cart */}
-            {(isAuthenticated && tempCartItems.length === 0) && (
+
+            {/* Main Content - Only show if authenticated */}
+            {isAuthenticated && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Left Side: Address Selection */}
                 <div className="bg-white border border-gray-200 p-6 md:p-8 rounded-md shadow-sm">

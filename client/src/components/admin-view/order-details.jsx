@@ -73,7 +73,7 @@ function AdminOrderDetailsView({ orderDetails }) {
   }
 
   return (
-    <DialogContent className="sm:max-w-[600px] bg-playground">
+    <DialogContent className="w-[800px] bg-playground">
       <div className="grid gap-6">
         <div className="grid gap-2">
           <div className="flex mt-6 items-center justify-between">
@@ -134,11 +134,16 @@ function AdminOrderDetailsView({ orderDetails }) {
             <ul className="grid gap-3">
               {orderDetails?.cartItems && orderDetails?.cartItems.length > 0
                 ? orderDetails?.cartItems.map((item) => (
-                  <li className="flex items-center justify-between">
-                    <span>Title: {item.title}</span>
-                    {item?.colors?.title && <span>Color: {item?.colors?.title}</span>}
-                    <span>Quantity: {item.quantity}</span>
-                    <span>Price: ₹{item.price}</span>
+                  <li className="flex flex-col gap-2 p-3 border rounded-md bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Title: {item.title}</span>
+                      <span className="font-medium">Price: ₹{item.price}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      {item?.productCode && <span>Code: {item.productCode}</span>}
+                      {item?.colors?.title && <span>Color: {item?.colors?.title}</span>}
+                      <span>Quantity: {item.quantity}</span>
+                    </div>
                   </li>
                 ))
                 : null}

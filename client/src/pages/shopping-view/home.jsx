@@ -15,6 +15,7 @@ import {
 
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
+import { addToTempCart } from "@/utils/tempCartManager";
 import { fetchCategories } from "@/store/shop/categories-slice";
 import { fetchBanners } from "@/store/shop/banners-slice";
 import { fetchInstaFeed } from "@/store/shop/instafeed-slice";
@@ -73,11 +74,36 @@ function ShoppingHome() {
 
     // Check if user is authenticated
     if (!isAuthenticated) {
-      toast({
-        title: "Please log in to add items to the cart!",
-        variant: "destructive",
-      });
-      return Promise.reject("Not authenticated");
+      // Add to temporary cart for non-authenticated users
+      const tempCartItem = {
+        productId: productId,
+        colorId: product?.colors?.[0]?._id || null,
+        quantity: 1,
+        productDetails: {
+          title: product?.title,
+          price: product?.price,
+          salePrice: product?.salePrice,
+          image: product?.image?.[0] || '',
+          category: product?.category,
+          productCode: product?.productCode || null
+        }
+      };
+
+      const success = addToTempCart(tempCartItem);
+
+      if (success) {
+        toast({
+          title: "Item added to cart!",
+          variant: "default",
+        });
+        return Promise.resolve({ success: true });
+      } else {
+        toast({
+          title: "Failed to add item to cart",
+          variant: "destructive",
+        });
+        return Promise.reject("Failed to add to temp cart");
+      }
     }
 
     // Check if product is in stock

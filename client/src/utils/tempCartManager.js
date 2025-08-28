@@ -151,6 +151,22 @@ export const getTempCartCount = () => {
 };
 
 /**
+ * Reset temp cart copy flag for a user (call on logout)
+ * @param {string} userId - User ID
+ */
+export const resetTempCartCopyFlag = (userId) => {
+  try {
+    const copyKey = `tempCartCopied_${userId}`;
+    localStorage.removeItem(copyKey);
+    console.log('Temp cart copy flag reset for user:', userId);
+    return true;
+  } catch (error) {
+    console.error('Error resetting temp cart copy flag:', error);
+    return false;
+  }
+};
+
+/**
  * Get temporary cart total value
  * @returns {number} Total value of items in temp cart
  */
@@ -225,6 +241,15 @@ export const copyTempCartToUser = async (addToCartFunction, userId) => {
       return { success: true, message: 'No items to copy' };
     }
 
+    // Check if we've already copied for this user to prevent duplicates
+    const copyKey = `tempCartCopied_${userId}`;
+    const alreadyCopied = localStorage.getItem(copyKey);
+
+    if (alreadyCopied) {
+      console.log('Temp cart already copied for this user, skipping');
+      return { success: true, message: 'Already copied', copied: 0, failed: 0 };
+    }
+
     const copyResults = [];
 
     // Copy each item to user's cart (don't clear temp cart)
@@ -251,20 +276,25 @@ export const copyTempCartToUser = async (addToCartFunction, userId) => {
       }
     }
 
-    // Only clear temp cart after successful copy of all items
+    // Count successful and failed copies
     const successCount = copyResults.filter(r => r.success).length;
     const failCount = copyResults.filter(r => !r.success).length;
 
-    if (failCount === 0) {
-      // All items copied successfully, clear temp cart
-      clearTempCart();
+    // Don't clear temp cart - keep items for when user logs out
+    // This allows users to see their temp cart items again after logout
+    console.log('Temp cart items preserved after copy (not cleared)');
+
+    // Mark as copied for this user to prevent future duplicates
+    if (successCount > 0) {
+      const copyKey = `tempCartCopied_${userId}`;
+      localStorage.setItem(copyKey, 'true');
     }
 
     console.log('Temp cart copy completed:', {
       total: tempCart.length,
       success: successCount,
       failed: failCount,
-      tempCartCleared: failCount === 0
+      tempCartPreserved: true
     });
 
     return {

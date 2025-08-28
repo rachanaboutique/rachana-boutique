@@ -83,6 +83,24 @@ function AuthForgotPassword() {
         onSubmit={onSubmit}
         disabled={!isFormValid}
       />
+      <div className="text-center space-y-2">
+        <div>
+          <Link
+            className="text-sm text-primary hover:underline"
+            to="/auth/login"
+          >
+            Back to Login
+          </Link>
+        </div>
+        <div>
+          <Link
+            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            to="/shop/home"
+          >
+            ← Go to Home
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

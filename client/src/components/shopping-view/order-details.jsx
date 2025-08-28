@@ -39,7 +39,7 @@ function ShoppingOrderDetailsView({ orderDetails }) {
   };
 
   return (
-    <DialogContent className="sm:max-w-[600px] max-h-[90vh] bg-white">
+    <DialogContent className="w-full md:w-[800px] max-h-[90vh] bg-white">
       <div className="mt-4 overflow-y-auto pr-1 -mr-1 max-h-[calc(90vh-80px)]">
         <DialogTitle className="text-xl font-light uppercase tracking-wide text-center sticky top-0  pb-4 z-10">
           Order Details
@@ -106,6 +106,7 @@ function ShoppingOrderDetailsView({ orderDetails }) {
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm truncate">{item.title}</h4>
                         <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
+                          {item?.productCode && <span>Code: {item.productCode}</span>}
                           {item?.colors?.title && <span>Color: {item?.colors?.title}</span>}
                           <span>Quantity: {item.quantity}</span>
                         </div>

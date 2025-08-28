@@ -223,9 +223,16 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
       {/* Product Details */}
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start w-full">
-          <h3 className="text-sm font-medium mb-1 line-clamp-2 pr-6">
-            {tempItem.productDetails?.title || 'Product'}
-          </h3>
+          <div className="flex-1 pr-6">
+            <h3 className="text-sm font-medium mb-1 line-clamp-2">
+              {tempItem.productDetails?.title || 'Product'}
+            </h3>
+            {tempItem.productDetails?.productCode && (
+              <p className="text-xs text-gray-500 mb-1">
+                Code: {tempItem.productDetails.productCode}
+              </p>
+            )}
+          </div>
 
           {/* Delete Button */}
           <button
@@ -264,10 +271,11 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 disabled={isUpdating}
               >
-                {selectedColor && (
-                  <div 
-                    className="w-3 h-3 rounded-full border border-gray-300"
-                    style={{ backgroundColor: selectedColor.hexCode }}
+                {selectedColor && selectedColor.image && (
+                  <img
+                    src={selectedColor.image}
+                    alt={selectedColor.title}
+                    className="w-4 h-4 object-cover border border-gray-300 rounded-sm"
                   />
                 )}
                 <span>{selectedColor?.title || 'Select Color'}</span>
@@ -282,10 +290,13 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors"
                       onClick={() => handleColorChange(color)}
                     >
-                      <div 
-                        className="w-3 h-3 rounded-full border border-gray-300"
-                        style={{ backgroundColor: color.hexCode }}
-                      />
+                      {color.image && (
+                        <img
+                          src={color.image}
+                          alt={color.title}
+                          className="w-4 h-4 object-cover border border-gray-300 rounded-sm"
+                        />
+                      )}
                       <span>{color.title}</span>
                       {color.inventory <= 0 && (
                         <span className="text-red-500 text-xs">(Out of stock)</span>

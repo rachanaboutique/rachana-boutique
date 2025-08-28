@@ -66,17 +66,17 @@ function ShoppingAccount() {
             </div>
 
             <Tabs defaultValue="orders" className="w-full">
-              <TabsList className="flex items-center w-full mb-8 border-b border-gray-200 overflow-x-auto">
+              <TabsList className="flex items-center w-full mb-8 border-b border-gray-200">
                 <TabsTrigger
                   value="orders"
-                  className="flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-wide font-medium data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:text-white rounded-none"
+                  className="flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-wide font-medium data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:text-white data-[state=active]:bg-black rounded-none bg-transparent"
                 >
                   <Package className="h-4 w-4" />
                   <span>Orders</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="address"
-                  className="flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-wide font-medium data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:text-white rounded-none"
+                  className="flex items-center gap-2 px-6 py-3 text-sm uppercase tracking-wide font-medium data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:text-white data-[state=active]:bg-black rounded-none bg-transparent"
                 >
                   <MapPin className="h-4 w-4" />
                   <span>Addresses</span>

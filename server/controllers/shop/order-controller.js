@@ -136,6 +136,7 @@ const capturePayment = async (req, res) => {
               <thead>
                 <tr>
                   <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: left;">Product</th>
+                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Code</th>
                   <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Quantity</th>
                   <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Price</th>
                   <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Color</th>
@@ -145,25 +146,27 @@ const capturePayment = async (req, res) => {
                 ${order.cartItems.map(item => `
                   <tr>
                     <td style="border-bottom: 1px solid #ddd; padding: 12px;">
-    <div style="display: flex; align-items: center; justify-content: flex-start; gap: 16px;">
-      <img src="${item?.image}" alt="${item?.title}"
-        style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; flex-shrink: 0;">
-      <span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; padding-top: 16px;">${item?.title}</span>
-    </div>
-  </td>
+                      <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="${item?.image || ''}" alt="${item?.title || ''}"
+                          style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; flex-shrink: 0;">
+                        <span style="font-weight: 600;">${item?.title || ''}</span>
+                      </div>
+                    </td>
 
+                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600; font-family: monospace; font-size: 12px; color: #666;">${item?.productCode || "-"}</td>
                     <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600;">${item?.quantity}</td>
                     <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600;">₹${item?.price}</td>
 
 
 
-                     <td style="border-bottom: 1px solid #ddd; padding: 12px;">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 16px;">
-      <img src="${item?.colors?.image || ""}" alt="${item?.colors?.title}"
-        style="width: 35px; height: 35px; border-radius: 50%;">
-       <span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; padding-top: 9px;">${item?.colors?.title || "-"}</span>
-    </div>
-  </td>
+                     <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center;">
+                      ${item?.colors && item.colors.title ? `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                          ${item.colors.image ? `<img src="${item.colors.image}" alt="${item.colors.title}" style="width: 25px; height: 25px; object-fit: cover; border-radius: 3px;">` : ''}
+                          <span style="font-weight: 600;">${item.colors.title}</span>
+                        </div>
+                      ` : ''}
+                    </td>
 
                   </tr>
                 `).join('')}
@@ -188,10 +191,90 @@ const capturePayment = async (req, res) => {
 
     // Determine the recipient email using order.email or fallback to the user's profile.
     const recipientEmail = order.email || (await User.findById(order.userId)).email;
+
+    // Send confirmation email to customer
     await sendEmail({
       email: recipientEmail,
       subject: "Order Confirmation - Your Order is Confirmed",
       message,
+    });
+
+    // Send notification email to admin
+    const adminEmail = "rachanaboutiquechennai@gmail.com";
+    const adminMessage = `
+    <div style="font-family: Arial, sans-serif; color: #2c3315; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #fed1d6; padding: 20px; text-align: center; color: #2c3315;">
+        <img src="https://res.cloudinary.com/dhkdsvdvr/image/upload/v1740216811/logo3_moey1d.png" alt="Logo" style="max-width: 150px;">
+        <h2 style="margin-bottom: 5px;">New Order Received!</h2>
+        <p style="font-size: 16px; margin-top: 0;">A new order has been placed and payment confirmed.</p>
+      </div>
+      <div style="padding: 20px;">
+        <h3 style="border-bottom: 2px solid #fed1d6; padding-bottom: 10px;">Order Details</h3>
+        <p><strong>Order ID:</strong> ${order._id}</p>
+        <p><strong>Customer Email:</strong> ${recipientEmail}</p>
+        <p><strong>Total Amount:</strong> ₹${order.totalAmount}</p>
+        <p><strong>Payment Status:</strong> Paid</p>
+        <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleDateString("en-GB")}</p>
+
+        ${order.cartItems && order.cartItems.length > 0 ? `
+          <div style="margin-top: 20px;">
+            <h4 style="margin-bottom: 10px;">Items Ordered:</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <thead>
+                <tr>
+                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: left;">Product</th>
+                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Code</th>
+                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Quantity</th>
+                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Price</th>
+                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Color</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.cartItems.map(item => `
+                  <tr>
+                    <td style="border-bottom: 1px solid #ddd; padding: 12px;">
+                      <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="${item?.image || ''}" alt="${item?.title || ''}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; flex-shrink: 0;">
+                        <span style="font-weight: 600;">${item?.title || ''}</span>
+                      </div>
+                    </td>
+                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600; font-family: monospace; font-size: 12px; color: #666;">${item?.productCode || "-"}</td>
+                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600;">${item?.quantity}</td>
+                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600;">₹${item?.price}</td>
+                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center;">
+                      ${item?.colors && item.colors.title ? `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                          ${item.colors.image ? `<img src="${item.colors.image}" alt="${item.colors.title}" style="width: 25px; height: 25px; object-fit: cover; border-radius: 3px;">` : ''}
+                          <span style="font-weight: 600;">${item.colors.title}</span>
+                        </div>
+                      ` : ''}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+
+        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
+          <h4 style="margin: 0 0 10px 0;">Customer Information:</h4>
+          <p style="margin: 5px 0;"><strong>Address:</strong> ${order.addressInfo?.address || 'N/A'}</p>
+          <p style="margin: 5px 0;"><strong>City:</strong> ${order.addressInfo?.city || 'N/A'}</p>
+          <p style="margin: 5px 0;"><strong>Pincode:</strong> ${order.addressInfo?.pincode || 'N/A'}</p>
+          <p style="margin: 5px 0;"><strong>Phone:</strong> ${order.addressInfo?.phone || 'N/A'}</p>
+          ${order.addressInfo?.notes ? `<p style="margin: 5px 0;"><strong>Notes:</strong> ${order.addressInfo.notes}</p>` : ''}
+        </div>
+      </div>
+      <div style="background-color: #f7f7f7; padding: 12px; text-align: center; font-size: 12px; color: #777;">
+        <p>Please process this order for fulfillment.</p>
+      </div>
+    </div>
+    `;
+
+    await sendEmail({
+      email: adminEmail,
+      subject: `New Order #${order._id.toString().slice(-8)} - ₹${order.totalAmount}`,
+      message: adminMessage,
     });
 
     res.status(200).json({

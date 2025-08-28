@@ -103,12 +103,19 @@ function AuthLogin() {
           }
         }
 
-        // Navigate back to checkout if user was there, otherwise to shop
+        // Navigate based on user role and current path
         const currentPath = window.location.pathname;
-        if (currentPath.includes('/checkout')) {
-          navigate('/shop/checkout');
+
+        if (user?.role === 'admin') {
+          // Admin users always go to admin dashboard
+          navigate('/admin/dashboard');
         } else {
-          navigate('/shop/home');
+          // Regular users: go back to checkout if they were there, otherwise to shop home
+          if (currentPath.includes('/checkout')) {
+            navigate('/shop/checkout');
+          } else {
+            navigate('/shop/home');
+          }
         }
       } else {
         toast({
@@ -148,10 +155,18 @@ function AuthLogin() {
         // Disable the submit/login button if the form isn't valid or if copying
         disabled={!isFormValid || isCopying}
       />
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <Link className="text-sm text-primary hover:underline" to="/auth/forgot-password">
           Forgot Password?
         </Link>
+        <div>
+          <Link
+            className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            to="/shop/home"
+          >
+            ← Go to Home
+          </Link>
+        </div>
       </div>
     </div>
   );

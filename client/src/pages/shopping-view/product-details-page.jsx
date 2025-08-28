@@ -128,7 +128,8 @@ function ProductDetailsPage({ open, setOpen }) {
           price: productDetails?.price,
           salePrice: productDetails?.salePrice,
           image: productDetails?.image?.[0] || '',
-          category: productDetails?.category
+          category: productDetails?.category,
+          productCode: productDetails?.productCode || null
         }
       };
 

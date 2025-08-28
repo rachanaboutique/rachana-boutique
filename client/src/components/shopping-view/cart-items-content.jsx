@@ -329,7 +329,14 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
         {/* Product Details */}
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start w-full">
-            <h3 className="text-sm font-medium mb-1 line-clamp-2 pr-6">{cartItem?.title}</h3>
+            <div className="flex-1 pr-6">
+              <h3 className="text-sm font-medium mb-1 line-clamp-2">{cartItem?.title}</h3>
+              {cartItem?.productCode && (
+                <p className="text-xs text-gray-500 mb-1">
+                  Code: {cartItem.productCode}
+                </p>
+              )}
+            </div>
 
             {/* Delete Button - Top Right */}
             <button

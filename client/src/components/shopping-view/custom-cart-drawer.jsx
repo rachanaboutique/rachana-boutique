@@ -45,20 +45,56 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
   const refreshTempCart = () => {
     if (!isAuthenticated) {
       const tempItems = getTempCartItems();
+      console.log('Refreshing temp cart items:', tempItems.length);
+      console.log('Temp cart items from localStorage:', tempItems);
+      console.log('localStorage tempCart value:', localStorage.getItem('tempCart'));
       setTempCartItems(tempItems);
+    } else {
+      // Clear temp cart items when authenticated
+      console.log('Clearing temp cart items (user authenticated)');
+      setTempCartItems([]);
     }
   };
 
-  // Load temporary cart items when drawer opens
+  // Load temporary cart items when drawer opens or authentication changes
   useEffect(() => {
     if (isOpen) {
       // If drawer is opening, mark as initial load
       isInitialLoad.current = true;
 
-      // Load temporary cart items for non-authenticated users
+      // Force refresh temp cart items when drawer opens
+      console.log('Cart drawer opened, authentication status:', isAuthenticated);
       refreshTempCart();
     }
   }, [isOpen, isAuthenticated]);
+
+  // Separate effect to handle authentication state changes
+  useEffect(() => {
+    // Always refresh temp cart when authentication state changes
+    console.log('Authentication state changed to:', isAuthenticated);
+    refreshTempCart();
+
+    // Force a small delay to ensure localStorage is accessible
+    setTimeout(() => {
+      refreshTempCart();
+    }, 50);
+  }, [isAuthenticated]);
+
+  // Listen for temp cart updates
+  useEffect(() => {
+    const handleTempCartUpdate = () => {
+      if (!isAuthenticated) {
+        refreshTempCart();
+      }
+    };
+
+    // Listen for custom temp cart update events
+    window.addEventListener('tempCartUpdated', handleTempCartUpdate);
+
+    return () => {
+      window.removeEventListener('tempCartUpdated', handleTempCartUpdate);
+    };
+  }, [isAuthenticated]);
 
   // Track cart updates with debounce to prevent flickering
   // Only show loading state if it persists for more than a short delay

@@ -245,7 +245,7 @@ const populateCartItemsWithProperTypes = async (cart) => {
   // Populate cart items
   await cart.populate({
     path: "items.productId",
-    select: "image title price salePrice colors",
+    select: "image title price salePrice colors productCode",
   });
 
   // Ensure all cart items have valid data with proper types
@@ -263,6 +263,7 @@ const populateCartItemsWithProperTypes = async (cart) => {
       salePrice: salePrice,
       quantity: quantity,
       colors: item.colors || null,
+      productCode: item.productId.productCode || null,
     };
   });
 
@@ -426,7 +427,7 @@ const fetchCartItems = async (req, res) => {
 
     const cart = await Cart.findOne({ userId }).populate({
       path: "items.productId",
-      select: "image title price salePrice colors",
+      select: "image title price salePrice colors productCode",
     });
 
     if (!cart) {
