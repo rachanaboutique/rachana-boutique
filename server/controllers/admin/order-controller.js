@@ -166,14 +166,27 @@ const sendShippingEmail = async (order, trackingNumber) => {
           </tbody>
         </table>
 
-        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-          <h3 style="margin: 0 0 10px 0; color: #2c3315;">🚚 Shipping Details</h3>
-          <p style="margin: 5px 0; font-size: 14px; color: #666;"><strong>Delivery Address:</strong></p>
-          <p style="margin: 5px 0; font-size: 14px; color: #2c3315; line-height: 1.4;">
-            ${order.addressInfo.address}<br>
-            ${order.addressInfo.city}, ${order.addressInfo.pincode}<br>
-            Phone: ${order.addressInfo.phone}
-          </p>
+        <div style="background-color: #e8f5e8; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #28a745;">
+          <h3 style="margin: 0 0 15px 0; color: #155724; font-size: 16px;">🚚 Shipping & Customer Details</h3>
+
+          <div style="background-color: white; padding: 12px; border-radius: 4px; margin-bottom: 10px;">
+            <p style="margin: 0 0 8px 0; font-weight: 600; color: #2c3315; font-size: 15px;">👤 Customer Information:</p>
+            <div style="margin-left: 15px;">
+              <p style="margin: 0 0 4px 0; color: #333;"><strong>Name:</strong> ${order.user?.name || order.user?.userName || 'N/A'}</p>
+              <p style="margin: 0 0 8px 0; color: #333;"><strong>Email:</strong> ${order.user?.email || 'N/A'}</p>
+            </div>
+          </div>
+
+          <div style="background-color: white; padding: 12px; border-radius: 4px;">
+            <p style="margin: 0 0 8px 0; font-weight: 600; color: #2c3315; font-size: 15px;">📍 Delivery Address:</p>
+            <div style="margin-left: 15px; line-height: 1.5;">
+              <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.address || 'N/A'}</p>
+              ${order.addressInfo?.state ? `<p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo.state}</p>` : ''}
+              <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.city || 'N/A'} - ${order.addressInfo?.pincode || 'N/A'}</p>
+              <p style="margin: 0 0 8px 0; color: #333;"><strong>📞 Phone:</strong> ${order.addressInfo?.phone || 'N/A'}</p>
+              ${order.addressInfo?.notes ? `<p style="margin: 8px 0 0 0; padding: 8px; background-color: #f8f9fa; border-radius: 3px; font-style: italic; color: #666; font-size: 13px;"><strong>📝 Delivery Notes:</strong> ${order.addressInfo.notes}</p>` : ''}
+            </div>
+          </div>
         </div>
 
         <div style="background-color: #e8f5e8; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #28a745;">

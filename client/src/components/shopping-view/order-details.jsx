@@ -139,6 +139,9 @@ function ShoppingOrderDetailsView({ orderDetails }) {
               <p className="font-medium text-sm mb-2">{user?.userName}</p>
               <div className="text-sm text-gray-600 space-y-1">
                 <p className="break-words">{orderDetails?.addressInfo?.address}</p>
+                {orderDetails?.addressInfo?.state && (
+                  <p>{orderDetails?.addressInfo?.state}</p>
+                )}
                 <p>{orderDetails?.addressInfo?.city} - {orderDetails?.addressInfo?.pincode}</p>
                 <p>Phone: {orderDetails?.addressInfo?.phone}</p>
                 {orderDetails?.addressInfo?.notes && (

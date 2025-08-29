@@ -157,10 +157,15 @@ function AdminOrderDetailsView({ orderDetails }) {
               <span>{orderDetails?.user?.name}</span>
               <span>{orderDetails?.user?.email}</span>
               <span>{orderDetails?.addressInfo?.address}</span>
+              {orderDetails?.addressInfo?.state && (
+                <span>{orderDetails?.addressInfo?.state}</span>
+              )}
               <span>{orderDetails?.addressInfo?.city}</span>
               <span>{orderDetails?.addressInfo?.pincode}</span>
               <span>{orderDetails?.addressInfo?.phone}</span>
-              <span>{orderDetails?.addressInfo?.notes}</span>
+              {orderDetails?.addressInfo?.notes && (
+                <span>{orderDetails?.addressInfo?.notes}</span>
+              )}
             </div>
           </div>
         </div>

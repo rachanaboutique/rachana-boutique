@@ -48,13 +48,21 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
   const dropdownRef = useRef(null);
 
   // Find the product in productList to get available colors - memoize this calculation
+  // Prioritize cart item's productColors (with up-to-date inventory) over productList
   const { currentProduct, availableColors } = useMemo(() => {
     const product = productList.find(p => p._id === cartItem.productId);
+
+    // Use productColors from cart item if available (includes up-to-date inventory)
+    // Otherwise fall back to productList colors
+    const colors = cartItem.productColors && cartItem.productColors.length > 0
+      ? cartItem.productColors
+      : product?.colors || [];
+
     return {
       currentProduct: product,
-      availableColors: product?.colors || []
+      availableColors: colors
     };
-  }, [productList, cartItem.productId]);
+  }, [productList, cartItem.productId, cartItem.productColors]);
 
   // Initialize state by computing defaults using our helper function - memoize this calculation
   const { defaultColor, defaultImage } = useMemo(() =>
@@ -205,24 +213,8 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
       return;
     }
 
-    // Check color inventory if increasing quantity
-    if (newQuantity > cartItem?.quantity && selectedColor) {
-      if (selectedColor.inventory <= 0) {
-        toast({
-          title: "Selected color is out of stock",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (newQuantity > selectedColor.inventory) {
-        toast({
-          title: `Only ${selectedColor.inventory} items available for ${selectedColor.title}`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
+    // Remove frontend validation - let backend handle it with fresh data
+    // This ensures we always use the most up-to-date inventory information
 
     setIsQuantityUpdating(true);
 
@@ -242,8 +234,10 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
         dispatch(fetchCartItems(user?.id));
         toast({ title: "Cart updated successfully" });
       } else {
+        // Handle backend validation errors
+        const errorMessage = data?.payload?.message || data?.error?.message || "Failed to update quantity";
         toast({
-          title: data?.payload?.message || "Failed to update quantity",
+          title: errorMessage,
           variant: "destructive",
         });
       }
@@ -253,8 +247,10 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
       }, 300);
     }).catch((error) => {
       console.error("Error updating quantity:", error);
+      // Handle network or other errors
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to update quantity";
       toast({
-        title: "Failed to update quantity",
+        title: errorMessage,
         variant: "destructive",
       });
       setTimeout(() => {
@@ -504,10 +500,8 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
                   <button
                     className="w-6 h-6 flex items-center justify-center border border-gray-300 hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleQuantityChange(cartItem?.quantity + 1)}
-                    disabled={selectedColor && (selectedColor.inventory <= 0 || cartItem?.quantity >= selectedColor.inventory)}
-                    title={selectedColor && selectedColor.inventory <= 0 ? "Color is out of stock" :
-                           selectedColor && cartItem?.quantity >= selectedColor.inventory ? `Only ${selectedColor.inventory} items available` :
-                           "Increase quantity"}
+                    disabled={isQuantityUpdating}
+                    title="Increase quantity"
                   >
                     <Plus className="w-2.5 h-2.5" />
                   </button>

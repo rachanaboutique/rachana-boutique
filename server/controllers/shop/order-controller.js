@@ -175,6 +175,18 @@ const capturePayment = async (req, res) => {
           </div>
         ` : ''}
 
+        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #2c3315;">
+          <h4 style="margin: 0 0 15px 0; color: #2c3315; font-size: 16px;">📍 Shipping Address</h4>
+          <div style="background-color: white; padding: 12px; border-radius: 4px; line-height: 1.6;">
+            <p style="margin: 0 0 8px 0; font-weight: 600; color: #2c3315;">${order.user?.userName || 'Customer'}</p>
+            <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.address || 'N/A'}</p>
+            ${order.addressInfo?.state ? `<p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo.state}</p>` : ''}
+            <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.city || 'N/A'} - ${order.addressInfo?.pincode || 'N/A'}</p>
+            <p style="margin: 0 0 8px 0; color: #333;"><strong>Phone:</strong> ${order.addressInfo?.phone || 'N/A'}</p>
+            ${order.addressInfo?.notes ? `<p style="margin: 8px 0 0 0; padding: 8px; background-color: #f8f9fa; border-radius: 3px; font-style: italic; color: #666; font-size: 14px;"><strong>Delivery Notes:</strong> ${order.addressInfo.notes}</p>` : ''}
+          </div>
+        </div>
+
         <div style="text-align: center; margin-top: 30px;">
           <a href="${process.env.FRONTEND_URL}/shop/account" style="display: inline-block; background-color: #fed1d6; color: #2c3315; padding: 14px 28px; font-size: 16px; text-decoration: none; border-radius: 4px; font-weight: bold;"> View Your Order</a>
         </div>
@@ -256,13 +268,24 @@ const capturePayment = async (req, res) => {
           </div>
         ` : ''}
 
-        <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px;">
-          <h4 style="margin: 0 0 10px 0;">Customer Information:</h4>
-          <p style="margin: 5px 0;"><strong>Address:</strong> ${order.addressInfo?.address || 'N/A'}</p>
-          <p style="margin: 5px 0;"><strong>City:</strong> ${order.addressInfo?.city || 'N/A'}</p>
-          <p style="margin: 5px 0;"><strong>Pincode:</strong> ${order.addressInfo?.pincode || 'N/A'}</p>
-          <p style="margin: 5px 0;"><strong>Phone:</strong> ${order.addressInfo?.phone || 'N/A'}</p>
-          ${order.addressInfo?.notes ? `<p style="margin: 5px 0;"><strong>Notes:</strong> ${order.addressInfo.notes}</p>` : ''}
+        <div style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+          <h4 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">👤 Customer & Shipping Information</h4>
+          <div style="background-color: white; padding: 12px; border-radius: 4px;">
+            <div style="margin-bottom: 15px;">
+              <p style="margin: 0 0 4px 0; font-weight: 600; color: #2c3315; font-size: 15px;">${order.user?.userName || 'Customer'}</p>
+              <p style="margin: 0; color: #666; font-size: 14px;">${order.user?.email || 'N/A'}</p>
+            </div>
+            <div style="border-top: 1px solid #eee; padding-top: 12px;">
+              <p style="margin: 0 0 8px 0; font-weight: 600; color: #2c3315;">📍 Delivery Address:</p>
+              <div style="margin-left: 15px; line-height: 1.5;">
+                <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.address || 'N/A'}</p>
+                ${order.addressInfo?.state ? `<p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo.state}</p>` : ''}
+                <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.city || 'N/A'} - ${order.addressInfo?.pincode || 'N/A'}</p>
+                <p style="margin: 0 0 8px 0; color: #333;"><strong>📞 Phone:</strong> ${order.addressInfo?.phone || 'N/A'}</p>
+                ${order.addressInfo?.notes ? `<p style="margin: 8px 0 0 0; padding: 8px; background-color: #f8f9fa; border-radius: 3px; font-style: italic; color: #666; font-size: 13px;"><strong>📝 Delivery Notes:</strong> ${order.addressInfo.notes}</p>` : ''}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div style="background-color: #f7f7f7; padding: 12px; text-align: center; font-size: 12px; color: #777;">

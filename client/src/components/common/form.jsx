@@ -16,7 +16,17 @@ import { getOptimizedImageUrl, getOptimizedVideoUrl } from "../../lib/utils";
 import { optimizeImageForUpload, isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
 
 
-function CommonForm({ formControls, formData, setFormData, onSubmit, buttonText, isBtnDisabled }) {
+function CommonForm({
+  formControls,
+  formData,
+  setFormData,
+  onSubmit,
+  buttonText,
+  isBtnDisabled,
+  stateOptions = [],
+  cityOptions = [],
+  formErrors = {}
+}) {
   const [passwordVisibility, setPasswordVisibility] = useState({});
   // Track upload status for color items (by index) and video upload status.
   const [colorsUploadStatus, setColorsUploadStatus] = useState({});
@@ -179,12 +189,20 @@ const uploadVideo = async (file) => {
             id={controlItem.name}
             type={controlItem.type}
             value={value}
-            onChange={(event) =>
-              setFormData({
-                ...formData,
-                [controlItem.name]: event.target.value,
-              })
-            }
+            onChange={(event) => {
+              if (typeof setFormData === 'function') {
+                // Check if setFormData is the custom handler (for address form)
+                if (setFormData.length === 2) {
+                  setFormData(controlItem.name, event.target.value);
+                } else {
+                  setFormData({
+                    ...formData,
+                    [controlItem.name]: event.target.value,
+                  });
+                }
+              }
+            }}
+            className={formErrors[controlItem.name] ? "border-red-500" : ""}
           />
         );
         break;
@@ -218,27 +236,56 @@ const uploadVideo = async (file) => {
           break;
 
       case "select":
+        let selectOptions = [];
+
+        // Handle state and city dropdowns
+        if (controlItem.name === "state") {
+          selectOptions = stateOptions; // Already in correct format from locationUtils
+        } else if (controlItem.name === "city") {
+          selectOptions = cityOptions; // Already in correct format from locationUtils
+        } else {
+          selectOptions = controlItem.options || [];
+        }
+
         element = (
           <Select
-            onValueChange={(val) =>
-              setFormData({
-                ...formData,
-                [controlItem.name]: val,
-              })
-            }
+            onValueChange={(val) => {
+              if (typeof setFormData === 'function') {
+                if (controlItem.name === "state" || controlItem.name === "city") {
+                  // Use the custom handler for state/city changes
+                  setFormData(controlItem.name, val);
+                } else {
+                  setFormData({
+                    ...formData,
+                    [controlItem.name]: val,
+                  });
+                }
+              }
+            }}
             value={value}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={controlItem.label} />
+              <SelectValue placeholder={controlItem.placeholder || controlItem.label} />
             </SelectTrigger>
-            <SelectContent>
-              {controlItem.options && controlItem.options.length > 0
-                ? controlItem.options.map((optionItem) => (
+            <SelectContent
+              position="popper"
+              side="bottom"
+              align="start"
+              className="z-50 max-h-60 overflow-auto"
+            >
+              {selectOptions && selectOptions.length > 0
+                ? selectOptions.map((optionItem) => (
                     <SelectItem key={optionItem.id} value={optionItem.id}>
                       {optionItem.label}
                     </SelectItem>
                   ))
-                : null}
+                : (
+                    <SelectItem value="no-options" disabled>
+                      {controlItem.name === "city" && !formData.state
+                        ? "Please select a state first"
+                        : "No options available"}
+                    </SelectItem>
+                  )}
             </SelectContent>
           </Select>
         );
@@ -450,6 +497,9 @@ const uploadVideo = async (file) => {
           <div className="grid w-full gap-1.5" key={controlItem.name}>
             <Label className="mb-1">{controlItem.label}</Label>
             {renderInputsByComponentType(controlItem)}
+            {formErrors[controlItem.name] && (
+              <span className="text-red-500 text-sm">{formErrors[controlItem.name]}</span>
+            )}
           </div>
         ))}
       </div>

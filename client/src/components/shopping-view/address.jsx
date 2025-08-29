@@ -7,10 +7,12 @@ import AddressCard from "./address-card";
 import { useToast } from "../ui/use-toast";
 import DeleteConfirmationModal from "@/components/common/delete-confirmation-modal";
 import { MapPin, Plus } from "lucide-react";
+import { getStatesList, getCitiesByState, getStateNameByCode, getStateCodeByName } from "@/utils/locationUtils";
 
 // Initial form data constant
 const initialAddressFormData = {
   address: "",
+  state: "",
   city: "",
   phone: "",
   pincode: "",
@@ -23,14 +25,87 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [availableStates] = useState(getStatesList());
+  const [availableCities, setAvailableCities] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { addressList } = useSelector((state) => state.shopAddress);
   const { toast } = useToast();
 
+  // Handle state change and update cities
+  const handleStateChange = (selectedStateCode) => {
+    setFormData(prev => ({
+      ...prev,
+      state: selectedStateCode,
+      city: "" // Reset city when state changes
+    }));
+    setAvailableCities(getCitiesByState(selectedStateCode));
+  };
+
+  // Validate form fields
+  const validateField = (name, value) => {
+    const control = addressFormControls.find(ctrl => ctrl.name === name);
+    if (!control?.validation) return "";
+
+    const { required, pattern, patternMessage, minLength, maxLength } = control.validation;
+
+    if (required && (!value || value.trim() === "")) {
+      return `${control.label} is required`;
+    }
+
+    if (pattern && value && !pattern.test(value)) {
+      return patternMessage || `Invalid ${control.label.toLowerCase()}`;
+    }
+
+    if (minLength && value && value.length < minLength) {
+      return `${control.label} must be at least ${minLength} characters`;
+    }
+
+    if (maxLength && value && value.length > maxLength) {
+      return `${control.label} must not exceed ${maxLength} characters`;
+    }
+
+    return "";
+  };
+
+  // Validate entire form
+  const validateForm = () => {
+    const errors = {};
+    addressFormControls.forEach(control => {
+      const error = validateField(control.name, formData[control.name]);
+      if (error) errors[control.name] = error;
+    });
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form data change with validation
+  const handleFormDataChange = (name, value) => {
+    if (name === "state") {
+      handleStateChange(value);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
   // Handle address addition or update
   function handleManageAddress(event) {
     event.preventDefault();
+
+    // Validate form before submission
+    if (!validateForm()) {
+      toast({
+        title: "Please fix the errors in the form",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (addressList.length >= 3 && currentEditedId === null) {
       setFormData(initialAddressFormData);
@@ -107,14 +182,31 @@ if (typeof setCurrentSelectedAddress === 'function') {
 
   function handleEditAddress(getCurrentAddress) {
     setCurrentEditedId(getCurrentAddress?._id);
+
+    // Handle state - if it's a name, convert to code; if it's already a code, use as is
+    const stateValue = getCurrentAddress?.state || "";
+    let stateCode = stateValue;
+
+    // Check if the state value is a name (longer than 3 chars) and convert to code
+    if (stateValue && stateValue.length > 3) {
+      stateCode = getStateCodeByName(stateValue) || stateValue;
+    }
+
     setFormData({
       ...formData,
-      address: getCurrentAddress?.address,
-      city: getCurrentAddress?.city,
-      phone: getCurrentAddress?.phone,
-      pincode: getCurrentAddress?.pincode,
-      notes: getCurrentAddress?.notes,
+      address: getCurrentAddress?.address || "",
+      state: stateCode,
+      city: getCurrentAddress?.city || "",
+      phone: getCurrentAddress?.phone || "",
+      pincode: getCurrentAddress?.pincode || "",
+      notes: getCurrentAddress?.notes || "",
     });
+
+    // Load cities for the state if state exists
+    if (stateCode) {
+      setAvailableCities(getCitiesByState(stateCode));
+    }
+
     setShowForm(true);
   }
 
@@ -131,6 +223,13 @@ if (typeof setCurrentSelectedAddress === 'function') {
     }
   }, [dispatch, user]);
 
+  // Update cities when state changes in form data
+  useEffect(() => {
+    if (formData.state) {
+      setAvailableCities(getCitiesByState(formData.state));
+    }
+  }, [formData.state]);
+
   return (
     <>
       <div className="mb-6">
@@ -144,6 +243,8 @@ if (typeof setCurrentSelectedAddress === 'function') {
               onClick={() => {
                 setCurrentEditedId(null);
                 setFormData(initialAddressFormData);
+                setAvailableCities([]);
+                setFormErrors({});
                 setShowForm(true);
               }}
               className="flex items-center gap-2 px-4 py-2 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 text-sm font-medium"
@@ -179,6 +280,8 @@ if (typeof setCurrentSelectedAddress === 'function') {
                 onClick={() => {
                   setCurrentEditedId(null);
                   setFormData(initialAddressFormData);
+                  setAvailableCities([]);
+                  setFormErrors({});
                   setShowForm(true);
                 }}
                 className="inline-block px-6 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
@@ -201,11 +304,14 @@ if (typeof setCurrentSelectedAddress === 'function') {
             <CommonForm
               formControls={addressFormControls}
               formData={formData}
-              setFormData={setFormData}
+              setFormData={handleFormDataChange}
               buttonText={currentEditedId !== null ? "Update Address" : "Save Address"}
               onSubmit={handleManageAddress}
               isBtnDisabled={!isFormValid()}
               buttonClassName="px-6 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
+              stateOptions={availableStates}
+              cityOptions={availableCities}
+              formErrors={formErrors}
             />
 
             <div className="mt-4 text-center">
@@ -214,6 +320,8 @@ if (typeof setCurrentSelectedAddress === 'function') {
                   setShowForm(false);
                   setCurrentEditedId(null);
                   setFormData(initialAddressFormData);
+                  setAvailableCities([]);
+                  setFormErrors({});
                 }}
                 className="text-sm text-gray-500 hover:text-black transition-colors"
               >

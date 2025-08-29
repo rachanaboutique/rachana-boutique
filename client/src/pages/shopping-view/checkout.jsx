@@ -13,10 +13,15 @@ import { MapPin, CreditCard, LogIn } from "lucide-react";
 import { getTempCartItems, getTempCartTotal, clearTempCart } from "@/utils/tempCartManager";
 import { addToCart } from "@/store/shop/cart-slice";
 import { ShoppingCart as ShoppingBag } from "lucide-react";
+import { getStateNameByCode } from "@/utils/locationUtils";
+import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
+
 function ShoppingCheckout() {
   const { cartItems } = useSelector((state) => state.shopCart);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const { approvalURL } = useSelector((state) => state.shopOrder);
+  const { addressList } = useSelector((state) => state.shopAddress);
+  const { productList } = useSelector((state) => state.shopProducts);
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymentStart] = useState(false);
   const [razorpayInstance, setRazorpayInstance] = useState(null);
@@ -58,8 +63,59 @@ function ShoppingCheckout() {
     setTempCartItems(tempItems);
   }, []);
 
+  // Auto-select address if user has only one address
+  useEffect(() => {
+    if (isAuthenticated && addressList && addressList.length === 1 && !currentSelectedAddress) {
+      setCurrentSelectedAddress(addressList[0]);
+    }
+  }, [isAuthenticated, addressList, currentSelectedAddress]);
+
+  // Refresh product data when checkout page loads to ensure latest inventory
+  useEffect(() => {
+    dispatch(fetchAllFilteredProducts({}));
+  }, [dispatch]);
+
   // Calculate temporary cart total
   const tempCartTotal = getTempCartTotal();
+
+  // Function to validate inventory before placing order
+  const validateInventory = () => {
+    const errors = [];
+
+    if (isAuthenticated && cartItems.length > 0) {
+      // Validate actual cart items
+      cartItems.forEach(item => {
+        if (item.colors) {
+          // For items with colors, check against color inventory
+          const availableInventory = item.productColors
+            ? item.productColors.find(color => color._id === item.colors._id)?.inventory || 0
+            : item.colors.inventory || 0;
+
+          if (item.quantity > availableInventory) {
+            errors.push(`${item.title} (${item.colors.title}): Only ${availableInventory} items available, but ${item.quantity} requested`);
+          }
+        } else {
+          // For items without colors, check total stock
+          if (item.quantity > (item.totalStock || 0)) {
+            errors.push(`${item.title}: Only ${item.totalStock || 0} items available, but ${item.quantity} requested`);
+          }
+        }
+      });
+    } else if (!isAuthenticated && tempCartItems.length > 0) {
+      // Validate temp cart items against productList
+      tempCartItems.forEach(tempItem => {
+        const product = productList.find(p => p._id === tempItem.productId);
+        if (product && tempItem.colorId) {
+          const color = product.colors?.find(c => c._id === tempItem.colorId);
+          if (color && tempItem.quantity > color.inventory) {
+            errors.push(`${tempItem.productDetails.title} (${color.title}): Only ${color.inventory} items available, but ${tempItem.quantity} requested`);
+          }
+        }
+      });
+    }
+
+    return errors;
+  };
 
 
 
@@ -89,6 +145,17 @@ function ShoppingCheckout() {
       return;
     }
 
+    // Validate inventory before proceeding
+    const inventoryErrors = validateInventory();
+    if (inventoryErrors.length > 0) {
+      toast({
+        title: "Inventory Error",
+        description: inventoryErrors[0], // Show first error
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsPaymentStart(true);
 
     const orderData = {
@@ -111,6 +178,11 @@ function ShoppingCheckout() {
       addressInfo: {
         addressId: currentSelectedAddress?._id,
         address: currentSelectedAddress?.address,
+        state: currentSelectedAddress?.state ? (
+          currentSelectedAddress.state.length <= 3
+            ? getStateNameByCode(currentSelectedAddress.state)
+            : currentSelectedAddress.state
+        ) : "",
         city: currentSelectedAddress?.city,
         pincode: currentSelectedAddress?.pincode,
         phone: currentSelectedAddress?.phone,

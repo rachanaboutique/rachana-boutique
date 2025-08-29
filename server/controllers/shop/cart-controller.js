@@ -255,6 +255,12 @@ const populateCartItemsWithProperTypes = async (cart) => {
     const salePrice = parseFloat(item.productId.salePrice || 0);
     const quantity = parseInt(item.quantity || 0, 10);
 
+    // Calculate total stock for products without colors
+    let totalStock = 0;
+    if (item.productId.colors && item.productId.colors.length > 0) {
+      totalStock = item.productId.colors.reduce((sum, color) => sum + (color.inventory || 0), 0);
+    }
+
     return {
       productId: item.productId._id,
       image: item.productId.image,
@@ -264,6 +270,9 @@ const populateCartItemsWithProperTypes = async (cart) => {
       quantity: quantity,
       colors: item.colors || null,
       productCode: item.productId.productCode || null,
+      // Include full product colors array with inventory data for validation
+      productColors: item.productId.colors || [],
+      totalStock: totalStock,
     };
   });
 
@@ -528,20 +537,34 @@ const updateCartItemQty = async (req, res) => {
       });
     }
 
+    // Get product for validation
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
     // If colorId is provided and different from oldColorId, we're changing colors
     if (colorId && (!oldColorId || colorId !== oldColorId)) {
-      const product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
 
       // Check if the product has colors
       if (!product.colors || product.colors.length === 0) {
-        // Just update quantity for products without colors
-        cart.items[findCurrentProductIndex].quantity = quantity;
+        // For products without colors, validate against total stock
+        if (quantity !== undefined) {
+          const totalStock = product.totalStock || 0;
+          if (quantity > totalStock) {
+            return res.status(400).json({
+              success: false,
+              message: `Only ${totalStock} items available for this product`,
+            });
+          }
+        }
+        // Update quantity for products without colors
+        if (quantity !== undefined) {
+          cart.items[findCurrentProductIndex].quantity = quantity;
+        }
       } else {
         const selectedColor = product.colors.find((c) => c._id.toString() === colorId);
         if (!selectedColor) {
@@ -549,6 +572,23 @@ const updateCartItemQty = async (req, res) => {
             success: false,
             message: "Invalid color selection!",
           });
+        }
+
+        // Validate color inventory
+        if (quantity !== undefined) {
+          if (selectedColor.inventory <= 0) {
+            return res.status(400).json({
+              success: false,
+              message: "Selected color is out of stock",
+            });
+          }
+
+          if (quantity > selectedColor.inventory) {
+            return res.status(400).json({
+              success: false,
+              message: `Only ${selectedColor.inventory} items available for ${selectedColor.title}`,
+            });
+          }
         }
 
         // Check if there's already an item with the new color
@@ -591,8 +631,42 @@ const updateCartItemQty = async (req, res) => {
         }
       }
     } else {
-      // Just update quantity if provided
+      // Just update quantity if provided - validate inventory first
       if (quantity !== undefined) {
+        const currentItem = cart.items[findCurrentProductIndex];
+
+        if (currentItem.colors && currentItem.colors._id) {
+          // For items with colors, validate against color inventory
+          const selectedColor = product.colors.find(c => c._id.toString() === currentItem.colors._id.toString());
+          if (selectedColor) {
+            if (selectedColor.inventory <= 0) {
+              return res.status(400).json({
+                success: false,
+                message: "Selected color is out of stock",
+              });
+            }
+
+            if (quantity > selectedColor.inventory) {
+              return res.status(400).json({
+                success: false,
+                message: `Only ${selectedColor.inventory} items available for ${selectedColor.title}`,
+              });
+            }
+          }
+        } else {
+          // For items without colors, validate against total stock
+          const totalStock = product.colors && product.colors.length > 0
+            ? product.colors.reduce((sum, color) => sum + (color.inventory || 0), 0)
+            : product.totalStock || 0;
+
+          if (quantity > totalStock) {
+            return res.status(400).json({
+              success: false,
+              message: `Only ${totalStock} items available for this product`,
+            });
+          }
+        }
+
         cart.items[findCurrentProductIndex].quantity = quantity;
       }
     }

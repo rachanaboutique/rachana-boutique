@@ -270,13 +270,29 @@ export const addressFormControls = [
     componentType: "input",
     type: "text",
     placeholder: "Enter your address",
+    validation: {
+      required: true,
+      minLength: 10,
+      maxLength: 200
+    }
+  },
+  {
+    label: "State",
+    name: "state",
+    componentType: "select",
+    placeholder: "Select your state",
+    validation: {
+      required: true
+    }
   },
   {
     label: "City",
     name: "city",
-    componentType: "input",
-    type: "text",
-    placeholder: "Enter your city",
+    componentType: "select",
+    placeholder: "Select your city",
+    validation: {
+      required: true
+    }
   },
   {
     label: "Pincode",
@@ -284,18 +300,32 @@ export const addressFormControls = [
     componentType: "input",
     type: "text",
     placeholder: "Enter your pincode",
+    validation: {
+      required: true,
+      pattern: /^[1-9][0-9]{5}$/,
+      patternMessage: "Please enter a valid 6-digit pincode"
+    }
   },
   {
     label: "Phone",
     name: "phone",
     componentType: "input",
-    type: "text",
+    type: "tel",
     placeholder: "Enter your phone number",
+    validation: {
+      required: true,
+      pattern: /^[6-9]\d{9}$/,
+      patternMessage: "Please enter a valid 10-digit mobile number"
+    }
   },
   {
     label: "Notes",
     name: "notes",
     componentType: "textarea",
     placeholder: "Enter any additional landmarks or notes (optional)",
+    validation: {
+      required: false,
+      maxLength: 500
+    }
   },
 ];

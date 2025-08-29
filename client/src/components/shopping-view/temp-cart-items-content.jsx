@@ -136,8 +136,10 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
       return;
     }
 
-    // Check inventory if increasing quantity
+    // For temp cart, we still need some validation since it doesn't go through backend
+    // But we'll be more lenient and let the checkout process handle final validation
     if (newQuantity > tempItem.quantity && selectedColor) {
+      // Only block if clearly out of stock (0 inventory)
       if (selectedColor.inventory <= 0) {
         toast({
           title: "Selected color is out of stock",
@@ -146,12 +148,13 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
         return;
       }
 
+      // Show warning but allow if exceeding inventory (will be caught at checkout)
       if (newQuantity > selectedColor.inventory) {
         toast({
-          title: `Only ${selectedColor.inventory} items available for ${selectedColor.title}`,
-          variant: "destructive",
+          title: `Warning: Only ${selectedColor.inventory} items available. This will be validated at checkout.`,
+          variant: "default", // Changed from destructive to default (warning)
         });
-        return;
+        // Don't return - allow the update to proceed
       }
     }
 
@@ -327,10 +330,8 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
                 <button
                   className="w-6 h-6 flex items-center justify-center border border-gray-300 hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => handleQuantityChange(tempItem.quantity + 1)}
-                  disabled={selectedColor && (selectedColor.inventory <= 0 || tempItem.quantity >= selectedColor.inventory)}
-                  title={selectedColor && selectedColor.inventory <= 0 ? "Color is out of stock" :
-                         selectedColor && tempItem.quantity >= selectedColor.inventory ? `Only ${selectedColor.inventory} items available` :
-                         "Increase quantity"}
+                  disabled={selectedColor && selectedColor.inventory <= 0}
+                  title={selectedColor && selectedColor.inventory <= 0 ? "Color is out of stock" : "Increase quantity"}
                 >
                   <Plus className="w-2.5 h-2.5" />
                 </button>
