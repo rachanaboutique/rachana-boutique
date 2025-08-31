@@ -18,7 +18,6 @@ const isFbqAvailable = () => {
 export const pageViewEvent = () => {
   if (isFbqAvailable()) {
     window.fbq('track', 'PageView');
-    console.log('Meta Pixel: PageView tracked');
   }
 };
 
@@ -40,7 +39,6 @@ export const viewContentEvent = (params = {}) => {
     };
     
     window.fbq('track', 'ViewContent', eventData);
-    console.log('Meta Pixel: ViewContent tracked', eventData);
   }
 };
 
@@ -80,7 +78,6 @@ export const addToCartEvent = (params = {}) => {
     });
 
     window.fbq('track', 'AddToCart', eventData);
-    console.log('Meta Pixel: AddToCart tracked', eventData);
   }
 };
 
@@ -102,7 +99,6 @@ export const initiateCheckoutEvent = (params = {}) => {
     };
     
     window.fbq('track', 'InitiateCheckout', eventData);
-    console.log('Meta Pixel: InitiateCheckout tracked', eventData);
   }
 };
 
@@ -153,7 +149,6 @@ export const purchaseEvent = (params = {}) => {
     });
 
     window.fbq('track', 'Purchase', eventData);
-    console.log('Meta Pixel: Purchase tracked', eventData);
   }
 };
 
@@ -165,7 +160,6 @@ export const purchaseEvent = (params = {}) => {
 export const leadEvent = (params = {}) => {
   if (isFbqAvailable()) {
     window.fbq('track', 'Lead', params);
-    console.log('Meta Pixel: Lead tracked', params);
   }
 };
 
@@ -178,7 +172,6 @@ export const leadEvent = (params = {}) => {
 export const searchEvent = (params = {}) => {
   if (isFbqAvailable()) {
     window.fbq('track', 'Search', params);
-    console.log('Meta Pixel: Search tracked', params);
   }
 };
 
@@ -190,7 +183,6 @@ export const searchEvent = (params = {}) => {
 export const completeRegistrationEvent = (params = {}) => {
   if (isFbqAvailable()) {
     window.fbq('track', 'CompleteRegistration', params);
-    console.log('Meta Pixel: CompleteRegistration tracked', params);
   }
 };
 
@@ -201,28 +193,24 @@ export const completeRegistrationEvent = (params = {}) => {
 export const signUpOTPVerificationEvent = () => {
   if (isFbqAvailable()) {
     window.fbq('track', 'SignUp-OTP-Verification');
-    console.log('Meta Pixel: SignUp-OTP-Verification tracked');
   }
 };
 
 export const signUpPhoneNumberEvent = () => {
   if (isFbqAvailable()) {
     window.fbq('track', 'SignUp-PhoneNumber-Entered');
-    console.log('Meta Pixel: SignUp-PhoneNumber-Entered tracked');
   }
 };
 
 export const landingPageEvent = () => {
   if (isFbqAvailable()) {
     window.fbq('track', 'Lead-LandingPage');
-    console.log('Meta Pixel: Lead-LandingPage tracked');
   }
 };
 
 export const kycUploadEvent = () => {
   if (isFbqAvailable()) {
     window.fbq('track', 'KYC-Upload');
-    console.log('Meta Pixel: KYC-Upload tracked');
   }
 };
 
@@ -233,28 +221,24 @@ export const kycUploadEvent = () => {
 export const categoryViewEvent = (categoryName) => {
   if (isFbqAvailable()) {
     window.fbq('track', 'Category-View', { category: categoryName });
-    console.log('Meta Pixel: Category-View tracked', categoryName);
   }
 };
 
 export const newsletterSignupEvent = () => {
   if (isFbqAvailable()) {
     window.fbq('track', 'Newsletter-Signup');
-    console.log('Meta Pixel: Newsletter-Signup tracked');
   }
 };
 
 export const contactFormSubmitEvent = () => {
   if (isFbqAvailable()) {
     window.fbq('track', 'Contact-Form-Submit');
-    console.log('Meta Pixel: Contact-Form-Submit tracked');
   }
 };
 
 export const wishlistAddEvent = (productId) => {
   if (isFbqAvailable()) {
     window.fbq('track', 'AddToWishlist', { content_ids: [productId] });
-    console.log('Meta Pixel: AddToWishlist tracked', productId);
   }
 };
 
@@ -263,7 +247,6 @@ export const wishlistAddEvent = (productId) => {
  * Call this from browser console to test if events are working
  */
 export const testMetaPixelEvents = () => {
-  console.log('🧪 Testing Meta Pixel Events...');
 
   if (!isFbqAvailable()) {
     console.error('❌ Meta Pixel not available');
@@ -271,7 +254,6 @@ export const testMetaPixelEvents = () => {
   }
 
   // Test AddToCart
-  console.log('Testing AddToCart event...');
   addToCartEvent({
     content_ids: ['test_product_123'],
     value: 99.99,
@@ -282,7 +264,6 @@ export const testMetaPixelEvents = () => {
 
   // Test Purchase
   setTimeout(() => {
-    console.log('Testing Purchase event...');
     purchaseEvent({
       content_ids: ['test_product_123', 'test_product_456'],
       value: 199.98,
@@ -292,11 +273,9 @@ export const testMetaPixelEvents = () => {
     });
   }, 2000);
 
-  console.log('✅ Test events fired. Check Meta Pixel Helper and Events Manager.');
 };
 
 // Make test function available globally for debugging
 if (typeof window !== 'undefined') {
   window.testMetaPixelEvents = testMetaPixelEvents;
-  console.log('💡 Test function available: window.testMetaPixelEvents()');
 }

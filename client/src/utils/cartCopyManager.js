@@ -30,18 +30,15 @@ export const hasCartCopyCompleted = (userId) => {
  */
 export const startCartCopy = (userId) => {
   if (cartCopyState.isInProgress) {
-    console.log('Cart copy already in progress, skipping');
     return false;
   }
   
   if (cartCopyState.hasCompleted && cartCopyState.userId === userId) {
-    console.log('Cart copy already completed for this user, skipping');
     return false;
   }
   
   cartCopyState.isInProgress = true;
   cartCopyState.userId = userId;
-  console.log('Cart copy started for user:', userId);
   return true;
 };
 
@@ -54,12 +51,10 @@ export const completeCartCopy = (userId, success = true) => {
   if (success) {
     cartCopyState.hasCompleted = true;
     cartCopyState.userId = userId;
-    console.log('Cart copy completed successfully for user:', userId);
   } else {
     // Reset state on failure so it can be retried
     cartCopyState.hasCompleted = false;
     cartCopyState.userId = null;
-    console.log('Cart copy failed for user:', userId);
   }
 };
 
@@ -72,7 +67,6 @@ export const resetCartCopyState = () => {
     hasCompleted: false,
     userId: null
   };
-  console.log('Cart copy state reset');
 };
 
 /**

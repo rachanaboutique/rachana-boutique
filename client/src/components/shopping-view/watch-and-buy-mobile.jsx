@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import FastMovingCard from "./fast-moving-card";
 import "@/styles/watch-and-buy-mobile.css";
 
-// Cloudinary Video Player Component for Mobile
+// Enhanced Video Player Component for Mobile with iOS Support
 function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onError, className, style }) {
   const videoRef = useRef();
   const playerInstanceRef = useRef();
@@ -14,6 +14,16 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isVideoSourceLoaded, setIsVideoSourceLoaded] = useState(false);
   const [hasVideoError, setHasVideoError] = useState(false);
+  const [useNativeVideo, setUseNativeVideo] = useState(false);
+
+  // Detect iOS and Safari for better video handling
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+               (navigator.userAgentData?.platform === 'macOS' && navigator.maxTouchPoints > 1) ||
+               (typeof navigator.platform !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  // Use native video for iOS or if Cloudinary fails
+  const shouldUseNativeVideo = isIOS || isSafari || useNativeVideo || hasVideoError;
 
   // Extract public ID from Cloudinary URL
   const extractPublicId = (url) => {
@@ -50,8 +60,13 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
     }
   };
 
-  // Check if Cloudinary is loaded
+  // Check if Cloudinary is loaded (skip for iOS/Safari)
   useEffect(() => {
+    if (shouldUseNativeVideo) {
+      setIsVideoSourceLoaded(true);
+      return;
+    }
+
     const checkCloudinary = () => {
       if (window.cloudinary) {
         setIsCloudinaryLoaded(true);
@@ -64,19 +79,28 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
       return;
     }
 
-    // Poll for Cloudinary to be loaded
+    // Poll for Cloudinary to be loaded with timeout
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max
     const interval = setInterval(() => {
+      attempts++;
       if (checkCloudinary()) {
+        clearInterval(interval);
+      } else if (attempts >= maxAttempts) {
+        // Fallback to native video if Cloudinary doesn't load
+        console.warn('Cloudinary failed to load, falling back to native video');
+        setUseNativeVideo(true);
+        setIsVideoSourceLoaded(true);
         clearInterval(interval);
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [shouldUseNativeVideo]);
 
-  // Initialize Cloudinary player
+  // Initialize Cloudinary player (only if not using native video)
   useEffect(() => {
-    if (!isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current || !videoUrl) return;
+    if (shouldUseNativeVideo || !isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current || !videoUrl) return;
 
     try {
       // Create a timeout to ensure DOM is ready
@@ -95,7 +119,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         playerInstanceRef.current = window.cloudinary.videoPlayer(videoElement, {
           cloud_name: 'dxfeyj7hl',
           controls: false,
-          autoplay: false, // Never autoplay during initialization
+          autoplay: false,
           muted: true,
           loop: false,
           fluid: true,
@@ -112,9 +136,8 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
 
         setIsPlayerReady(true);
 
-        // Set up event listeners
+        // Set up event listeners with error handling
         if (playerInstanceRef.current) {
-          // Use a more robust approach for progress tracking
           playerInstanceRef.current.on('timeupdate', () => {
             if (onProgress && playerInstanceRef.current) {
               try {
@@ -140,28 +163,25 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
             console.error('Cloudinary player error:', error);
             setIsPlayerReady(false);
             setHasVideoError(true);
+            setUseNativeVideo(true);
             if (onError) onError(error);
           });
 
           playerInstanceRef.current.on('loadedmetadata', () => {
-            console.log('Video metadata loaded for:', extractPublicId(videoUrl));
             setIsPlayerReady(true);
             setIsVideoSourceLoaded(true);
           });
 
           playerInstanceRef.current.on('loadeddata', () => {
-            console.log('Video data loaded for:', extractPublicId(videoUrl));
             setIsVideoSourceLoaded(true);
           });
 
           playerInstanceRef.current.on('canplay', () => {
-            console.log('Video can play for:', extractPublicId(videoUrl));
             setIsPlayerReady(true);
             setIsVideoSourceLoaded(true);
           });
 
           playerInstanceRef.current.on('ready', () => {
-            // console.log('Cloudinary player ready for:', extractPublicId(videoUrl));
             setIsPlayerReady(true);
 
             // Set video source immediately when player is ready
@@ -177,6 +197,7 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
               } catch (sourceError) {
                 console.error('Error setting video source on ready:', sourceError);
                 setHasVideoError(true);
+                setUseNativeVideo(true);
               }
             }
           });
@@ -186,24 +207,41 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
       return () => clearTimeout(initTimeout);
     } catch (error) {
       console.error('Error initializing Cloudinary player:', error);
+      setHasVideoError(true);
+      setUseNativeVideo(true);
       if (onError) onError(error);
     }
-  }, [isCloudinaryLoaded, videoUrl]);
+  }, [isCloudinaryLoaded, videoUrl, shouldUseNativeVideo]);
 
-  // Handle play/pause with improved logic
+  // Handle play/pause for both native and Cloudinary video
   useEffect(() => {
-    if (playerInstanceRef.current && isPlayerReady && isVideoSourceLoaded) {
+    if (shouldUseNativeVideo && videoRef.current) {
+      // Handle native video playback
       try {
         if (isPlaying) {
-          console.log('Playing video:', extractPublicId(videoUrl));
-          // Add a small delay to ensure the video is fully ready
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.warn('Native video play failed:', error);
+              // This is expected on iOS without user interaction
+            });
+          }
+        } else {
+          videoRef.current.pause();
+        }
+      } catch (error) {
+        console.error('Error controlling native video playback:', error);
+      }
+    } else if (playerInstanceRef.current && isPlayerReady && isVideoSourceLoaded) {
+      // Handle Cloudinary player playback
+      try {
+        if (isPlaying) {
           setTimeout(() => {
             if (playerInstanceRef.current) {
               const playPromise = playerInstanceRef.current.play();
               if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                  console.warn('Play failed:', error);
-                  // Try again after a short delay
+                  console.warn('Cloudinary play failed:', error);
                   setTimeout(() => {
                     if (playerInstanceRef.current) {
                       playerInstanceRef.current.play().catch(e => console.warn('Retry play failed:', e));
@@ -214,18 +252,21 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
             }
           }, 50);
         } else {
-          console.log('Pausing video:', extractPublicId(videoUrl));
           playerInstanceRef.current.pause();
         }
       } catch (error) {
-        console.error('Error controlling playback:', error);
+        console.error('Error controlling Cloudinary playback:', error);
       }
     }
-  }, [isPlaying, isPlayerReady, isVideoSourceLoaded, videoUrl]);
+  }, [isPlaying, isPlayerReady, isVideoSourceLoaded, videoUrl, shouldUseNativeVideo]);
 
-  // Handle mute/unmute
+  // Handle mute/unmute for both video types
   useEffect(() => {
-    if (playerInstanceRef.current) {
+    if (shouldUseNativeVideo && videoRef.current) {
+      // Handle native video muting
+      videoRef.current.muted = isMuted;
+    } else if (playerInstanceRef.current) {
+      // Handle Cloudinary player muting
       try {
         if (isMuted) {
           playerInstanceRef.current.mute();
@@ -236,14 +277,13 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
         console.error('Error controlling volume:', error);
       }
     }
-  }, [isMuted]);
+  }, [isMuted, shouldUseNativeVideo]);
 
   // Update video source when videoUrl changes
   useEffect(() => {
     if (playerInstanceRef.current && videoUrl && isPlayerReady) {
       try {
         const publicId = extractPublicId(videoUrl);
-        console.log('Changing video source to:', publicId);
 
         // Reset states before changing source
         setIsVideoSourceLoaded(false);
@@ -299,6 +339,76 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
     };
   }, []);
 
+  // Enhanced native video handling for iOS
+  const handleNativeVideoLoad = () => {
+    setIsVideoSourceLoaded(true);
+  };
+
+  const handleNativeVideoError = (e) => {
+    console.error('Native video error:', e);
+    setHasVideoError(true);
+    if (onError) onError(e);
+  };
+
+  const handleNativeTimeUpdate = () => {
+    if (shouldUseNativeVideo && videoRef.current && onProgress) {
+      const video = videoRef.current;
+      if (video.duration > 0) {
+        const progress = video.currentTime / video.duration;
+        onProgress({ played: progress });
+      }
+    }
+  };
+
+  const handleNativeEnded = () => {
+    if (onEnded) onEnded();
+  };
+
+  // Use native video for iOS/Safari or when Cloudinary fails
+  if (shouldUseNativeVideo) {
+    return (
+      <div ref={containerRef} className={className} style={style}>
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          src={videoUrl}
+          loop={false}
+          muted={isMuted}
+          playsInline={true}
+          controls={false}
+          preload="metadata"
+          onLoadedData={handleNativeVideoLoad}
+          onLoadedMetadata={handleNativeVideoLoad}
+          onCanPlay={handleNativeVideoLoad}
+          onError={handleNativeVideoError}
+          onTimeUpdate={handleNativeTimeUpdate}
+          onEnded={handleNativeEnded}
+          onContextMenu={(e) => e.preventDefault()}
+          suppressHydrationWarning={true}
+          autoPlay={false}
+          disablePictureInPicture={true}
+          controlsList="nodownload"
+          disableRemotePlayback={true}
+        />
+        {!isVideoSourceLoaded && !hasVideoError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="text-white text-sm">Loading video...</div>
+            </div>
+          </div>
+        )}
+        {hasVideoError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <div className="text-white text-sm">Unable to load video</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Cloudinary player for non-iOS devices
   return (
     <div ref={containerRef} className={className} style={style}>
       <video
@@ -344,14 +454,11 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   const [videoProgress, setVideoProgress] = useState({});
   const videoContainerRef = useRef(null);
   const progressBarRef = useRef(null);
-  const sliderRef = useRef(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  
+
   // Touch event states for custom slider
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchStartY, setTouchStartY] = useState(0);
-  const [touchEndX, setTouchEndX] = useState(0);
-  const [touchEndY, setTouchEndY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const containerRef = useRef(null);
@@ -369,13 +476,11 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         if (video.cloudinaryPlayer) {
           try {
             video.cloudinaryPlayer.pause();
-            console.log(`Paused non-active video ${index} via cloudinaryPlayer`);
           } catch (error) {
             console.warn(`Error pausing video ${index}:`, error);
           }
         } else {
           video.pause();
-          console.log(`Paused non-active video ${index} via HTML5`);
         }
       }
     });
@@ -385,35 +490,29 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   const forceUnmuteActiveVideo = useCallback(() => {
     // Multiple strategies to find and unmute the active video
     setTimeout(() => {
-      console.log('Attempting to force unmute active mobile video...');
 
       // First pause all non-active videos
       pauseAllVideosExceptActive();
 
       // Strategy 1: Find by active class
       let activeVideoElements = document.querySelectorAll('.mobile-video-slide.active video');
-      console.log('Found active mobile videos:', activeVideoElements.length);
 
       // Strategy 2: Find all videos in modal
       if (activeVideoElements.length === 0) {
         activeVideoElements = document.querySelectorAll('.fast-moving-video-modal video');
-        console.log('Found videos in mobile modal:', activeVideoElements.length);
       }
 
       // Strategy 3: Find all videos
       if (activeVideoElements.length === 0) {
         activeVideoElements = document.querySelectorAll('video');
-        console.log('Found all videos:', activeVideoElements.length);
       }
 
       activeVideoElements.forEach((video, index) => {
-        console.log(`Processing mobile video ${index}:`, video);
 
         // Try cloudinaryPlayer reference
         if (video && video.cloudinaryPlayer) {
           try {
             video.cloudinaryPlayer.unmute();
-            console.log(`Successfully unmuted mobile video ${index} via cloudinaryPlayer`);
           } catch (error) {
             console.warn(`Error unmuting mobile video ${index} via cloudinaryPlayer:`, error);
           }
@@ -423,7 +522,6 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         if (video) {
           try {
             video.muted = false;
-            console.log(`Set mobile video ${index} muted property to false`);
           } catch (error) {
             console.warn(`Error setting muted property on mobile video ${index}:`, error);
           }
@@ -432,7 +530,6 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
       // Also ensure React state is updated
       setIsMuted(false);
-      console.log('Set React isMuted state to false for mobile');
     }, 300); // Increased delay to ensure transitions are complete
   }, [pauseAllVideosExceptActive]);
 
@@ -507,7 +604,6 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     setDirection(1);
     setCurrentSlideIndex((prevIndex) => {
       const next = prevIndex >= totalSlides - 1 ? 0 : prevIndex + 1;
-      console.log(`Moving from slide ${prevIndex} to ${next} (total: ${totalSlides})`);
       return next;
     });
   }, [getTotalSlides]);
@@ -518,7 +614,6 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     setDirection(-1);
     setCurrentSlideIndex((prevIndex) => {
       const previous = prevIndex <= 0 ? totalSlides - 1 : prevIndex - 1;
-      console.log(`Moving from slide ${prevIndex} to ${previous} (total: ${totalSlides})`);
       return previous;
     });
   }, [getTotalSlides]);
@@ -527,14 +622,12 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
     // Set direction based on relative index
     setDirection(index > currentSlideIndex ? 1 : -1);
     setCurrentSlideIndex(index);
-    console.log(`Going to slide ${index}`);
   }, [currentSlideIndex]);
 
   // Initialize slider
   useEffect(() => {
     if (products.length > 0) {
       setCurrentSlideIndex(0); // Always start at the beginning
-      console.log(`Initialized slider with ${products.length} products`);
     }
   }, [products.length]);
 
@@ -542,7 +635,6 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
   useEffect(() => {
     if (isAutoPlaying && !isDragging && products.length > 0) {
       autoPlayIntervalRef.current = setInterval(() => {
-        console.log('Auto-play: moving to next slide');
         nextSlide();
       }, 8000); // Increased from 4000ms to 8000ms (8 seconds)
     }
@@ -572,16 +664,14 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
 
   const handleTouchEndSlider = useCallback((e) => {
     if (!isDragging) return;
-    
+
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
-    setTouchEndX(touchEndX);
-    setTouchEndY(touchEndY);
-    
+
     const horizontalDiff = touchStartX - touchEndX;
     const verticalDiff = touchStartY - touchEndY;
     const threshold = 50; // Minimum swipe distance
-    
+
     // Only trigger slide if horizontal movement is greater than vertical movement
     if (Math.abs(horizontalDiff) > Math.abs(verticalDiff) && Math.abs(horizontalDiff) > threshold) {
       if (horizontalDiff > 0) {
@@ -590,10 +680,10 @@ const WatchAndBuyMobile = ({ products, handleAddtoCart }) => {
         prevSlide(); // Swipe right - previous slide
       }
     }
-    
+
     setIsDragging(false);
     setDragOffset(0);
-    
+
     // Resume autoplay after touch interaction
     setTimeout(() => {
       setIsAutoPlaying(true);

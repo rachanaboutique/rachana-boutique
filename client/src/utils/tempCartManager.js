@@ -22,46 +22,105 @@ export const getTempCartItems = () => {
 };
 
 /**
- * Add item to temporary cart in localStorage
+ * Add item to temporary cart in localStorage with inventory validation
  * @param {Object} item - Cart item to add
  * @param {string} item.productId - Product ID
  * @param {string} item.colorId - Color ID (optional)
  * @param {number} item.quantity - Quantity to add
  * @param {Object} item.productDetails - Product details for display
+ * @param {Array} productList - Product list for inventory validation (optional)
+ * @param {Array} existingCartItems - Existing cart items to check against (optional)
+ * @returns {Object} Result object with success status and message
  */
-export const addToTempCart = (item) => {
+export const addToTempCart = (item, productList = null, existingCartItems = null) => {
   try {
     const tempCart = getTempCartItems();
-    
+
     // Check if item already exists in temp cart
     const existingItemIndex = tempCart.findIndex(
       cartItem => cartItem.productId === item.productId && cartItem.colorId === item.colorId
     );
-    
+
+    const quantityToAdd = item.quantity || 1;
+    const existingQuantity = existingItemIndex > -1 ? tempCart[existingItemIndex].quantity : 0;
+    const newTotalQuantity = existingQuantity + quantityToAdd;
+
+    // Check existing cart items (actual cart) to prevent exceeding total stock
+    let existingCartQuantity = 0;
+    if (existingCartItems && existingCartItems.length > 0) {
+      const existingCartItem = existingCartItems.find(
+        cartItem => cartItem.productId === item.productId &&
+        (item.colorId ? cartItem.colors?._id === item.colorId : (!cartItem.colors || !cartItem.colors._id || cartItem.colors.length === 0))
+      );
+      if (existingCartItem) {
+        existingCartQuantity = existingCartItem.quantity;
+      }
+    }
+
+    // Calculate total quantity including existing cart items
+    const totalQuantityWithCart = newTotalQuantity + existingCartQuantity;
+
+    // Validate inventory if productList is provided
+    if (productList) {
+      const product = productList.find(p => p._id === item.productId);
+      if (product) {
+        if (item.colorId) {
+          // For items with colors, check color inventory
+          const color = product.colors?.find(c => c._id === item.colorId);
+          if (color) {
+            if (color.inventory <= 0) {
+              return {
+                success: false,
+                message: "Selected color is out of stock"
+              };
+            }
+            if (totalQuantityWithCart > color.inventory) {
+              return {
+                success: false,
+                message: `Only ${color.inventory} items available for this product`
+              };
+            }
+          }
+        } else {
+          // For items without colors, check total stock
+          const totalStock = product.colors && product.colors.length > 0
+            ? product.colors.reduce((sum, color) => sum + (color.inventory || 0), 0)
+            : product.totalStock || 0;
+
+          if (totalQuantityWithCart > totalStock) {
+            return {
+              success: false,
+              message: `Only ${totalStock} items available for this product`
+            };
+          }
+        }
+      }
+    }
+
     if (existingItemIndex > -1) {
       // Update quantity if item exists
-      tempCart[existingItemIndex].quantity += item.quantity || 1;
+      tempCart[existingItemIndex].quantity = newTotalQuantity;
     } else {
       // Add new item to temp cart
       tempCart.push({
         productId: item.productId,
         colorId: item.colorId || null,
-        quantity: item.quantity || 1,
+        quantity: quantityToAdd,
         productDetails: item.productDetails || {},
         addedAt: new Date().toISOString()
       });
     }
-    
+
     localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
     console.log('Item added to temp cart:', item);
 
     // Dispatch custom event to notify components
     window.dispatchEvent(new CustomEvent('tempCartUpdated'));
 
-    return true;
+    return { success: true, message: "Item added to cart successfully" };
   } catch (error) {
     console.error('Error adding to temp cart:', error);
-    return false;
+    return { success: false, message: "Failed to add item to cart" };
   }
 };
 
@@ -91,39 +150,85 @@ export const removeFromTempCart = (productId, colorId = null) => {
 };
 
 /**
- * Update item quantity in temporary cart
+ * Update item quantity in temporary cart with inventory validation
  * @param {string} productId - Product ID
  * @param {string} colorId - Color ID (optional)
  * @param {number} quantity - New quantity
+ * @param {Array} productList - Product list for inventory validation (optional)
+ * @returns {Object} Result object with success status and message
  */
-export const updateTempCartQuantity = (productId, colorId = null, quantity) => {
+export const updateTempCartQuantity = (productId, colorId = null, quantity, productList = null) => {
   try {
     const tempCart = getTempCartItems();
     const itemIndex = tempCart.findIndex(
       item => item.productId === productId && item.colorId === colorId
     );
-    
-    if (itemIndex > -1) {
-      if (quantity <= 0) {
-        // Remove item if quantity is 0 or less
-        tempCart.splice(itemIndex, 1);
-      } else {
-        tempCart[itemIndex].quantity = quantity;
-      }
-      
+
+    if (itemIndex === -1) {
+      return { success: false, message: "Item not found in cart" };
+    }
+
+    if (quantity <= 0) {
+      // Remove item if quantity is 0 or less
+      tempCart.splice(itemIndex, 1);
       localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
-      console.log('Temp cart quantity updated:', { productId, colorId, quantity });
+      console.log('Item removed from temp cart:', { productId, colorId });
 
       // Dispatch custom event to notify components
       window.dispatchEvent(new CustomEvent('tempCartUpdated'));
 
-      return true;
+      return { success: true, message: "Item removed from cart" };
     }
-    
-    return false;
+
+    // Validate inventory if productList is provided
+    if (productList) {
+      const product = productList.find(p => p._id === productId);
+      if (product) {
+        if (colorId) {
+          // For items with colors, check color inventory
+          const color = product.colors?.find(c => c._id === colorId);
+          if (color) {
+            if (color.inventory <= 0) {
+              return {
+                success: false,
+                message: "Selected color is out of stock"
+              };
+            }
+            if (quantity > color.inventory) {
+              return {
+                success: false,
+                message: `Only ${color.inventory} items available for ${color.title}`
+              };
+            }
+          }
+        } else {
+          // For items without colors, check total stock
+          const totalStock = product.colors && product.colors.length > 0
+            ? product.colors.reduce((sum, color) => sum + (color.inventory || 0), 0)
+            : product.totalStock || 0;
+
+          if (quantity > totalStock) {
+            return {
+              success: false,
+              message: `Only ${totalStock} items available for this product`
+            };
+          }
+        }
+      }
+    }
+
+    // Update quantity
+    tempCart[itemIndex].quantity = quantity;
+    localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
+    console.log('Temp cart quantity updated:', { productId, colorId, quantity });
+
+    // Dispatch custom event to notify components
+    window.dispatchEvent(new CustomEvent('tempCartUpdated'));
+
+    return { success: true, message: "Quantity updated successfully" };
   } catch (error) {
     console.error('Error updating temp cart quantity:', error);
-    return false;
+    return { success: false, message: "Failed to update quantity" };
   }
 };
 
@@ -142,12 +247,12 @@ export const clearTempCart = () => {
 };
 
 /**
- * Get temporary cart count
- * @returns {number} Total number of items in temp cart
+ * Get temporary cart count (number of unique products, consistent with actual cart)
+ * @returns {number} Number of unique products in temp cart
  */
 export const getTempCartCount = () => {
   const tempCart = getTempCartItems();
-  return tempCart.reduce((total, item) => total + item.quantity, 0);
+  return tempCart.length; // Count unique products, not total quantity
 };
 
 /**

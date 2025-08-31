@@ -101,8 +101,10 @@ export const verifyTrackingFunctions = () => {
   ];
   
   try {
-    // Dynamic import to check if functions exist
-    import('./metaPixelEvents.js').then(module => {
+    // Use static import with proper error handling for iOS Safari compatibility
+    const modulePromise = import('../utils/metaPixelEvents.js');
+
+    modulePromise.then(module => {
       functionsToCheck.forEach(funcName => {
         if (typeof module[funcName] === 'function') {
           console.log(`✅ ${funcName} available`);
@@ -110,9 +112,12 @@ export const verifyTrackingFunctions = () => {
           console.log(`❌ ${funcName} not found`);
         }
       });
+    }).catch(error => {
+      console.warn('⚠️ Meta Pixel events module not available:', error.message);
+      // Don't throw error, just log warning
     });
   } catch (error) {
-    console.error('❌ Error checking tracking functions:', error);
+    console.warn('⚠️ Dynamic import not supported, skipping function verification');
   }
 };
 

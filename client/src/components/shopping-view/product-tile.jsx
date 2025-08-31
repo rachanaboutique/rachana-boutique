@@ -63,9 +63,9 @@ const ShoppingProductTile = ({
         }
       };
 
-      const success = addToTempCart(tempCartItem);
+      const result = addToTempCart(tempCartItem, [product], []); // Pass product for validation
 
-      if (success) {
+      if (result.success) {
         // Track Meta Pixel AddToCart event
         setTimeout(() => {
           addToCartEvent({
@@ -86,7 +86,7 @@ const ShoppingProductTile = ({
         }, 100);
 
         toast({
-          title: "Item added to cart!",
+          title: result.message,
           variant: "default",
         });
 
@@ -97,7 +97,7 @@ const ShoppingProductTile = ({
       } else {
         setIsAddingToCart(false);
         toast({
-          title: "Failed to add item to cart. Please try again.",
+          title: result.message,
           variant: "destructive",
         });
       }

@@ -20,6 +20,7 @@ import { Helmet } from "react-helmet-async";
 import { categoryMapping } from "@/config";
 import { useMetaPixelCart } from "@/hooks/useMetaPixelCart";
 import { addToTempCart } from "@/utils/tempCartManager";
+import { validateAddToCart } from "@/utils/cartValidation";
 import { addToCartEvent } from "@/utils/metaPixelEvents";
 
 function ProductDetailsPage({ open, setOpen }) {
@@ -118,7 +119,7 @@ function ProductDetailsPage({ open, setOpen }) {
     setIsAddingToCart(true);
 
     if (!isAuthenticated) {
-      // Add to temporary cart and redirect to checkout
+      // Add to temporary cart with inventory validation
       const tempCartItem = {
         productId: currentProductId,
         colorId: selectedColor?._id || null,
@@ -133,9 +134,9 @@ function ProductDetailsPage({ open, setOpen }) {
         }
       };
 
-      const success = addToTempCart(tempCartItem);
+      const result = addToTempCart(tempCartItem, [productDetails], cartItems || []); // Pass product and cart items for validation
 
-      if (success) {
+      if (result.success) {
         // Track Meta Pixel AddToCart event
         setTimeout(() => {
           addToCartEvent({
@@ -148,11 +149,7 @@ function ProductDetailsPage({ open, setOpen }) {
             num_items: quantity
           });
 
-          console.log('Meta Pixel: AddToCart tracked from ProductDetails (temp cart)', {
-            productId: currentProductId,
-            quantity: quantity,
-            value: productDetails?.salePrice || productDetails?.price || 0
-          });
+         
         }, 100);
 
         toast({
@@ -167,70 +164,34 @@ function ProductDetailsPage({ open, setOpen }) {
       } else {
         setIsAddingToCart(false);
         toast({
-          title: "Failed to add item to cart. Please try again.",
+          title: result.message || "Failed to add item to cart. Please try again.",
           variant: "destructive",
         });
       }
       return;
     }
 
-    // Check if a color is selected and if it's out of stock
-    if (selectedColor && selectedColor.inventory <= 0) {
+
+
+    // Validate if item can be added to cart (checks existing cart quantities and inventory)
+    const validation = validateAddToCart({
+      productId: currentProductId,
+      colorId: selectedColor?._id,
+      quantityToAdd: quantity,
+      cartItems: cartItems || [],
+      productList: [productDetails]
+    });
+
+
+    if (!validation.success) {
       toast({
-        title: "Selected color is out of stock",
+        title: validation.message,
         variant: "destructive",
       });
       setIsAddingToCart(false);
       return;
     }
 
-    // Check color inventory if a color is selected
-    if (selectedColor) {
-      let currentCartItems = cartItems.items || [];
-      const itemIndex = currentCartItems.findIndex(
-        (item) => item.productId === currentProductId &&
-                  item.colors &&
-                  item.colors._id === selectedColor._id
-      );
-
-      if (itemIndex > -1) {
-        const currentQuantity = currentCartItems[itemIndex].quantity;
-        if (currentQuantity + quantity > selectedColor.inventory) {
-          toast({
-            title: `Only ${selectedColor.inventory - currentQuantity} more can be added for this color`,
-            variant: "destructive",
-          });
-          setIsAddingToCart(false);
-          return;
-        }
-      } else if (quantity > selectedColor.inventory) {
-        toast({
-          title: `Only ${selectedColor.inventory} items available for this color`,
-          variant: "destructive",
-        });
-        setIsAddingToCart(false);
-        return;
-      }
-    } else {
-      // Fallback to total stock check for products without colors
-      let currentCartItems = cartItems.items || [];
-      if (currentCartItems.length) {
-        const itemIndex = currentCartItems.findIndex(
-          (item) => item.productId === currentProductId
-        );
-        if (itemIndex > -1) {
-          const currentQuantity = currentCartItems[itemIndex].quantity;
-          if (currentQuantity + quantity > totalStock) {
-            toast({
-              title: `Only ${totalStock - currentQuantity} more can be added for this item`,
-              variant: "destructive",
-            });
-            setIsAddingToCart(false);
-            return;
-          }
-        }
-      }
-    }
 
     // Make sure we have a selected color
     if (!selectedColor && productDetails?.colors && productDetails.colors.length > 0) {

@@ -136,44 +136,24 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
       return;
     }
 
-    // For temp cart, we still need some validation since it doesn't go through backend
-    // But we'll be more lenient and let the checkout process handle final validation
-    if (newQuantity > tempItem.quantity && selectedColor) {
-      // Only block if clearly out of stock (0 inventory)
-      if (selectedColor.inventory <= 0) {
-        toast({
-          title: "Selected color is out of stock",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Show warning but allow if exceeding inventory (will be caught at checkout)
-      if (newQuantity > selectedColor.inventory) {
-        toast({
-          title: `Warning: Only ${selectedColor.inventory} items available. This will be validated at checkout.`,
-          variant: "default", // Changed from destructive to default (warning)
-        });
-        // Don't return - allow the update to proceed
-      }
-    }
-
     setIsUpdating(true);
 
-    const success = updateTempCartQuantity(
+    // Use the updated function with inventory validation
+    const result = updateTempCartQuantity(
       tempItem.productId,
       tempItem.colorId,
-      newQuantity
+      newQuantity,
+      productList // Pass productList for inventory validation
     );
 
-    if (success) {
+    if (result.success) {
       toast({
-        title: "Quantity updated successfully",
+        title: result.message,
       });
       onUpdate(); // Refresh the cart
     } else {
       toast({
-        title: "Failed to update quantity",
+        title: result.message,
         variant: "destructive",
       });
     }
@@ -181,7 +161,7 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
     setTimeout(() => {
       setIsUpdating(false);
     }, 300);
-  }, [tempItem, selectedColor, toast, onUpdate]);
+  }, [tempItem, productList, toast, onUpdate]);
 
   // Handle delete item
   const handleDeleteItem = useCallback(() => {

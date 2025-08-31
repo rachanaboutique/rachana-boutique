@@ -2,6 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* iOS Safari and Mac Chrome compatibility fixes */
+* {
+  /* Fix for iOS Safari touch callout */
+  -webkit-touch-callout: none;
+  /* Fix for iOS Safari text size adjust */
+  -webkit-text-size-adjust: 100%;
+  /* Fix for iOS Safari tap highlight */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix for iOS Safari viewport height issues */
+html {
+  /* Use CSS custom property for dynamic viewport height */
+  height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
+}
+
+body {
+  /* Prevent iOS Safari bounce scrolling */
+  overscroll-behavior: none;
+  /* Fix for iOS Safari font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Ensure stable layout for BrowserStack testing */
+  min-height: 100vh;
+  min-height: calc(var(--vh, 1vh) * 100);
+}
+
+/* BrowserStack specific fixes */
+.browserstack-env {
+  /* Prevent layout shifts during testing */
+  overflow-x: hidden;
+}
+
+.browserstack-env body {
+  /* Ensure consistent rendering in BrowserStack */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* iOS device specific fixes */
+.ios-device {
+  /* Prevent zoom on input focus */
+  -webkit-text-size-adjust: 100%;
+}
+
+.ios-device input,
+.ios-device textarea,
+.ios-device select {
+  /* Prevent zoom on input focus in iOS */
+  font-size: 16px !important;
+}
+
 ::-webkit-scrollbar {
   display: none;
 }

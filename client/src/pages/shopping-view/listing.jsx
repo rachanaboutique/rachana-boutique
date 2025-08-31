@@ -154,7 +154,6 @@ function ShoppingListing({ categorySlug }) {
 
       // Only apply frontend sorting if backend sorting didn't work
       if (!isAlreadySorted) {
-        console.log('Applying frontend product code sorting as fallback');
 
         if (sort === "productcode-atoz") {
           updatedProducts.sort((a, b) => {
@@ -284,7 +283,6 @@ function ShoppingListing({ categorySlug }) {
     if (!currentCategory) return "";
 
     const mappedCategory = categoryMapping.find(cat => cat.id === currentCategory._id);
-    console.log(mappedCategory);
     return mappedCategory?.description || "";
   }, [currentCategory]);
 
@@ -335,11 +333,7 @@ function ShoppingListing({ categorySlug }) {
             num_items: 1
           });
 
-          console.log('Meta Pixel: AddToCart tracked from Listing (temp cart)', {
-            productId: productId,
-            productName: product?.title,
-            value: product?.salePrice || product?.price || 0
-          });
+      
         }, 100);
 
         toast({

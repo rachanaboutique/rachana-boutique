@@ -16,6 +16,7 @@ import {
 import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
 import { addToTempCart } from "@/utils/tempCartManager";
+import { validateAddToCart } from "@/utils/cartValidation";
 import { fetchCategories } from "@/store/shop/categories-slice";
 import { fetchBanners } from "@/store/shop/banners-slice";
 import { fetchInstaFeed } from "@/store/shop/instafeed-slice";
@@ -33,11 +34,41 @@ import { Loader } from "../../components/ui/loader";
 
 function ShoppingHome() {
   const [, setIsMobile] = useState(false);
+  const [isPageReady, setIsPageReady] = useState(false);
+
+  // BrowserStack and iOS compatibility initialization
+  useEffect(() => {
+    const initializePage = () => {
+      try {
+        // Detect BrowserStack environment
+        const isBrowserStack = /BrowserStack/.test(navigator.userAgent) ||
+                              window.location.hostname.includes('browserstack');
+
+        if (isBrowserStack) {
+          console.log('🧪 Home page initializing in BrowserStack environment');
+          // Add small delay for BrowserStack stability
+          setTimeout(() => setIsPageReady(true), 100);
+        } else {
+          setIsPageReady(true);
+        }
+      } catch (error) {
+        console.warn('Page initialization error:', error);
+        setIsPageReady(true); // Fallback to show page anyway
+      }
+    };
+
+    initializePage();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // Adjust the breakpoint if needed
+      try {
+        setIsMobile(window.innerWidth < 768); // Adjust the breakpoint if needed
+      } catch (error) {
+        console.warn('Resize handler error:', error);
+      }
     };
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -74,7 +105,7 @@ function ShoppingHome() {
 
     // Check if user is authenticated
     if (!isAuthenticated) {
-      // Add to temporary cart for non-authenticated users
+      // Add to temporary cart for non-authenticated users with inventory validation
       const tempCartItem = {
         productId: productId,
         colorId: product?.colors?.[0]?._id || null,
@@ -89,30 +120,21 @@ function ShoppingHome() {
         }
       };
 
-      const success = addToTempCart(tempCartItem);
+      const result = addToTempCart(tempCartItem, [product], cartItems || []); // Pass product and cart items for validation
 
-      if (success) {
+      if (result.success) {
         toast({
-          title: "Item added to cart!",
+          title: result.message,
           variant: "default",
         });
         return Promise.resolve({ success: true });
       } else {
         toast({
-          title: "Failed to add item to cart",
+          title: result.message,
           variant: "destructive",
         });
-        return Promise.reject("Failed to add to temp cart");
+        return Promise.reject(result.message);
       }
-    }
-
-    // Check if product is in stock
-    if (totalStock <= 0) {
-      toast({
-        title: "This product is out of stock",
-        variant: "destructive",
-      });
-      return Promise.reject("Out of stock");
     }
 
     // Get the first available color (with inventory > 0) if product has colors
@@ -131,43 +153,23 @@ function ShoppingHome() {
       }
 
       colorId = selectedColor._id;
+    }
 
-      // Check color inventory
-      let currentCartItems = cartItems.items || [];
-      const itemIndex = currentCartItems.findIndex(
-        (item) => item.productId === productId &&
-                  item.colors &&
-                  item.colors._id === colorId
-      );
+    // Validate if item can be added to cart (checks existing cart quantities and inventory)
+    const validation = validateAddToCart({
+      productId: productId,
+      colorId: colorId,
+      quantityToAdd: 1,
+      cartItems: cartItems || [],
+      productList: [product]
+    });
 
-      if (itemIndex > -1) {
-        const currentQuantity = currentCartItems[itemIndex].quantity;
-        if (currentQuantity + 1 > selectedColor.inventory) {
-          toast({
-            title: `Only ${selectedColor.inventory} quantity available for ${selectedColor.title}`,
-            variant: "destructive",
-          });
-          return Promise.reject("Exceeds color stock limit");
-        }
-      }
-    } else {
-      // Check total stock for products without colors
-      let currentCartItems = cartItems.items || [];
-      if (currentCartItems.length) {
-        const itemIndex = currentCartItems.findIndex(
-          (item) => item.productId === productId
-        );
-        if (itemIndex > -1) {
-          const currentQuantity = currentCartItems[itemIndex].quantity;
-          if (currentQuantity + 1 > totalStock) {
-            toast({
-              title: `Only ${totalStock} quantity available for this item`,
-              variant: "destructive",
-            });
-            return Promise.reject("Exceeds stock limit");
-          }
-        }
-      }
+    if (!validation.success) {
+      toast({
+        title: validation.message,
+        variant: "destructive",
+      });
+      return Promise.reject(validation.message);
     }
 
     // Add to cart
@@ -212,7 +214,10 @@ function ShoppingHome() {
 
 
   const isAnyLoading = productsLoading || bannersLoading || categoriesLoading || instaFeedLoading;
-  if (isAnyLoading) return <Loader />;
+
+  // Show loader while page is initializing or data is loading
+  if (isAnyLoading || !isPageReady) return <Loader />;
+
   return (
     <>
 
@@ -475,21 +480,21 @@ function ShoppingHome() {
 
 
         {/* Watch and Buy Section - Desktop and Mobile versions */}
-        <section className="">
+        {/* <section className="">
           {hasWatchAndBuyProducts && (
             <>
-              {/* Desktop version */}
+           
               <div className="hidden md:block">
                 <WatchAndBuy products={filteredProducts} handleAddtoCart={handleAddtoCart} />
               </div>
 
-              {/* Mobile version */}
+             
               <div className="md:hidden">
                 <WatchAndBuyMobile products={filteredProducts} handleAddtoCart={handleAddtoCart} />
               </div>
             </>
           )}
-        </section>
+        </section> */}
 
         <section className="py-8">
           <Banner

@@ -339,6 +339,32 @@ const addToCart = async (req, res) => {
           message: `Only ${selectedColor.inventory - currentQuantityInCart} more items available for this color`,
         });
       }
+    } else {
+      // For products without colors, validate against total stock
+      const totalStock = product.colors && product.colors.length > 0
+        ? product.colors.reduce((sum, color) => sum + (color.inventory || 0), 0)
+        : product.totalStock || 0;
+
+      if (totalStock <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "This product is out of stock",
+        });
+      }
+
+      // Check if adding this quantity would exceed total stock
+      const existingCartItem = cart.items.find(item =>
+        item.productId.toString() === productId &&
+        (!item.colors || !item.colors._id)
+      );
+
+      const currentQuantityInCart = existingCartItem ? existingCartItem.quantity : 0;
+      if (currentQuantityInCart + quantity > totalStock) {
+        return res.status(400).json({
+          success: false,
+          message: `Only ${totalStock - currentQuantityInCart} more items available for this product`,
+        });
+      }
     }
 
     // Handle products with and without color options

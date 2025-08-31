@@ -22,6 +22,7 @@ import { Helmet } from "react-helmet-async";
 import newArrivalsBanner from "@/assets/newarrivals.png";
 import { useMetaPixelCart } from "@/hooks/useMetaPixelCart";
 import { addToTempCart } from "@/utils/tempCartManager";
+import { validateAddToCart } from "@/utils/cartValidation";
 import { addToCartEvent } from "@/utils/metaPixelEvents";
 
 function NewArrivals() {
@@ -69,7 +70,7 @@ function NewArrivals() {
 
       // Check if user is authenticated
       if (!isAuthenticated) {
-        // Add to temporary cart and redirect to checkout
+        // Add to temporary cart with inventory validation
         const tempCartItem = {
           productId: productId,
           colorId: product?.colors?.[0]?._id || null,
@@ -84,9 +85,9 @@ function NewArrivals() {
           }
         };
 
-        const success = addToTempCart(tempCartItem);
+        const result = addToTempCart(tempCartItem, [product], cartItems || []); // Pass product and cart items for validation
 
-        if (success) {
+        if (result.success) {
           // Track Meta Pixel AddToCart event
           setTimeout(() => {
             addToCartEvent({
@@ -107,27 +108,18 @@ function NewArrivals() {
           }, 100);
 
           toast({
-            title: "Item added to cart!",
+            title: result.message,
             variant: "default",
           });
 
           return Promise.resolve({ success: true });
         } else {
           toast({
-            title: "Failed to add item to cart. Please try again.",
+            title: result.message,
             variant: "destructive",
           });
-          return Promise.reject("Failed to add to temp cart");
+          return Promise.reject(result.message);
         }
-      }
-
-      // Check if product is in stock
-      if (totalStock <= 0) {
-        toast({
-          title: "This product is out of stock",
-          variant: "destructive",
-        });
-        return Promise.reject("Out of stock");
       }
 
       // Get the first available color (with inventory > 0) if product has colors
@@ -146,43 +138,23 @@ function NewArrivals() {
         }
 
         colorId = selectedColor._id;
+      }
 
-        // Check color inventory
-        let currentCartItems = cartItems.items || [];
-        const itemIndex = currentCartItems.findIndex(
-          (item) => item.productId === productId &&
-                    item.colors &&
-                    item.colors._id === colorId
-        );
+      // Validate if item can be added to cart (checks existing cart quantities and inventory)
+      const validation = validateAddToCart({
+        productId: productId,
+        colorId: colorId,
+        quantityToAdd: 1,
+        cartItems: cartItems || [],
+        productList: [product]
+      });
 
-        if (itemIndex > -1) {
-          const currentQuantity = currentCartItems[itemIndex].quantity;
-          if (currentQuantity + 1 > selectedColor.inventory) {
-            toast({
-              title: `Only ${selectedColor.inventory} quantity available for ${selectedColor.title}`,
-              variant: "destructive",
-            });
-            return Promise.reject("Exceeds color stock limit");
-          }
-        }
-      } else {
-        // Check total stock for products without colors
-        let currentCartItems = cartItems.items || [];
-        if (currentCartItems.length) {
-          const itemIndex = currentCartItems.findIndex(
-            (item) => item.productId === productId
-          );
-          if (itemIndex > -1) {
-            const currentQuantity = currentCartItems[itemIndex].quantity;
-            if (currentQuantity + 1 > totalStock) {
-              toast({
-                title: `Only ${totalStock} quantity available for this item`,
-                variant: "destructive",
-              });
-              return Promise.reject("Exceeds stock limit");
-            }
-          }
-        }
+      if (!validation.success) {
+        toast({
+          title: validation.message,
+          variant: "destructive",
+        });
+        return Promise.reject(validation.message);
       }
 
       // Add to cart

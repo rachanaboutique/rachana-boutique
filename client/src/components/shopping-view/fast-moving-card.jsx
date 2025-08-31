@@ -5,10 +5,11 @@ import classNames from "classnames";
 import { Heart, ExternalLink, X, ShoppingBag, Loader, Play } from "lucide-react";
 import { useToast } from "../ui/use-toast";
 import { addToTempCart } from "@/utils/tempCartManager";
+import { validateAddToCart } from "@/utils/cartValidation";
 import { useInView } from "react-intersection-observer";
 import iosAutoplayManager from "../../utils/iosAutoplayManager";
 
-// Cloudinary Video Player Component
+// Enhanced Video Player Component with iOS Support
 const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
   videoUrl,
   isPlaying,
@@ -30,9 +31,29 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [playerError, setPlayerError] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [useNativeVideo, setUseNativeVideo] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   // Create a unique identifier for this player instance
   const playerIdRef = useRef(`player-${Math.random().toString(36).substring(2, 11)}`);
+
+  // Detect iOS and Safari with safer checks
+  const isIOS = (() => {
+    if (typeof navigator === 'undefined') return false;
+    const userAgent = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    return /iPad|iPhone|iPod/.test(userAgent) ||
+           (platform === 'MacIntel' && navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
+  })();
+
+  const isSafari = (() => {
+    if (typeof navigator === 'undefined') return false;
+    const userAgent = navigator.userAgent || '';
+    return /^((?!chrome|android).)*safari/i.test(userAgent);
+  })();
+
+  // Use native video for iOS or if Cloudinary fails
+  const shouldUseNativeVideo = isIOS || isSafari || useNativeVideo || playerError;
 
   // Extract public ID from Cloudinary URL
   const extractPublicId = (url) => {
@@ -64,8 +85,13 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
     }
   };
 
-  // Check if Cloudinary is loaded
+  // Check if Cloudinary is loaded (skip for iOS/Safari)
   useEffect(() => {
+    if (shouldUseNativeVideo) {
+      setVideoLoaded(true);
+      return;
+    }
+
     const checkCloudinary = () => {
       if (window.cloudinary) {
         cloudinaryRef.current = window.cloudinary;
@@ -79,27 +105,35 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
       return;
     }
 
-    // Poll for Cloudinary to be loaded
+    // Poll for Cloudinary to be loaded with timeout
+    let attempts = 0;
+    const maxAttempts = 50; // 5 seconds max
     const interval = setInterval(() => {
+      attempts++;
       if (checkCloudinary()) {
+        clearInterval(interval);
+      } else if (attempts >= maxAttempts) {
+        // Fallback to native video if Cloudinary doesn't load
+        console.warn('Cloudinary failed to load, falling back to native video');
+        setUseNativeVideo(true);
+        setVideoLoaded(true);
         clearInterval(interval);
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [shouldUseNativeVideo]);
 
-  // Initialize Cloudinary player
+  // Initialize Cloudinary player (only if not using native video)
   useEffect(() => {
-    if (!isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current || !videoUrl || hasInitialized) return;
+    if (shouldUseNativeVideo || !isCloudinaryLoaded || playerInstanceRef.current || !videoRef.current || !videoUrl || hasInitialized) return;
 
     try {
       // Add a small delay to stagger initializations and reduce simultaneous loads
-      const initDelay = Math.random() * 500; // Random delay between 0-500ms
+      const initDelay = Math.random() * 300; // Reduced delay for faster loading
 
       const delayTimeout = setTimeout(() => {
         try {
-          // console.log(`Initializing Cloudinary player ${playerIdRef.current} for video:`, extractPublicId(videoUrl));
           setHasInitialized(true);
 
           const initTimeout = setTimeout(() => {
@@ -110,37 +144,29 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
 
             const videoElement = videoRef.current;
             videoElement.preload = 'metadata';
-            videoElement.playsInline = playsInline;
-            videoElement.muted = isMuted;
+            videoElement.playsInline = true;
+            videoElement.muted = true;
 
-            // Enhanced configuration for iOS compatibility
+            // Enhanced configuration for better compatibility
             playerInstanceRef.current = cloudinaryRef.current.videoPlayer(videoElement, {
               cloud_name: 'dxfeyj7hl',
               controls: controls,
-              autoplay: false, // Always start with autoplay false for iOS compatibility
-              muted: true, // Always muted for autoplay to work on iOS
+              autoplay: false,
+              muted: true,
               loop: loop,
               fluid: true,
-              playsinline: true, // Critical for iOS
+              playsinline: true,
               preload: 'metadata',
               transformation: {
                 quality: 'auto',
                 fetch_format: 'auto'
-              },
-              html5: {
-                vhs: {
-                  overrideNative: true // Important for consistent behavior
-                }
-              },
-              // Additional iOS-specific settings
-              webkit_playsinline: true,
-              allowsInlineMediaPlayback: true
+              }
             });
 
-            // Set up event listeners
+            // Set up event listeners with error handling
             playerInstanceRef.current.on('ready', () => {
-              // console.log(`Cloudinary player ${playerIdRef.current} ready`);
               setIsPlayerReady(true);
+              setVideoLoaded(true);
 
               // Set video source when player is ready
               try {
@@ -154,17 +180,20 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
               } catch (sourceError) {
                 console.error('Error setting video source:', sourceError);
                 setPlayerError(true);
+                setUseNativeVideo(true);
                 onError && onError(sourceError);
               }
             });
 
             playerInstanceRef.current.on('loadeddata', () => {
+              setVideoLoaded(true);
               onLoadedData && onLoadedData();
             });
 
             playerInstanceRef.current.on('error', (error) => {
               console.error('Cloudinary player error:', error);
               setPlayerError(true);
+              setUseNativeVideo(true);
               onError && onError(error);
             });
 
@@ -174,6 +203,7 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
         } catch (error) {
           console.error('Error initializing Cloudinary player:', error);
           setPlayerError(true);
+          setUseNativeVideo(true);
           onError && onError(error);
         }
       }, initDelay);
@@ -182,58 +212,73 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
     } catch (error) {
       console.error('Error setting up Cloudinary player initialization:', error);
       setPlayerError(true);
+      setUseNativeVideo(true);
       onError && onError(error);
     }
-  }, [isCloudinaryLoaded, videoUrl, hasInitialized]); // Removed callback dependencies to prevent re-initialization
+  }, [isCloudinaryLoaded, videoUrl, hasInitialized, shouldUseNativeVideo]);
 
-  // Handle play/pause based on isPlaying prop with iOS autoplay handling
+  // Handle play/pause for both Cloudinary and native video
   useEffect(() => {
-    if (!playerInstanceRef.current || !isPlayerReady) return;
-
-    try {
-      if (isPlaying) {
-        // For iOS, ensure we have user interaction before attempting autoplay
-        const playVideo = async () => {
-          try {
-            // Ensure video is muted for autoplay compatibility
-            playerInstanceRef.current.mute();
-
-            const playPromise = playerInstanceRef.current.play();
-            if (playPromise !== undefined) {
-              await playPromise;
-              console.log('Video autoplay successful');
-            }
-          } catch (error) {
-            console.warn('Autoplay failed, this is expected on iOS without user interaction:', error);
-            // On iOS, videos won't autoplay until user interaction
-            // This is normal behavior and not an error
+    if (shouldUseNativeVideo && videoRef.current) {
+      // Handle native video playback
+      try {
+        if (isPlaying) {
+          const playPromise = videoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.warn('Native video autoplay failed:', error);
+              // This is expected on iOS without user interaction
+            });
           }
-        };
-
-        playVideo();
-      } else {
-        playerInstanceRef.current.pause();
+        } else {
+          videoRef.current.pause();
+        }
+      } catch (error) {
+        console.error('Error controlling native video playback:', error);
       }
-    } catch (error) {
-      console.error('Error controlling playback:', error);
+    } else if (playerInstanceRef.current && isPlayerReady) {
+      // Handle Cloudinary player playback
+      try {
+        if (isPlaying) {
+          const playVideo = async () => {
+            try {
+              playerInstanceRef.current.mute();
+              const playPromise = playerInstanceRef.current.play();
+              if (playPromise !== undefined) {
+                await playPromise;
+              }
+            } catch (error) {
+              console.warn('Cloudinary autoplay failed:', error);
+            }
+          };
+          playVideo();
+        } else {
+          playerInstanceRef.current.pause();
+        }
+      } catch (error) {
+        console.error('Error controlling Cloudinary playback:', error);
+      }
     }
-  }, [isPlaying, isPlayerReady]);
+  }, [isPlaying, isPlayerReady, shouldUseNativeVideo]);
 
-  // Handle mute/unmute
+  // Handle mute/unmute for both video types
   useEffect(() => {
-    if (!playerInstanceRef.current) return;
-
-    try {
-      // Use the correct Cloudinary video player API for muting
-      if (isMuted) {
-        playerInstanceRef.current.mute();
-      } else {
-        playerInstanceRef.current.unmute();
+    if (shouldUseNativeVideo && videoRef.current) {
+      // Handle native video muting
+      videoRef.current.muted = isMuted;
+    } else if (playerInstanceRef.current) {
+      // Handle Cloudinary player muting
+      try {
+        if (isMuted) {
+          playerInstanceRef.current.mute();
+        } else {
+          playerInstanceRef.current.unmute();
+        }
+      } catch (error) {
+        console.error('Error controlling mute:', error);
       }
-    } catch (error) {
-      console.error('Error controlling mute:', error);
     }
-  }, [isMuted]);
+  }, [isMuted, shouldUseNativeVideo]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -265,28 +310,54 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
     };
   }, []);
 
-  // Fallback to regular video if Cloudinary fails or isn't loaded
-  if (playerError || !isCloudinaryLoaded) {
+  // Enhanced native video handling for iOS
+  const handleNativeVideoLoad = () => {
+    setVideoLoaded(true);
+    onLoadedData && onLoadedData();
+  };
+
+  const handleNativeVideoError = (e) => {
+    console.error('Native video error:', e);
+    onError && onError(e);
+  };
+
+  // Use native video for iOS/Safari or when Cloudinary fails
+  if (shouldUseNativeVideo) {
     return (
-      <video
-        ref={videoRef}
-        className={className}
-        style={style}
-        src={videoUrl}
-        loop={loop}
-        muted={isMuted}
-        playsInline={playsInline}
-        webkit-playsinline="true"
-        controls={controls}
-        poster={poster}
-        onLoadedData={onLoadedData}
-        onError={onError}
-        preload="metadata"
-        x-webkit-airplay="allow"
-      />
+      <div className={className} style={style}>
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          src={videoUrl}
+          loop={loop}
+          muted={isMuted}
+          playsInline={true}
+          webkit-playsinline="true"
+          controls={controls}
+          poster={poster}
+          onLoadedData={handleNativeVideoLoad}
+          onError={handleNativeVideoError}
+          onLoadedMetadata={handleNativeVideoLoad}
+          onCanPlay={handleNativeVideoLoad}
+          preload="metadata"
+          x-webkit-airplay="allow"
+          // iOS-specific attributes for better compatibility
+          autoPlay={false}
+          disablePictureInPicture={true}
+          onContextMenu={(e) => e.preventDefault()}
+          suppressHydrationWarning={true}
+        />
+        {!videoLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+            <div className="text-white text-sm">Loading video...</div>
+          </div>
+        )}
+      </div>
     );
   }
 
+  // Cloudinary player for non-iOS devices
   return (
     <div className={className} style={style}>
       <video
@@ -299,11 +370,10 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
         onContextMenu={(e) => e.preventDefault()}
         suppressHydrationWarning={true}
         poster={poster}
-        // iOS-specific attributes
         x-webkit-airplay="allow"
         controls={false}
       />
-      {!isPlayerReady && (
+      {!isPlayerReady && !videoLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
           <div className="text-white text-sm">Loading video...</div>
         </div>
@@ -383,7 +453,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
     }
 
     if (!isAuthenticated) {
-      // Add to temporary cart for non-authenticated users
+      // Add to temporary cart for non-authenticated users with inventory validation
       const tempCartItem = {
         productId: item._id,
         colorId: item?.colors?.[0]?._id || null,
@@ -398,16 +468,16 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
         }
       };
 
-      const success = addToTempCart(tempCartItem);
+      const result = addToTempCart(tempCartItem, [item], []); // Pass item for validation (no existing cart for temp users)
 
-      if (success) {
+      if (result.success) {
         toast({
-          title: "Item added to cart!",
+          title: result.message,
           variant: "default",
         });
       } else {
         toast({
-          title: "Failed to add item to cart",
+          title: result.message,
           variant: "destructive",
         });
       }

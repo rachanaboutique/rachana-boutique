@@ -46,9 +46,8 @@ import { addToCart } from "./store/shop/cart-slice";
 import { startCartCopy, completeCartCopy, hasCartCopyCompleted, resetCartCopyState } from "./utils/cartCopyManager";
 
 // Import Meta Pixel verification in development mode
-if (import.meta.env.DEV) {
-  import("./utils/metaPixelVerification.js");
-}
+// Replaced dynamic import with static import for better iOS Safari compatibility
+import { verifyPixelInstallation } from "./utils/metaPixelVerification.js";
 
 
 
@@ -57,6 +56,17 @@ function App() {
   const dispatch = useDispatch();
   const videoObserverRef = useRef(null);
   const hasCopiedCart = useRef(false);
+
+  // Initialize Meta Pixel verification in development mode
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      try {
+        verifyPixelInstallation();
+      } catch (error) {
+        console.warn('Meta Pixel verification failed:', error);
+      }
+    }
+  }, []);
 
   // Prevent context menu on all video elements
   useLayoutEffect(() => {

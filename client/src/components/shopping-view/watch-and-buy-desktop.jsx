@@ -431,32 +431,26 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
   const forceUnmuteActiveVideo = useCallback(() => {
     // Multiple strategies to find and unmute the active video
     setTimeout(() => {
-      console.log('Attempting to force unmute active video...');
 
       // Strategy 1: Find by z-20 class (center video)
       let activeVideoElements = document.querySelectorAll('.video-card-container.z-20 video');
-      console.log('Found videos with z-20:', activeVideoElements.length);
 
       // Strategy 2: If no z-20, find all videos and unmute them
       if (activeVideoElements.length === 0) {
         activeVideoElements = document.querySelectorAll('.video-card video');
-        console.log('Found videos with video-card:', activeVideoElements.length);
       }
 
       // Strategy 3: Find all videos in modal
       if (activeVideoElements.length === 0) {
         activeVideoElements = document.querySelectorAll('.modal-view video');
-        console.log('Found videos in modal:', activeVideoElements.length);
       }
 
       activeVideoElements.forEach((video, index) => {
-        console.log(`Processing video ${index}:`, video);
 
         // Try cloudinaryPlayer reference
         if (video && video.cloudinaryPlayer) {
           try {
             video.cloudinaryPlayer.unmute();
-            console.log(`Successfully unmuted video ${index} via cloudinaryPlayer`);
           } catch (error) {
             console.warn(`Error unmuting video ${index} via cloudinaryPlayer:`, error);
           }
@@ -466,7 +460,6 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
         if (video) {
           try {
             video.muted = false;
-            console.log(`Set video ${index} muted property to false`);
           } catch (error) {
             console.warn(`Error setting muted property on video ${index}:`, error);
           }
@@ -475,7 +468,6 @@ const WatchAndBuy = ({ products, handleAddtoCart }) => {
 
       // Also ensure React state is updated
       setIsMuted(false);
-      console.log('Set React isMuted state to false');
     }, 200); // Increased delay to ensure DOM is ready
   }, []);
 

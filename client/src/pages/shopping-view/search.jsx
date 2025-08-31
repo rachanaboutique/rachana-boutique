@@ -11,6 +11,7 @@ import { Search, X } from "lucide-react";
 import { useMetaPixelCart } from "@/hooks/useMetaPixelCart";
 import { addToTempCart } from "@/utils/tempCartManager";
 import { addToCartEvent } from "@/utils/metaPixelEvents";
+import { validateAddToCart } from "@/utils/cartValidation";
 
 function SearchProducts() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -124,7 +125,9 @@ function SearchProducts() {
     }
   }, []);
 
-  function handleAddtoCart(getCurrentProductId, totalStock, product) {
+  function handleAddtoCart(product) {
+    const getCurrentProductId = product._id;
+    const totalStock = product.totalStock;
     // Check if user is authenticated
     if (!isAuthenticated) {
       // Add to temporary cart and redirect to checkout
@@ -142,9 +145,9 @@ function SearchProducts() {
         }
       };
 
-      const success = addToTempCart(tempCartItem);
+      const result = addToTempCart(tempCartItem, [product], cartItems || []); // Pass product and cart items for validation
 
-      if (success) {
+      if (result.success) {
         // Track Meta Pixel AddToCart event
         setTimeout(() => {
           addToCartEvent({
@@ -165,33 +168,32 @@ function SearchProducts() {
         }, 100);
 
         toast({
-          title: "Item added to cart!",
+          title: result.message,
           variant: "default",
         });
       } else {
         toast({
-          title: "Failed to add item to cart. Please try again.",
+          title: result.message,
           variant: "destructive",
         });
       }
       return;
     }
 
-    // Find the product in the product list
-    const currentProduct = product || productList.find((p) => p._id === getCurrentProductId);
+    // Find the product - prioritize the passed product parameter, then search in productList, then in filteredProducts
+    let currentProduct = product;
+
+    if (!currentProduct) {
+      currentProduct = productList.find((p) => p._id === getCurrentProductId);
+    }
+
+    if (!currentProduct) {
+      currentProduct = filteredProducts.find((p) => p._id === getCurrentProductId);
+    }
 
     if (!currentProduct) {
       toast({
         title: "Product not found",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if product is in stock
-    if (currentProduct.totalStock <= 0) {
-      toast({
-        title: "This product is out of stock",
         variant: "destructive",
       });
       return;
@@ -214,42 +216,23 @@ function SearchProducts() {
       }
 
       colorId = selectedColor._id;
+    }
 
-      // Check color inventory
-      let currentCartItems = cartItems.items || [];
-      const itemIndex = currentCartItems.findIndex(
-        (item) => item.productId === getCurrentProductId &&
-          item.colors &&
-          item.colors._id === colorId
-      );
+    // Validate if item can be added to cart (checks existing cart quantities)
+    const validation = validateAddToCart({
+      productId: getCurrentProductId,
+      colorId: colorId,
+      quantityToAdd: 1,
+      cartItems: cartItems || [],
+      productList: [currentProduct]
+    });
 
-      if (itemIndex > -1) {
-        const currentQuantity = currentCartItems[itemIndex].quantity;
-        if (currentQuantity + 1 > selectedColor.inventory) {
-          toast({
-            title: `Only ${selectedColor.inventory} quantity available for ${selectedColor.title}`,
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-    } else {
-      // Check total stock for products without colors
-      let currentCartItems = cartItems.items || [];
-      const itemIndex = currentCartItems.findIndex(
-        (item) => item.productId === getCurrentProductId
-      );
-
-      if (itemIndex > -1) {
-        const currentQuantity = currentCartItems[itemIndex].quantity;
-        if (currentQuantity + 1 > currentProduct.totalStock) {
-          toast({
-            title: `Only ${currentProduct.totalStock} quantity available for this item`,
-            variant: "destructive",
-          });
-          return;
-        }
-      }
+    if (!validation.success) {
+      toast({
+        title: validation.message,
+        variant: "destructive",
+      });
+      return;
     }
 
     dispatch(
