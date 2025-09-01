@@ -7,7 +7,7 @@ import AddressCard from "./address-card";
 import { useToast } from "../ui/use-toast";
 import DeleteConfirmationModal from "@/components/common/delete-confirmation-modal";
 import { MapPin, Plus } from "lucide-react";
-import { getStatesList, getCitiesByState, getStateNameByCode, getStateCodeByName } from "@/utils/locationUtils";
+import { getStatesList, searchCitiesByState, getStateNameByCode, getStateCodeByName } from "@/utils/locationUtils";
 
 // Initial form data constant
 const initialAddressFormData = {
@@ -25,22 +25,85 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
   const [isModalOpen, setModalOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [availableStates] = useState(getStatesList());
+  const [availableStates, setAvailableStates] = useState([]);
   const [availableCities, setAvailableCities] = useState([]);
   const [formErrors, setFormErrors] = useState({});
+  const [isLoadingStates, setIsLoadingStates] = useState(true);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { addressList } = useSelector((state) => state.shopAddress);
   const { toast } = useToast();
 
-  // Handle state change and update cities
-  const handleStateChange = (selectedStateCode) => {
+  // Load states on component mount
+  useEffect(() => {
+    const loadStates = async () => {
+      try {
+        setIsLoadingStates(true);
+        const states = await getStatesList();
+        setAvailableStates(states);
+      } catch (error) {
+        toast({
+          title: "Error loading states",
+          description: "Please refresh the page to try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingStates(false);
+      }
+    };
+
+    loadStates();
+  }, [toast]);
+
+  // Handle state change and load cities
+  const handleStateChange = async (selectedStateCode) => {
     setFormData(prev => ({
       ...prev,
       state: selectedStateCode,
       city: "" // Reset city when state changes
     }));
-    setAvailableCities(getCitiesByState(selectedStateCode));
+
+    // Load cities for the selected state
+    if (selectedStateCode) {
+      try {
+        setIsLoadingCities(true);
+        setAvailableCities([]); // Clear previous cities
+
+        // Get all cities for the state by searching with common prefixes
+        const commonPrefixes = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+        const allCities = [];
+
+        // Search with multiple prefixes to get comprehensive city list
+        for (const prefix of commonPrefixes.slice(0, 5)) { // Limit to first 5 to avoid too many API calls
+          try {
+            const cities = await searchCitiesByState(prefix, selectedStateCode);
+            cities.forEach(city => {
+              if (!allCities.find(c => c.value === city.value)) {
+                allCities.push(city);
+              }
+            });
+          } catch (error) {
+            // Continue with other prefixes if one fails
+          }
+        }
+
+        // Sort cities alphabetically
+        allCities.sort((a, b) => a.label.localeCompare(b.label));
+        setAvailableCities(allCities);
+      } catch (error) {
+        toast({
+          title: "Error loading cities",
+          description: "Please try again or enter city manually.",
+          variant: "destructive",
+        });
+        setAvailableCities([]);
+      } finally {
+        setIsLoadingCities(false);
+      }
+    } else {
+      setAvailableCities([]);
+    }
   };
 
   // Validate form fields
@@ -202,10 +265,7 @@ if (typeof setCurrentSelectedAddress === 'function') {
       notes: getCurrentAddress?.notes || "",
     });
 
-    // Load cities for the state if state exists
-    if (stateCode) {
-      setAvailableCities(getCitiesByState(stateCode));
-    }
+    // Note: Cities are now entered as text input, no need to load city options
 
     setShowForm(true);
   }
@@ -224,11 +284,8 @@ if (typeof setCurrentSelectedAddress === 'function') {
   }, [dispatch, user]);
 
   // Update cities when state changes in form data
-  useEffect(() => {
-    if (formData.state) {
-      setAvailableCities(getCitiesByState(formData.state));
-    }
-  }, [formData.state]);
+  // Note: City search is now handled via searchCitiesByState when user types in city field
+  // We don't pre-populate cities anymore to reduce API calls
 
   return (
     <>
@@ -243,7 +300,6 @@ if (typeof setCurrentSelectedAddress === 'function') {
               onClick={() => {
                 setCurrentEditedId(null);
                 setFormData(initialAddressFormData);
-                setAvailableCities([]);
                 setFormErrors({});
                 setShowForm(true);
               }}
@@ -280,7 +336,6 @@ if (typeof setCurrentSelectedAddress === 'function') {
                 onClick={() => {
                   setCurrentEditedId(null);
                   setFormData(initialAddressFormData);
-                  setAvailableCities([]);
                   setFormErrors({});
                   setShowForm(true);
                 }}
@@ -311,6 +366,8 @@ if (typeof setCurrentSelectedAddress === 'function') {
               buttonClassName="px-6 py-3 border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
               stateOptions={availableStates}
               cityOptions={availableCities}
+              isLoadingStates={isLoadingStates}
+              isLoadingCities={isLoadingCities}
               formErrors={formErrors}
             />
 
@@ -320,7 +377,6 @@ if (typeof setCurrentSelectedAddress === 'function') {
                   setShowForm(false);
                   setCurrentEditedId(null);
                   setFormData(initialAddressFormData);
-                  setAvailableCities([]);
                   setFormErrors({});
                 }}
                 className="text-sm text-gray-500 hover:text-black transition-colors"

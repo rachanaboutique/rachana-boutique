@@ -112,7 +112,6 @@ export const addToTempCart = (item, productList = null, existingCartItems = null
     }
 
     localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
-    console.log('Item added to temp cart:', item);
 
     // Dispatch custom event to notify components
     window.dispatchEvent(new CustomEvent('tempCartUpdated'));
@@ -137,7 +136,6 @@ export const removeFromTempCart = (productId, colorId = null) => {
     );
     
     localStorage.setItem(TEMP_CART_KEY, JSON.stringify(updatedCart));
-    console.log('Item removed from temp cart:', { productId, colorId });
 
     // Dispatch custom event to notify components
     window.dispatchEvent(new CustomEvent('tempCartUpdated'));
@@ -172,7 +170,6 @@ export const updateTempCartQuantity = (productId, colorId = null, quantity, prod
       // Remove item if quantity is 0 or less
       tempCart.splice(itemIndex, 1);
       localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
-      console.log('Item removed from temp cart:', { productId, colorId });
 
       // Dispatch custom event to notify components
       window.dispatchEvent(new CustomEvent('tempCartUpdated'));
@@ -220,7 +217,6 @@ export const updateTempCartQuantity = (productId, colorId = null, quantity, prod
     // Update quantity
     tempCart[itemIndex].quantity = quantity;
     localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
-    console.log('Temp cart quantity updated:', { productId, colorId, quantity });
 
     // Dispatch custom event to notify components
     window.dispatchEvent(new CustomEvent('tempCartUpdated'));
@@ -238,7 +234,6 @@ export const updateTempCartQuantity = (productId, colorId = null, quantity, prod
 export const clearTempCart = () => {
   try {
     localStorage.removeItem(TEMP_CART_KEY);
-    console.log('Temp cart cleared');
     return true;
   } catch (error) {
     console.error('Error clearing temp cart:', error);
@@ -263,7 +258,6 @@ export const resetTempCartCopyFlag = (userId) => {
   try {
     const copyKey = `tempCartCopied_${userId}`;
     localStorage.removeItem(copyKey);
-    console.log('Temp cart copy flag reset for user:', userId);
     return true;
   } catch (error) {
     console.error('Error resetting temp cart copy flag:', error);
@@ -321,7 +315,6 @@ export const changeTempCartColor = (productId, oldColorId, newColorId, productDe
     }
 
     localStorage.setItem(TEMP_CART_KEY, JSON.stringify(tempCart));
-    console.log('Temp cart color changed:', { productId, oldColorId, newColorId });
 
     // Dispatch custom event to notify components
     window.dispatchEvent(new CustomEvent('tempCartUpdated'));
@@ -351,7 +344,6 @@ export const copyTempCartToUser = async (addToCartFunction, userId) => {
     const alreadyCopied = localStorage.getItem(copyKey);
 
     if (alreadyCopied) {
-      console.log('Temp cart already copied for this user, skipping');
       return { success: true, message: 'Already copied', copied: 0, failed: 0 };
     }
 
@@ -387,7 +379,6 @@ export const copyTempCartToUser = async (addToCartFunction, userId) => {
 
     // Don't clear temp cart - keep items for when user logs out
     // This allows users to see their temp cart items again after logout
-    console.log('Temp cart items preserved after copy (not cleared)');
 
     // Mark as copied for this user to prevent future duplicates
     if (successCount > 0) {
@@ -395,12 +386,7 @@ export const copyTempCartToUser = async (addToCartFunction, userId) => {
       localStorage.setItem(copyKey, 'true');
     }
 
-    console.log('Temp cart copy completed:', {
-      total: tempCart.length,
-      success: successCount,
-      failed: failCount,
-      tempCartPreserved: true
-    });
+ 
 
     return {
       success: failCount === 0,

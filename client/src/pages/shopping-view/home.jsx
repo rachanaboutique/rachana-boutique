@@ -34,41 +34,11 @@ import { Loader } from "../../components/ui/loader";
 
 function ShoppingHome() {
   const [, setIsMobile] = useState(false);
-  const [isPageReady, setIsPageReady] = useState(false);
-
-  // BrowserStack and iOS compatibility initialization
-  useEffect(() => {
-    const initializePage = () => {
-      try {
-        // Detect BrowserStack environment
-        const isBrowserStack = /BrowserStack/.test(navigator.userAgent) ||
-                              window.location.hostname.includes('browserstack');
-
-        if (isBrowserStack) {
-          console.log('🧪 Home page initializing in BrowserStack environment');
-          // Add small delay for BrowserStack stability
-          setTimeout(() => setIsPageReady(true), 100);
-        } else {
-          setIsPageReady(true);
-        }
-      } catch (error) {
-        console.warn('Page initialization error:', error);
-        setIsPageReady(true); // Fallback to show page anyway
-      }
-    };
-
-    initializePage();
-  }, []);
 
   useEffect(() => {
     const handleResize = () => {
-      try {
-        setIsMobile(window.innerWidth < 768); // Adjust the breakpoint if needed
-      } catch (error) {
-        console.warn('Resize handler error:', error);
-      }
+      setIsMobile(window.innerWidth < 768); // Adjust the breakpoint if needed
     };
-
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -214,10 +184,7 @@ function ShoppingHome() {
 
 
   const isAnyLoading = productsLoading || bannersLoading || categoriesLoading || instaFeedLoading;
-
-  // Show loader while page is initializing or data is loading
-  if (isAnyLoading || !isPageReady) return <Loader />;
-
+  if (isAnyLoading) return <Loader />;
   return (
     <>
 

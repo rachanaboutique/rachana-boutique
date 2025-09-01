@@ -141,7 +141,6 @@ function App() {
             // Double-check that copying hasn't happened yet using global state
             if (!hasCartCopyCompleted(user.id) && startCartCopy(user.id)) {
               try {
-                console.log('Auto-copying cart items for authenticated user (backup system)');
                 const copyResult = await copyTempCartToUser(
                   (cartData) => dispatch(addToCart(cartData)),
                   user.id
@@ -149,7 +148,6 @@ function App() {
 
                 if (copyResult.success && copyResult.copied > 0) {
                   completeCartCopy(user.id, true);
-                  console.log(`Successfully copied ${copyResult.copied} items to user cart`);
                 } else {
                   completeCartCopy(user.id, false);
                 }

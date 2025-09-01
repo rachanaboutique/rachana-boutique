@@ -14,6 +14,7 @@ import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { getOptimizedImageUrl, getOptimizedVideoUrl } from "../../lib/utils";
 import { optimizeImageForUpload, isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
+import { searchCitiesByState } from "@/utils/locationUtils";
 
 
 function CommonForm({
@@ -25,6 +26,8 @@ function CommonForm({
   isBtnDisabled,
   stateOptions = [],
   cityOptions = [],
+  isLoadingStates = false,
+  isLoadingCities = false,
   formErrors = {}
 }) {
   const [passwordVisibility, setPasswordVisibility] = useState({});
@@ -33,6 +36,32 @@ function CommonForm({
   const [videoUploadStatus, setVideoUploadStatus] = useState("idle"); // idle, uploading, uploaded, error
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState("");
+
+  // City autocomplete state
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const [citySearchLoading, setCitySearchLoading] = useState(false);
+
+  // Function to search cities based on user input
+  const searchCities = async (query, stateCode) => {
+    if (!query || query.length < 2 || !stateCode) {
+      setCitySuggestions([]);
+      setShowCitySuggestions(false);
+      return;
+    }
+
+    try {
+      setCitySearchLoading(true);
+      const cities = await searchCitiesByState(query, stateCode);
+      setCitySuggestions(cities);
+      setShowCitySuggestions(cities.length > 0);
+    } catch (error) {
+      setCitySuggestions([]);
+      setShowCitySuggestions(false);
+    } finally {
+      setCitySearchLoading(false);
+    }
+  };
 
   // Helper function for uploading a color image directly to Cloudinary with optimization.
   const uploadColorImage = async (file, idx, controlItem) => {
@@ -207,6 +236,86 @@ const uploadVideo = async (file) => {
         );
         break;
 
+      case "autocomplete":
+        element = (
+          <div className="relative">
+            <Input
+              name={controlItem.name}
+              placeholder={controlItem.placeholder}
+              id={controlItem.name}
+              type={controlItem.type}
+              value={value}
+              onChange={(event) => {
+                const inputValue = event.target.value;
+                if (typeof setFormData === 'function') {
+                  // Check if setFormData is the custom handler (for address form)
+                  if (setFormData.length === 2) {
+                    setFormData(controlItem.name, inputValue);
+                  } else {
+                    setFormData({
+                      ...formData,
+                      [controlItem.name]: inputValue,
+                    });
+                  }
+                }
+
+                // Trigger city search if this is the city field and we have a state
+                if (controlItem.name === "city" && formData.state) {
+                  searchCities(inputValue, formData.state);
+                } else if (controlItem.name === "city" && !formData.state) {
+                  // Clear suggestions if no state is selected
+                  setCitySuggestions([]);
+                  setShowCitySuggestions(false);
+                }
+              }}
+              onFocus={() => {
+                if (controlItem.name === "city" && citySuggestions.length > 0) {
+                  setShowCitySuggestions(true);
+                }
+              }}
+              onBlur={() => {
+                // Delay hiding suggestions to allow clicking on them
+                setTimeout(() => setShowCitySuggestions(false), 200);
+              }}
+              className={formErrors[controlItem.name] ? "border-red-500" : ""}
+            />
+
+            {/* City suggestions dropdown */}
+            {controlItem.name === "city" && showCitySuggestions && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {citySearchLoading ? (
+                  <div className="px-3 py-2 text-gray-500">Searching...</div>
+                ) : citySuggestions.length > 0 ? (
+                  citySuggestions.map((city, index) => (
+                    <div
+                      key={index}
+                      className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur
+                        if (typeof setFormData === 'function') {
+                          if (setFormData.length === 2) {
+                            setFormData(controlItem.name, city.label);
+                          } else {
+                            setFormData({
+                              ...formData,
+                              [controlItem.name]: city.label,
+                            });
+                          }
+                        }
+                        setShowCitySuggestions(false);
+                      }}
+                    >
+                      {city.label}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-3 py-2 text-gray-500">No cities found</div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+        break;
 
         case "password":
           element = (
@@ -273,19 +382,33 @@ const uploadVideo = async (file) => {
               align="start"
               className="z-50 max-h-60 overflow-auto"
             >
-              {selectOptions && selectOptions.length > 0
-                ? selectOptions.map((optionItem) => (
-                    <SelectItem key={optionItem.id} value={optionItem.id}>
-                      {optionItem.label}
-                    </SelectItem>
-                  ))
-                : (
-                    <SelectItem value="no-options" disabled>
-                      {controlItem.name === "city" && !formData.state
-                        ? "Please select a state first"
-                        : "No options available"}
-                    </SelectItem>
-                  )}
+              {/* Show loading message for states */}
+              {controlItem.name === "state" && isLoadingStates ? (
+                <SelectItem value="loading" disabled>
+                  Fetching States...
+                </SelectItem>
+              ) : /* Show loading message for cities */
+              controlItem.name === "city" && isLoadingCities ? (
+                <SelectItem value="loading" disabled>
+                  Fetching Cities...
+                </SelectItem>
+              ) : /* Show city-specific message when no state selected */
+              controlItem.name === "city" && !formData.state ? (
+                <SelectItem value="no-state" disabled>
+                  Please select a state first
+                </SelectItem>
+              ) : /* Show options if available */
+              selectOptions && selectOptions.length > 0 ? (
+                selectOptions.map((optionItem) => (
+                  <SelectItem key={optionItem.id} value={optionItem.value || optionItem.id}>
+                    {optionItem.label}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-options" disabled>
+                  {controlItem.name === "city" ? "No cities found" : "No options available"}
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
         );

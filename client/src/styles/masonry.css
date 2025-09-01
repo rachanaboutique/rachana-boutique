@@ -1,16 +1,10 @@
 /* Masonry Grid Styles */
 .masonry-grid {
   display: block;
-  /* iOS Safari compatibility for column layout */
-  -webkit-column-break-inside: avoid;
-  column-break-inside: avoid;
 }
 
 .masonry-item {
   break-inside: avoid;
-  /* iOS Safari compatibility */
-  -webkit-column-break-inside: avoid;
-  page-break-inside: avoid;
   position: relative;
 }
 
@@ -560,16 +554,8 @@
     flex-direction: column;
     width: 100vw;
     height: 100vh;
-    /* iOS Safari compatibility for viewport height */
-    height: -webkit-fill-available;
-    height: -moz-available;
-    height: fill-available;
-    height: calc(var(--vh, 1vh) * 100);
     overflow: hidden;
     touch-action: manipulation;
-    -webkit-overflow-scrolling: touch;
-    /* Prevent iOS Safari bounce scrolling */
-    overscroll-behavior: none;
   }
 
   .fast-moving-video-modal video {

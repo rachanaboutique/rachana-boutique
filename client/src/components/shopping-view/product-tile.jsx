@@ -78,11 +78,7 @@ const ShoppingProductTile = ({
             num_items: 1
           });
 
-          console.log('Meta Pixel: AddToCart tracked from ProductTile (temp cart)', {
-            productId: product._id,
-            productName: product.title,
-            value: product.salePrice || product.price || 0
-          });
+         
         }, 100);
 
         toast({
@@ -125,11 +121,7 @@ const ShoppingProductTile = ({
                   num_items: 1
                 });
 
-                console.log('Meta Pixel: AddToCart tracked from ProductTile', {
-                  productId: product._id,
-                  productName: product.title,
-                  value: product.salePrice || product.price || 0
-                });
+              
               }, 100); // Small delay to ensure proper event timing
             }
 

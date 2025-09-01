@@ -45,13 +45,9 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
   const refreshTempCart = () => {
     if (!isAuthenticated) {
       const tempItems = getTempCartItems();
-      console.log('Refreshing temp cart items:', tempItems.length);
-      console.log('Temp cart items from localStorage:', tempItems);
-      console.log('localStorage tempCart value:', localStorage.getItem('tempCart'));
       setTempCartItems(tempItems);
     } else {
       // Clear temp cart items when authenticated
-      console.log('Clearing temp cart items (user authenticated)');
       setTempCartItems([]);
     }
   };
@@ -63,7 +59,6 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
       isInitialLoad.current = true;
 
       // Force refresh temp cart items when drawer opens
-      console.log('Cart drawer opened, authentication status:', isAuthenticated);
       refreshTempCart();
     }
   }, [isOpen, isAuthenticated]);
@@ -71,7 +66,6 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
   // Separate effect to handle authentication state changes
   useEffect(() => {
     // Always refresh temp cart when authentication state changes
-    console.log('Authentication state changed to:', isAuthenticated);
     refreshTempCart();
 
     // Force a small delay to ensure localStorage is accessible

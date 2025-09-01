@@ -1,6 +1,7 @@
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Label } from "../ui/label";
+import { useState, useEffect } from "react";
 import { getStateNameByCode } from "@/utils/locationUtils";
 
 function AddressCard({
@@ -10,6 +11,30 @@ function AddressCard({
   setCurrentSelectedAddress,
   selectedId,
 }) {
+  const [stateName, setStateName] = useState(addressInfo?.state || '');
+
+  // Resolve state name if it's a code
+  useEffect(() => {
+    const resolveStateName = async () => {
+      if (addressInfo?.state) {
+        if (addressInfo.state.length <= 3) {
+          // It's likely a state code, resolve to name
+          try {
+            const resolvedName = await getStateNameByCode(addressInfo.state);
+            setStateName(resolvedName);
+          } catch (error) {
+            setStateName(addressInfo.state);
+          }
+        } else {
+          // It's already a state name
+          setStateName(addressInfo.state);
+        }
+      }
+    };
+
+    resolveStateName();
+  }, [addressInfo?.state]);
+
   return (
     <Card
       onClick={
@@ -26,11 +51,7 @@ function AddressCard({
       <CardContent className="grid p-4 gap-4">
         <Label>Address: {addressInfo?.address}</Label>
         {addressInfo?.state && (
-          <Label>
-            State: {addressInfo.state.length <= 3
-              ? getStateNameByCode(addressInfo.state)
-              : addressInfo.state}
-          </Label>
+          <Label>State: {stateName}</Label>
         )}
         <Label>City: {addressInfo?.city}</Label>
         <Label>Pincode: {addressInfo?.pincode}</Label>
