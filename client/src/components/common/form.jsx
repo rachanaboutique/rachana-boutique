@@ -12,6 +12,7 @@ import {
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
+import { Eye, EyeOff } from "lucide-react";
 import { getOptimizedImageUrl, getOptimizedVideoUrl } from "../../lib/utils";
 import { optimizeImageForUpload, isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
 import { searchCitiesByState } from "@/utils/locationUtils";
@@ -332,13 +333,18 @@ const uploadVideo = async (file) => {
                     [controlItem.name]: event.target.value,
                   })
                 }
+                className="pr-10" // Add padding-right to make space for the icon
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 z-10"
                 onClick={() => togglePasswordVisibility(controlItem.name)}
               >
-                {passwordVisibility[controlItem.name] ? "👁️" : "👁️‍🗨️"}
+                {passwordVisibility[controlItem.name] ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           );

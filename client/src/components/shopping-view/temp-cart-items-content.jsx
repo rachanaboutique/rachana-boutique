@@ -220,15 +220,15 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
           {/* Delete Button */}
           <button
             type="button"
-            className="p-1 text-gray-400 hover:text-black transition-colors flex-shrink-0"
+            className="p-2 text-gray-400 hover:text-black transition-colors flex-shrink-0 rounded-md hover:bg-gray-100 min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation"
             onClick={handleDeleteItem}
             disabled={isDeleting}
             aria-label="Remove item"
           >
             {isDeleting ? (
-              <span className="w-3.5 h-3.5 block animate-pulse">...</span>
+              <span className="w-4 h-4 block animate-pulse">...</span>
             ) : (
-              <Trash className="w-3.5 h-3.5" />
+              <Trash className="w-4 h-4" />
             )}
           </button>
         </div>
@@ -294,26 +294,27 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
           {/* Quantity Controls */}
           <div className="flex items-center gap-1">
             {isUpdating ? (
-              <div className="flex items-center justify-center w-20">
+              <div className="flex items-center justify-center w-24">
                 <span className="text-xs text-gray-500 animate-pulse">Updating...</span>
               </div>
             ) : (
               <>
                 <button
-                  className="w-6 h-6 flex items-center justify-center border border-gray-300 hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-8 h-8 flex items-center justify-center border border-gray-300 hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded touch-manipulation"
                   disabled={tempItem.quantity === 1}
                   onClick={() => handleQuantityChange(tempItem.quantity - 1)}
+                  aria-label="Decrease quantity"
                 >
-                  <Minus className="w-2.5 h-2.5" />
+                  <Minus className="w-3 h-3" />
                 </button>
-                <span className="w-6 text-center text-xs">{tempItem.quantity}</span>
+                <span className="w-8 text-center text-sm">{tempItem.quantity}</span>
                 <button
-                  className="w-6 h-6 flex items-center justify-center border border-gray-300 hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-8 h-8 flex items-center justify-center border border-gray-300 hover:border-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded touch-manipulation"
                   onClick={() => handleQuantityChange(tempItem.quantity + 1)}
                   disabled={selectedColor && selectedColor.inventory <= 0}
-                  title={selectedColor && selectedColor.inventory <= 0 ? "Color is out of stock" : "Increase quantity"}
+                  aria-label={selectedColor && selectedColor.inventory <= 0 ? "Color is out of stock" : "Increase quantity"}
                 >
-                  <Plus className="w-2.5 h-2.5" />
+                  <Plus className="w-3 h-3" />
                 </button>
               </>
             )}

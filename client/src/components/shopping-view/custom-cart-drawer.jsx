@@ -261,9 +261,10 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
             <h2 className="text-lg font-semibold text-foreground">Your Cart</h2>
             <button
               onClick={onClose}
-              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+              className="cart-close-button p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+              aria-label="Close cart"
             >
-              <X className="h-4 w-4" />
+              <X className="h-6 w-6 text-gray-600 hover:text-gray-800" />
               <span className="sr-only">Close</span>
             </button>
           </div>

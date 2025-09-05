@@ -45,6 +45,7 @@ function ShoppingHeader() {
   const lastCartSheetToggleTime = useRef(0);
   const { toast } = useToast();
   const navigate = useNavigate(); // Add navigate at the component level
+  const location = useLocation(); // Add location to track route changes
 
 const messages = [
   "Luxury looks at affordable prices",
@@ -194,7 +195,6 @@ const messages = [
             )}
             <span className="sr-only">Shopping Bag</span>
           </button>
-
           {/* Custom Cart Drawer */}
           <CustomCartDrawer
             isOpen={openCartSheet}
@@ -252,14 +252,20 @@ const messages = [
             >
               <DropdownMenuItem
                 className="flex items-center py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer"
-                onClick={() => navigate("/auth/login")}
+                onClick={() => {
+                  navigate("/auth/login");
+                  setIsSheetOpen(false); // Close the mobile sheet when navigating to auth
+                }}
               >
                 Sign In
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-gray-200 my-1" />
               <DropdownMenuItem
                 className="flex items-center py-2 px-2 rounded-md hover:bg-gray-50 cursor-pointer"
-                onClick={() => navigate("/auth/register")}
+                onClick={() => {
+                  navigate("/auth/register");
+                  setIsSheetOpen(false); // Close the mobile sheet when navigating to auth
+                }}
               >
                 Create Account
               </DropdownMenuItem>
@@ -288,6 +294,42 @@ const messages = [
       dispatch(fetchCartItems(user.id));
     }
   }, [user?.id, dispatch]);
+
+  // Close mobile sheet when location changes (navigation occurs)
+  useEffect(() => {
+    setIsSheetOpen(false);
+    // Force cleanup of any lingering overlays or event listeners
+    document.body.classList.remove('sheet-open');
+    // Remove any potential pointer-events blocking
+    document.body.style.pointerEvents = 'auto';
+  }, [location.pathname]);
+
+  // Manage body scroll when sheet is open/closed
+  useEffect(() => {
+    if (isSheetOpen) {
+      // Add class to prevent body scroll when sheet is open
+      document.body.classList.add('sheet-open');
+    } else {
+      // Remove class to restore body scroll when sheet is closed
+      document.body.classList.remove('sheet-open');
+    }
+
+    // Cleanup function to restore scroll on unmount
+    return () => {
+      document.body.classList.remove('sheet-open');
+      document.body.style.pointerEvents = 'auto';
+    };
+  }, [isSheetOpen]);
+
+  // Global cleanup effect on component unmount
+  useEffect(() => {
+    return () => {
+      // Ensure complete cleanup when header component unmounts
+      document.body.classList.remove('sheet-open');
+      document.body.style.pointerEvents = 'auto';
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   // Update temporary cart count for non-authenticated users
   useEffect(() => {
@@ -324,6 +366,7 @@ const messages = [
         window.removeEventListener('focus', updateTempCartCount);
       };
     } else {
+
       setTempCartCount(0);
     }
   }, [isAuthenticated]);
@@ -403,7 +446,13 @@ const messages = [
           <div className="max-w-[1440px] mx-auto flex h-16 items-center justify-between px-4 md:px-6">
             {/* Mobile menu button */}
             <div className="lg:hidden">
-              <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+              <Sheet open={isSheetOpen} onOpenChange={(open) => {
+                setIsSheetOpen(open);
+                // Ensure body scroll is properly managed
+                if (!open) {
+                  document.body.classList.remove('sheet-open');
+                }
+              }}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="-ml-3 text-gray-700">
                     <Menu className="h-6 w-6" />
@@ -413,7 +462,11 @@ const messages = [
 
                 <SheetContent side="left" className="w-full max-w-xs p-0">
                   <div className="p-6">
-                    <Link to="/shop/home" className="block mb-6">
+                    <Link
+                      to="/shop/home"
+                      className="block mb-6"
+                      onClick={() => setIsSheetOpen(false)}
+                    >
                       <img src={logo} alt="Rachana Boutique Logo" className="h-8" />
                     </Link>
                     <MenuItems onCloseSheet={() => setIsSheetOpen(false)} />

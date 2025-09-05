@@ -2,6 +2,7 @@ import CommonForm from "@/components/common/form";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
 import { forgotPassword } from "@/store/auth-slice";
 import logo from "@/assets/logo3.png";
 
