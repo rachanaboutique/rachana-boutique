@@ -267,6 +267,83 @@ form button {
   }
 }
 
+/* Mobile sheet/sidebar improvements */
+.sheet-overlay-fix {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+/* Ensure mobile sidebar closes properly */
+@media (max-width: 1024px) {
+  [data-radix-dialog-overlay] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+
+  [data-radix-dialog-content] {
+    pointer-events: auto !important;
+  }
+
+  /* Prevent body scroll when mobile sheet is open */
+  body:has([data-state="open"]) {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+/* Mobile header layout improvements */
+@media (max-width: 1024px) {
+  /* Mobile header uses simple flexbox with justify-between */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Mobile icon buttons consistent styling */
+  .mobile-icon-button {
+    padding: 0.5rem;
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Mobile header layout - ensure proper spacing */
+  .mobile-header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .mobile-left-section {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .mobile-right-section {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
+
 /* Prevent context menu on video elements */
 video::-webkit-media-controls-enclosure,
 video::-webkit-media-controls-panel,

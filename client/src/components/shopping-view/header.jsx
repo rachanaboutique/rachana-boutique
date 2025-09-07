@@ -9,7 +9,9 @@ import {
   UserPlus,
   Instagram,
   Facebook,
+  X,
 } from "lucide-react";
+import MobileUserAuth from "./mobile-user-auth";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
@@ -101,6 +103,27 @@ const messages = [
     );
   }
 
+
+  // Mobile sidebar content without user authentication
+  function MobileSidebarContent() {
+    const navigate = useNavigate();
+
+    return (
+      <div className="flex flex-col gap-4">
+        {/* Search option for mobile sidebar */}
+        <button
+          onClick={() => {
+            navigate('/shop/search');
+            setIsSheetOpen(false);
+          }}
+          className="flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors"
+        >
+          <Search className="h-5 w-5 text-gray-600" />
+          <span className="font-medium">Search Products</span>
+        </button>
+      </div>
+    );
+  }
 
   function HeaderRightContent() {
     // Get both isAuthenticated and user from the auth state
@@ -304,6 +327,18 @@ const messages = [
     document.body.style.pointerEvents = 'auto';
   }, [location.pathname]);
 
+  // Add escape key handler for mobile sheet
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (e.key === "Escape" && isSheetOpen) {
+        setIsSheetOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => document.removeEventListener("keydown", handleEscapeKey);
+  }, [isSheetOpen]);
+
   // Manage body scroll when sheet is open/closed
   useEffect(() => {
     if (isSheetOpen) {
@@ -443,95 +478,129 @@ const messages = [
 
         {/* Main header */}
         <div className="bg-gray-50 border-b border-gray-200">
-          <div className="max-w-[1440px] mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-            {/* Mobile menu button */}
-            <div className="lg:hidden">
-              <Sheet open={isSheetOpen} onOpenChange={(open) => {
-                setIsSheetOpen(open);
-                // Ensure body scroll is properly managed
-                if (!open) {
-                  document.body.classList.remove('sheet-open');
-                }
-              }}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="-ml-3 text-gray-700">
-                    <Menu className="h-6 w-6" />
-                    <span className="sr-only">Toggle menu</span>
-                  </Button>
-                </SheetTrigger>
+          <div className={`h-16 pl-3 ${isAuthenticated ? 'pr-3.5' : 'pr-0'} md:pt-2 md:px-16`}>
+            {/* Mobile Layout */}
+            <div className="flex items-center justify-between lg:hidden h-full">
+              {/* Mobile left side - hamburger + logo (grouped together) */}
+              <div className="flex items-center">
+                <Sheet open={isSheetOpen} onOpenChange={(open) => {
+                  setIsSheetOpen(open);
+                  // Ensure body scroll is properly managed
+                  if (!open) {
+                    document.body.classList.remove('sheet-open');
+                    // Force cleanup of any lingering overlays
+                    document.body.style.pointerEvents = 'auto';
+                    document.body.style.overflow = '';
+                  }
+                }}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="-ml-3 text-gray-700">
+                      <Menu className="h-6 w-6" />
+                      <span className="sr-only">Toggle menu</span>
+                    </Button>
+                  </SheetTrigger>
 
-                <SheetContent side="left" className="w-full max-w-xs p-0">
-                  <div className="p-6">
-                    <Link
-                      to="/shop/home"
-                      className="block mb-6"
-                      onClick={() => setIsSheetOpen(false)}
-                    >
-                      <img src={logo} alt="Rachana Boutique Logo" className="h-8" />
-                    </Link>
-                    <MenuItems onCloseSheet={() => setIsSheetOpen(false)} />
-                    <div className="mt-8 pt-6 border-t">
-                      <HeaderRightContent />
+                  <SheetContent side="left" className="w-full max-w-xs p-0" closeButton={false}>
+                    <div className="p-6">
+                      {/* Header with logo and close button */}
+                      <div className="flex items-center justify-between mb-6">
+                        <Link
+                          to="/shop/home"
+                          className="block"
+                          onClick={() => setIsSheetOpen(false)}
+                        >
+                          <img src={logo} alt="Rachana Boutique Logo" className="h-8" />
+                        </Link>
+                        <button
+                          onClick={() => setIsSheetOpen(false)}
+                          className="p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 "
+                          aria-label="Close menu"
+                        >
+                          <X className="h-5 w-5 text-gray-600" />
+                        </button>
+                      </div>
+                      <MenuItems onCloseSheet={() => setIsSheetOpen(false)} />
+                      <div className="mt-8 pt-6 border-t">
+                        <MobileSidebarContent />
+                      </div>
                     </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  </SheetContent>
+                </Sheet>
+
+                {/* Logo - close to hamburger */}
+                <Link to="/shop/home" className="ml-1 flex items-center">
+                  <img src={logo} alt="Rachana Boutique Logo" className="mt-1 h-[36px]" />
+                </Link>
+              </div>
+
+              {/* Mobile right icons - grouped together */}
+              <div className="flex items-center -space-x-2">
+                  <button
+                    onClick={() => navigate('/shop/search')}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors relative group  flex items-center justify-center"
+                  >
+                    <Search className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
+                    <span className="sr-only">Search</span>
+                  </button>
+
+                  {/* Mobile User Authentication */}
+                  <MobileUserAuth />
+
+                  <button
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors relative group flex items-center justify-center"
+                    onClick={(e) => {
+                      // Prevent multiple rapid clicks or clicks while already fetching
+                      if (isFetchingCart.current || cartIsLoading) {
+                        e.preventDefault();
+                        return;
+                      }
+
+                      // Prevent rapid toggling of the cart drawer
+                      const now = Date.now();
+                      if (now - lastCartSheetToggleTime.current > 300) {
+                        lastCartSheetToggleTime.current = now;
+
+                        // Simply open the drawer - the useEffect will handle fetching
+                        setOpenCartSheet(true);
+                      }
+                    }}
+                  >
+                    <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
+                    {((cartItems?.length || 0) + tempCartCount) > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                        {(cartItems?.length || 0) + tempCartCount}
+                      </span>
+                    )}
+                    <span className="sr-only">Shopping Bag</span>
+                  </button>
+              </div>
             </div>
 
-            {/* Logo */}
-            <Link to="/shop/home" className="ml-4  md:-ml-8 flex items-center">
-              <img src={logo} alt="Rachana Boutique Logo" className="mt-1 md:mt-0 h-[36px] md:h-12" />
-            </Link>
+            {/* Desktop Layout */}
+            <div className="hidden lg:flex lg:items-center lg:justify-between lg:w-full">
+              {/* Desktop Logo */}
+              <Link to="/shop/home" className="md:-ml-8 flex items-center">
+                <img src={logo} alt="Rachana Boutique Logo" className="md:h-12" />
+              </Link>
 
-            {/* Desktop navigation */}
-            <div className="hidden lg:block">
-              <MenuItems onCloseSheet={() => { }} />
+              {/* Desktop navigation */}
+              <div>
+                <MenuItems onCloseSheet={() => { }} />
+              </div>
+
+              {/* Desktop right side icons */}
+              <div>
+                <HeaderRightContent />
+              </div>
             </div>
 
-            {/* Right side icons */}
-            <div className="hidden lg:block">
-              <HeaderRightContent />
-            </div>
-
-            {/* Mobile right icons */}
-            <div className="flex items-center  lg:hidden">
-              <button
-                onClick={() => navigate('/shop/search')}
-                className="relative group p-2"
-              >
-                <Search className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
-                <span className="sr-only">Search</span>
-              </button>
-              <button
-                className="relative group"
-                onClick={(e) => {
-                  // Prevent multiple rapid clicks or clicks while already fetching
-                  if (isFetchingCart.current || cartIsLoading) {
-                    e.preventDefault();
-                    return;
-                  }
-
-                  // Prevent rapid toggling of the cart drawer
-                  const now = Date.now();
-                  if (now - lastCartSheetToggleTime.current > 300) {
-                    lastCartSheetToggleTime.current = now;
-
-                    // Simply open the drawer - the useEffect will handle fetching
-                    setOpenCartSheet(true);
-                  }
-                }}
-              >
-                <ShoppingBag className="h-5 w-5 text-gray-700 group-hover:text-black transition-colors" />
-                {((cartItems?.length || 0) + tempCartCount) > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {(cartItems?.length || 0) + tempCartCount}
-                  </span>
-                )}
-                <span className="sr-only">Shopping Bag</span>
-              </button>
-
-              {/* We don't need to duplicate the CustomCartDrawer here as it's already rendered above */}
-            </div>
+            {/* Custom Cart Drawer */}
+            <CustomCartDrawer
+              isOpen={openCartSheet}
+              onClose={() => setOpenCartSheet(false)}
+              cartItems={cartItems || []}
+              isLoading={cartItems.length === 0 ? cartIsLoading || isFetchingCart.current : false}
+            />
           </div>
         </div>
       </header>

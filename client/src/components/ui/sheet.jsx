@@ -52,8 +52,12 @@ const SheetContent = React.forwardRef(({ side = "right", className, children, cl
       className={cn(sheetVariants({ side }), className)}
       {...props}
       onInteractOutside={(e) => {
-        // Prevent interaction outside from interfering with other page elements
-        e.preventDefault();
+        // Allow normal closing behavior when clicking outside
+        // Only prevent default for specific elements that might interfere
+        const target = e.target;
+        if (target && (target.closest('[data-prevent-close]') || target.closest('button[aria-expanded="true"]'))) {
+          e.preventDefault();
+        }
       }}
     >
       {/* Hidden title for accessibility */}
