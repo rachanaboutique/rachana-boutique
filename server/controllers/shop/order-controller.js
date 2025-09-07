@@ -29,6 +29,17 @@ const createOrder = async (req, res) => {
       cartId,
     } = req.body;
 
+    // Validate and sanitize addressInfo
+    const sanitizedAddressInfo = {
+      addressId: String(addressInfo?.addressId || ''),
+      address: String(addressInfo?.address || ''),
+      state: String(addressInfo?.state || ''),
+      city: String(addressInfo?.city || ''),
+      pincode: String(addressInfo?.pincode || ''),
+      phone: String(addressInfo?.phone || ''),
+      notes: String(addressInfo?.notes || ''),
+    };
+
     // Create Razorpay order
     const options = {
       amount: totalAmount * 100, // Razorpay expects amount in paise
@@ -43,7 +54,7 @@ const createOrder = async (req, res) => {
       userId,
       cartId,
       cartItems,
-      addressInfo,
+      addressInfo: sanitizedAddressInfo,
       orderStatus: orderStatus || "pending", // Default to pending if not provided
       paymentMethod,
       paymentStatus: paymentStatus || "pending", // Default to pending if not provided

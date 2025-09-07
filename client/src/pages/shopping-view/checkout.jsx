@@ -178,14 +178,10 @@ function ShoppingCheckout() {
       addressInfo: {
         addressId: currentSelectedAddress?._id,
         address: currentSelectedAddress?.address,
-        state: currentSelectedAddress?.state ? (
-          currentSelectedAddress.state.length <= 3
-            ? getStateNameByCode(currentSelectedAddress.state)
-            : currentSelectedAddress.state
-        ) : "",
-        city: currentSelectedAddress?.city,
-        pincode: currentSelectedAddress?.pincode,
-        phone: currentSelectedAddress?.phone,
+        state: currentSelectedAddress?.state || "",
+        city: currentSelectedAddress?.city || "",
+        pincode: currentSelectedAddress?.pincode || "",
+        phone: currentSelectedAddress?.phone || "",
       },
       totalAmount: totalCartAmount,
       orderStatus: "pending",

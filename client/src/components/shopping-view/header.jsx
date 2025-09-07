@@ -478,7 +478,7 @@ const messages = [
 
         {/* Main header */}
         <div className="bg-gray-50 border-b border-gray-200">
-          <div className={`h-16 pl-3 ${isAuthenticated ? 'pr-3.5' : 'pr-0'} md:pt-2 md:px-16`}>
+          <div className="h-16 pl-3 pr-3.5 md:pt-2 md:px-16">
             {/* Mobile Layout */}
             <div className="flex items-center justify-between lg:hidden h-full">
               {/* Mobile left side - hamburger + logo (grouped together) */}

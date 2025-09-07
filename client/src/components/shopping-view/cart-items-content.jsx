@@ -376,106 +376,42 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
             {availableColors.length > 0 && (
               <div className="relative" ref={dropdownRef}>
                 <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isColorUpdating) {
-                      setDropdownOpen(!dropdownOpen);
-                    }
-                  }}
-                  className="flex items-center justify-between w-28 px-2 py-1 border border-gray-300 rounded-sm hover:border-black transition-colors"
+                  className="flex items-center gap-2 px-2 py-1 border border-gray-300 rounded text-xs hover:border-black transition-colors disabled:opacity-50"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
                   disabled={isColorUpdating}
                 >
-                  {isColorUpdating ? (
-                    <div className="flex items-center justify-center w-full">
-                      <span className="text-xs text-gray-500 animate-pulse">Updating...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-1.5">
-                        {selectedColor?.image ? (
-                          <div className="relative w-4 h-4 overflow-hidden rounded-sm border border-gray-300">
-                            <img
-                              src={selectedColor.image}
-                              alt={selectedColor.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            className="w-4 h-4 rounded-sm border border-gray-300"
-                            style={{ backgroundColor: selectedColor?.colorCode || '#ccc' }}
-                          ></div>
-                        )}
-                        <span className="text-xs uppercase tracking-wide truncate">{selectedColor?.title || "Color"}</span>
-                      </div>
-                      <ChevronDown className="w-3 h-3 flex-shrink-0" />
-                    </>
+                  {selectedColor && selectedColor.image && (
+                    <img
+                      src={selectedColor.image}
+                      alt={selectedColor.title}
+                      className="w-4 h-4 object-cover border border-gray-300 rounded-sm"
+                    />
                   )}
+                  <span>{selectedColor?.title || 'Select Color'}</span>
+                  <ChevronDown className="w-3 h-3" />
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute left-0 w-40 mt-1 bg-white border border-gray-200 rounded-sm shadow-lg z-50">
-                    <div className="py-1">
-                      <div className="px-2 pb-1 mb-1 border-b border-gray-100">
-                        <span className="text-xs text-gray-500 uppercase tracking-wider">Select Color</span>
-                      </div>
-
-                      <div className="max-h-40 overflow-y-auto">
-                        {availableColors.map((color) => {
-                          const isOutOfStock = color.inventory <= 0;
-                          return (
-                            <button
-                              key={color._id}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (!isOutOfStock) {
-                                  handleColorChange(color);
-                                }
-                              }}
-                              className={`w-full text-left flex items-center gap-2 px-2 py-1.5 transition-colors ${
-                                isOutOfStock
-                                  ? 'cursor-not-allowed opacity-50'
-                                  : 'cursor-pointer hover:bg-gray-50'
-                              }`}
-                              disabled={isOutOfStock}
-                            >
-                              <div className="relative flex items-center">
-                                {color.image ? (
-                                  <div className="relative w-6 h-6 overflow-hidden rounded-sm border border-gray-200">
-                                    <img
-                                      src={color.image}
-                                      alt={color.title}
-                                      className="w-full h-full object-cover"
-                                    />
-                                    {selectedColor?._id === color._id && (
-                                      <div className="absolute inset-0 border-2 border-black"></div>
-                                    )}
-                                    {isOutOfStock && (
-                                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                        <span className="text-white text-xs font-bold">OOS</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div
-                                    className={`w-6 h-6 rounded-sm ${selectedColor?._id === color._id ? 'border-2 border-black' : 'border border-gray-300'}`}
-                                    style={{ backgroundColor: color?.colorCode || '#ccc' }}
-                                  ></div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <span className={`text-xs uppercase tracking-wide block truncate ${isOutOfStock ? 'line-through' : ''}`}>
-                                  {color.title}
-                                  {isOutOfStock && <span className="text-red-500 ml-1">(Out of Stock)</span>}
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 min-w-[120px]">
+                    {availableColors.map((color) => (
+                      <button
+                        key={color._id}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors"
+                        onClick={() => handleColorChange(color)}
+                      >
+                        {color.image && (
+                          <img
+                            src={color.image}
+                            alt={color.title}
+                            className="w-4 h-4 object-cover border border-gray-300 rounded-sm"
+                          />
+                        )}
+                        <span>{color.title}</span>
+                        {color.inventory <= 0 && (
+                          <span className="text-red-500 text-xs">(Out of stock)</span>
+                        )}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
