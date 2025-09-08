@@ -15,6 +15,7 @@ import { addToCart } from "@/store/shop/cart-slice";
 import { ShoppingCart as ShoppingBag } from "lucide-react";
 import { getStateNameByCode } from "@/utils/locationUtils";
 import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
+import { runCartDebug } from "@/utils/cartDebugHelper";
 
 function ShoppingCheckout() {
   const { cartItems } = useSelector((state) => state.shopCart);
@@ -82,36 +83,192 @@ function ShoppingCheckout() {
   const validateInventory = () => {
     const errors = [];
 
+    // Run comprehensive debug to understand data structure
+    runCartDebug({ cartItems, tempCartItems, productList });
+
+    // Debug: Log cart items structure to understand data format
+    console.log('🔍 Validating inventory for cart items:', cartItems);
+    if (cartItems.length > 0) {
+      console.log('🔍 First cart item structure:', cartItems[0]);
+    }
+
     if (isAuthenticated && cartItems.length > 0) {
       // Validate actual cart items
-      cartItems.forEach(item => {
-        if (item.colors) {
+      cartItems.forEach((item, index) => {
+        // Enhanced debugging for title issue
+        console.log(`🔍 Cart item ${index}:`, {
+          title: item.title,
+          productId: item.productId,
+          hasColors: !!item.colors,
+          colorTitle: item.colors?.title,
+          quantity: item.quantity,
+          productColors: item.productColors,
+          totalStock: item.totalStock,
+          fullItem: item
+        });
+
+        // Get product title with multiple fallbacks, including from productList
+        const productFromList = productList.find(p => p._id === item.productId);
+        const productTitle = item.title ||
+                           item.productTitle ||
+                           item.name ||
+                           productFromList?.title ||
+                           `Product ${item.productId || 'Unknown'}`;
+
+        if (item.colors && item.colors._id) {
           // For items with colors, check against color inventory
           const availableInventory = item.productColors
             ? item.productColors.find(color => color._id === item.colors._id)?.inventory || 0
             : item.colors.inventory || 0;
 
+          console.log(`🔍 Color inventory check:`, {
+            productTitle,
+            colorTitle: item.colors.title,
+            requestedQuantity: item.quantity,
+            availableInventory
+          });
+
           if (item.quantity > availableInventory) {
-            errors.push(`${item.title} (${item.colors.title}): Only ${availableInventory} items available, but ${item.quantity} requested`);
+            const colorTitle = item.colors.title || 'Selected Color';
+            if (availableInventory === 0) {
+              errors.push(`Sorry, "${productTitle}" in ${colorTitle} is currently out of stock.`);
+            } else {
+              errors.push(`Sorry, only ${availableInventory} item${availableInventory === 1 ? '' : 's'} of "${productTitle}" in ${colorTitle} ${availableInventory === 1 ? 'is' : 'are'} available. Please reduce the quantity.`);
+            }
           }
         } else {
-          // For items without colors, check total stock
-          if (item.quantity > (item.totalStock || 0)) {
-            errors.push(`${item.title}: Only ${item.totalStock || 0} items available, but ${item.quantity} requested`);
+          // For items without colors OR items with colors but no color selected
+          // Check if this product actually has colors in the product list
+          const productFromList = productList.find(p => p._id === item.productId);
+
+          // Also check if the cart item has productColors data (more reliable)
+          const hasColorsInCartItem = item.productColors && item.productColors.length > 0;
+          const hasColorsInProductList = productFromList?.colors && productFromList.colors.length > 0;
+
+          console.log(`🔍 Color data analysis:`, {
+            productTitle,
+            hasColorsInCartItem,
+            hasColorsInProductList,
+            cartItemProductColors: item.productColors?.length || 0,
+            productListColors: productFromList?.colors?.length || 0,
+            cartItemHasColors: !!item.colors,
+            cartItemColorId: item.colors?._id,
+            // Additional debugging
+            productColorsData: item.productColors,
+            productListColorsData: productFromList?.colors,
+            totalStock: item.totalStock
+          });
+
+          if (hasColorsInCartItem) {
+            // Use cart item's productColors data (most reliable)
+            const totalAvailableStock = item.productColors.reduce((sum, color) => sum + (color.inventory || 0), 0);
+
+            console.log(`🔍 Using cart item productColors:`, {
+              productTitle,
+              requestedQuantity: item.quantity,
+              totalAvailableStock,
+              colorsCount: item.productColors.length,
+              colorInventories: item.productColors.map(c => ({ title: c.title, inventory: c.inventory }))
+            });
+
+            if (item.quantity > totalAvailableStock) {
+              if (totalAvailableStock === 0) {
+                errors.push(`Sorry, "${productTitle}" is currently out of stock.`);
+              } else {
+                errors.push(`Sorry, only ${totalAvailableStock} item${totalAvailableStock === 1 ? '' : 's'} of "${productTitle}" ${totalAvailableStock === 1 ? 'is' : 'are'} available. Please reduce the quantity.`);
+              }
+            }
+          } else if (hasColorsInProductList) {
+            // Fallback to product list colors
+            const totalAvailableStock = productFromList.colors.reduce((sum, color) => sum + (color.inventory || 0), 0);
+
+            console.log(`🔍 Using product list colors:`, {
+              productTitle,
+              requestedQuantity: item.quantity,
+              totalAvailableStock,
+              colorsCount: productFromList.colors.length,
+              colorInventories: productFromList.colors.map(c => ({ title: c.title, inventory: c.inventory }))
+            });
+
+            if (item.quantity > totalAvailableStock) {
+              if (totalAvailableStock === 0) {
+                errors.push(`Sorry, "${productTitle}" is currently out of stock.`);
+              } else {
+                errors.push(`Sorry, only ${totalAvailableStock} item${totalAvailableStock === 1 ? '' : 's'} of "${productTitle}" ${totalAvailableStock === 1 ? 'is' : 'are'} available. Please reduce the quantity.`);
+              }
+            }
+          } else {
+            // Product truly has no colors, check total stock
+            // Use current product list data instead of potentially stale cart item data
+            const totalStock = productFromList?.totalStock || item.totalStock || 0;
+
+            console.log(`🔍 Product without colors - total stock check:`, {
+              productTitle,
+              requestedQuantity: item.quantity,
+              totalStock,
+              cartItemTotalStock: item.totalStock,
+              productListTotalStock: productFromList?.totalStock,
+              usingSource: productFromList?.totalStock !== undefined ? 'productList' : 'cartItem'
+            });
+
+            if (item.quantity > totalStock) {
+              if (totalStock === 0) {
+                errors.push(`Sorry, "${productTitle}" is currently out of stock.`);
+              } else {
+                errors.push(`Sorry, only ${totalStock} item${totalStock === 1 ? '' : 's'} of "${productTitle}" ${totalStock === 1 ? 'is' : 'are'} available. Please reduce the quantity.`);
+              }
+            }
           }
         }
       });
     } else if (!isAuthenticated && tempCartItems.length > 0) {
       // Validate temp cart items against productList
-      tempCartItems.forEach(tempItem => {
+      tempCartItems.forEach((tempItem, index) => {
         const product = productList.find(p => p._id === tempItem.productId);
+
+        // Enhanced debugging for temp cart items
+        console.log(`🔍 Temp cart item ${index}:`, {
+          productId: tempItem.productId,
+          productDetailsTitle: tempItem.productDetails?.title,
+          productTitle: product?.title,
+          colorId: tempItem.colorId,
+          quantity: tempItem.quantity
+        });
+
+        const productTitle = tempItem.productDetails?.title ||
+                           product?.title ||
+                           `Product ${tempItem.productId || 'Unknown'}`;
+
         if (product && tempItem.colorId) {
           const color = product.colors?.find(c => c._id === tempItem.colorId);
           if (color && tempItem.quantity > color.inventory) {
-            errors.push(`${tempItem.productDetails.title} (${color.title}): Only ${color.inventory} items available, but ${tempItem.quantity} requested`);
+            const colorTitle = color.title || 'Selected Color';
+            if (color.inventory === 0) {
+              errors.push(`Sorry, "${productTitle}" in ${colorTitle} is currently out of stock.`);
+            } else {
+              errors.push(`Sorry, only ${color.inventory} item${color.inventory === 1 ? '' : 's'} of "${productTitle}" in ${colorTitle} ${color.inventory === 1 ? 'is' : 'are'} available. Please reduce the quantity.`);
+            }
+          }
+        } else if (product && !tempItem.colorId) {
+          // For temp cart items without colors
+          const totalStock = product.colors && product.colors.length > 0
+            ? product.colors.reduce((sum, color) => sum + (color.inventory || 0), 0)
+            : product.totalStock || 0;
+
+          if (tempItem.quantity > totalStock) {
+            if (totalStock === 0) {
+              errors.push(`Sorry, "${productTitle}" is currently out of stock.`);
+            } else {
+              errors.push(`Sorry, only ${totalStock} item${totalStock === 1 ? '' : 's'} of "${productTitle}" ${totalStock === 1 ? 'is' : 'are'} available. Please reduce the quantity.`);
+            }
           }
         }
       });
+    }
+
+    // Log final errors for debugging
+    if (errors.length > 0) {
+      console.log('🚨 Inventory validation errors:', errors);
     }
 
     return errors;
@@ -149,8 +306,8 @@ function ShoppingCheckout() {
     const inventoryErrors = validateInventory();
     if (inventoryErrors.length > 0) {
       toast({
-        title: "Inventory Error",
-        description: inventoryErrors[0], // Show first error
+        title: "Unable to Complete Order",
+        description: inventoryErrors[0], // Show first error with user-friendly message
         variant: "destructive",
       });
       return;
@@ -400,13 +557,13 @@ function ShoppingCheckout() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
-                      onClick={() => navigate('/auth/login')}
+                      onClick={() => navigate('/auth/login?redirect=checkout')}
                       className="px-8 py-3 bg-black text-white hover:bg-gray-800 transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
                     >
                       Sign In
                     </button>
                     <button
-                      onClick={() => navigate('/auth/register')}
+                      onClick={() => navigate('/auth/register?redirect=checkout')}
                       className="px-8 py-3 border-2 border-black text-black hover:bg-black hover:text-white transition-colors duration-300 uppercase tracking-wider text-sm font-medium"
                     >
                       Create Account

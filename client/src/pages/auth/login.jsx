@@ -4,7 +4,7 @@ import { loginFormControls } from "@/config";
 import { loginUser } from "@/store/auth-slice";
 import { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/main-logo.png";
 import { getTempCartItems, copyTempCartToUser } from "@/utils/tempCartManager";
 import { addToCart } from "@/store/shop/cart-slice";
@@ -22,6 +22,7 @@ function AuthLogin() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   // Flag to prevent duplicate cart copying
   const hasCopiedCart = useRef(false);
@@ -103,17 +104,19 @@ function AuthLogin() {
           }
         }
 
-        // Navigate based on user role and current path
-        const currentPath = window.location.pathname;
+        // Navigate based on user role and redirect context
+        const redirectParam = searchParams.get('redirect');
 
         if (user?.role === 'admin') {
           // Admin users always go to admin dashboard
           navigate('/admin/dashboard');
         } else {
-          // Regular users: go back to checkout if they were there, otherwise to shop home
-          if (currentPath.includes('/checkout')) {
+          // Regular users: check redirect parameter first, then fallback to current path
+          if (redirectParam === 'checkout') {
+            // User came from checkout page - redirect back to checkout
             navigate('/shop/checkout');
           } else {
+            // Normal login from header or other places - go to home
             navigate('/shop/home');
           }
         }
@@ -139,7 +142,7 @@ function AuthLogin() {
           Don't have an account?
           <Link
             className="font-medium ml-2 text-primary hover:underline"
-            to="/auth/register"
+            to={`/auth/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`}
           >
             Register
           </Link>

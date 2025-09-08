@@ -426,12 +426,20 @@ const uploadVideo = async (file) => {
             placeholder={controlItem.placeholder}
             id={controlItem.id}
             value={value}
-            onChange={(event) =>
-              setFormData({
-                ...formData,
-                [controlItem.name]: event.target.value,
-              })
-            }
+            onChange={(event) => {
+              if (typeof setFormData === 'function') {
+                // Check if setFormData is the custom handler (for address form)
+                if (setFormData.length === 2) {
+                  setFormData(controlItem.name, event.target.value);
+                } else {
+                  setFormData({
+                    ...formData,
+                    [controlItem.name]: event.target.value,
+                  });
+                }
+              }
+            }}
+            className={formErrors[controlItem.name] ? "border-red-500" : ""}
           />
         );
         break;

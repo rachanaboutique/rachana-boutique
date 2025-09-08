@@ -271,10 +271,11 @@ if (typeof setCurrentSelectedAddress === 'function') {
   }
 
   function isFormValid() {
-    return Object.keys(formData)
-      .filter((key) => key !== "notes")
-      .map((key) => formData[key].trim() !== "")
-      .every((item) => item);
+    const requiredFields = ['address', 'state', 'city', 'phone', 'pincode'];
+    return requiredFields.every(field => {
+      const value = formData[field];
+      return value && typeof value === 'string' && value.trim() !== '';
+    });
   }
 
   useEffect(() => {

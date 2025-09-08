@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { useToast } from "../ui/use-toast";
 import { useState, useRef, useEffect, memo, useMemo, useCallback } from "react";
 import { updateTempCartQuantity, removeFromTempCart, changeTempCartColor } from "@/utils/tempCartManager";
+import { isTempCartItemOutOfStock } from "@/utils/cartValidation";
 
 // Helper function to format currency
 const formatCurrency = (amount) => {
@@ -48,6 +49,11 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
   const availableColors = useMemo(() => {
     return currentProduct?.colors || [];
   }, [currentProduct]);
+
+  // Check if this temp cart item is out of stock
+  const isOutOfStock = useMemo(() => {
+    return isTempCartItemOutOfStock(tempItem, productList);
+  }, [tempItem, productList]);
 
   // Initialize selected color and image
   const { defaultColor, defaultImage } = useMemo(() => {
@@ -291,9 +297,13 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
             </div>
           )}
 
-          {/* Quantity Controls */}
+          {/* Quantity Controls or Out of Stock Message */}
           <div className="flex items-center gap-1">
-            {isUpdating ? (
+            {isOutOfStock ? (
+              <div className="px-3 py-1 bg-red-100 border border-red-300 rounded text-xs text-red-700 font-medium">
+                Out of Stock
+              </div>
+            ) : isUpdating ? (
               <div className="flex items-center justify-center w-24">
                 <span className="text-xs text-gray-500 animate-pulse">Updating...</span>
               </div>

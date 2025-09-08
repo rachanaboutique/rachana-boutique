@@ -1016,7 +1016,7 @@ function ProductDetailsPage({ open, setOpen }) {
               </div>
 
               {/* Return & Exchange Policy */}
-              <div className="w-full border-b border-gray-200">
+              <div className="w-full ">
                 <button
                   onClick={() => toggleFAQ('return')}
                   className="w-full flex items-center justify-between py-5 text-left hover:bg-gray-50/50 transition-all duration-300 group"
@@ -1185,7 +1185,7 @@ function ProductDetailsPage({ open, setOpen }) {
               </div>
 
               {/* Return & Exchange Policy */}
-              <div className="w-full border-b border-gray-200">
+              <div className="w-full ">
                 <button
                   onClick={() => toggleFAQ('return-mobile')}
                   className="w-full flex items-center justify-between py-4 text-left hover:bg-gray-50/50 transition-all duration-300 group"
@@ -1200,8 +1200,8 @@ function ProductDetailsPage({ open, setOpen }) {
                     <Plus className="h-5 w-5 text-gray-600" />
                   </div>
                 </button>
-                <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                  expandedFAQ['return-mobile'] ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+                <div className={`transition-all duration-500 ease-in-out ${
+                  expandedFAQ['return-mobile'] ? 'max-h-none opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
                 }`}>
                   <div className="pb-4 text-lg text-gray-700 leading-relaxed">
                     <div className="pl-11 space-y-3">

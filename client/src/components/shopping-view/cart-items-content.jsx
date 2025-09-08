@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { deleteCartItem, updateCartQuantity, fetchCartItems } from "@/store/shop/cart-slice";
 import { useToast } from "../ui/use-toast";
 import { useState, useRef, useEffect, memo, useMemo, useCallback } from "react";
+import { isCartItemOutOfStock } from "@/utils/cartValidation";
 
 // Helper function to compute initial selection based on cartItem and available colors
 const getInitialSelection = (cartItem, availableColors) => {
@@ -49,7 +50,7 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
 
   // Find the product in productList to get available colors - memoize this calculation
   // Prioritize cart item's productColors (with up-to-date inventory) over productList
-  const { currentProduct, availableColors } = useMemo(() => {
+  const { currentProduct, availableColors, isOutOfStock } = useMemo(() => {
     const product = productList.find(p => p._id === cartItem.productId);
 
     // Use productColors from cart item if available (includes up-to-date inventory)
@@ -58,11 +59,15 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
       ? cartItem.productColors
       : product?.colors || [];
 
+    // Check if this cart item is out of stock
+    const outOfStock = isCartItemOutOfStock(cartItem, productList);
+
     return {
       currentProduct: product,
-      availableColors: colors
+      availableColors: colors,
+      isOutOfStock: outOfStock
     };
-  }, [productList, cartItem.productId, cartItem.productColors]);
+  }, [productList, cartItem.productId, cartItem.productColors, cartItem]);
 
   // Initialize state by computing defaults using our helper function - memoize this calculation
   const { defaultColor, defaultImage } = useMemo(() =>
@@ -417,9 +422,13 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
               </div>
             )}
 
-            {/* Quantity Controls */}
+            {/* Quantity Controls or Out of Stock Message */}
             <div className="flex items-center gap-1">
-              {isQuantityUpdating ? (
+              {isOutOfStock ? (
+                <div className="px-3 py-1 bg-red-100 border border-red-300 rounded text-xs text-red-700 font-medium">
+                  Out of Stock
+                </div>
+              ) : isQuantityUpdating ? (
                 <div className="flex items-center justify-center w-24">
                   <span className="text-xs text-gray-500 animate-pulse">Updating...</span>
                 </div>

@@ -79,17 +79,18 @@ function MobileUserAuth() {
       </SheetTrigger>
 
       <SheetContent side="bottom" className="h-auto max-h-[50vh] rounded-t-xl pt-6" closeButton={false}>
-        <SheetHeader className="flex flex-row items-center justify-between mb-6">
-          <SheetTitle className="text-lg font-medium">
-            {user ? "Account" : "Welcome to Rachana Boutique!"}
-          </SheetTitle>
-          <button 
+        <button 
             onClick={() => setIsSheetOpen(false)}
-            className="cart-close-button p-2 rounded-md hover:bg-gray-100 transition-colors duration-200 focus:outline-none "
+            className="absolute top-1 right-1 cart-close-button  rounded-md hover:bg-gray-100 transition-colors duration-200 focus:outline-none "
             aria-label="Close"
           >
             <X className="h-5 w-5 text-gray-600" />
           </button>
+        <SheetHeader className="pt-4 flex flex-row items-center justify-center mb-6">
+          <SheetTitle className="text-lg font-medium">
+            {user ? "Account" : "Welcome to Rachana Boutique!"}
+          </SheetTitle>
+          
         </SheetHeader>
 
         <div className="space-y-4 pb-6">

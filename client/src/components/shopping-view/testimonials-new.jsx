@@ -195,7 +195,7 @@ const Testimonials = () => {
   };
 
   return (
-    <div className='relative'>
+    <div className=''>
       <div className='w-full mx-auto relative md:px-6'>
         {/* Navigation Arrows - Desktop Only */}
         {!isMobile && (
@@ -237,7 +237,7 @@ const Testimonials = () => {
         </div>
 
         {/* Dots Indicator */}
-        <div className="flex justify-center mt-8 space-x-2">
+        <div className="flex justify-center mt-6 md:mt-8 space-x-2">
           {Array.from({ length: totalSlides }).map((_, index) => (
             <button
               key={index}
@@ -253,11 +253,12 @@ const Testimonials = () => {
           ))}
         </div>
 
-        {/* Feedback button positioned at the bottom center */}
-        <div className="flex justify-center mt-8">
+     
+      </div>
+         {/* Feedback button positioned at the bottom center */}
+        <div className="flex justify-center mt-8 md:mt-12 ">
           <FeedbackCard />
         </div>
-      </div>
     </div>
   );
 };

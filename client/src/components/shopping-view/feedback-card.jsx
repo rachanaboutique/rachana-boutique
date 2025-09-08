@@ -58,7 +58,7 @@ const FeedbackCard = () => {
           <span>Share Your Experience</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className=" w-[90%] md:w-[50%]">
         <DialogHeader>
           <DialogTitle className="mt-6 text-xl font-light uppercase tracking-wide text-center">Share Your Experience</DialogTitle>
           <div className="w-16 h-0.5 bg-black mx-auto mt-2 mb-4"></div>

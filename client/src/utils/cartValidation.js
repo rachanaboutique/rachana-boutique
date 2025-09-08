@@ -149,7 +149,7 @@ export const isInStock = ({ productId, colorId, productList }) => {
       const color = product.colors?.find(c => c._id === colorId);
       return color ? color.inventory > 0 : false;
     } else {
-      const totalStock = product.colors && product.colors.length > 0 
+      const totalStock = product.colors && product.colors.length > 0
         ? product.colors.reduce((sum, color) => sum + (color.inventory || 0), 0)
         : product.totalStock || 0;
       return totalStock > 0;
@@ -157,5 +157,61 @@ export const isInStock = ({ productId, colorId, productList }) => {
   } catch (error) {
     console.error('Error checking stock:', error);
     return false;
+  }
+};
+
+/**
+ * Check if a cart item is out of stock
+ * @param {Object} cartItem - Cart item to check
+ * @param {Array} productList - Product list for current inventory data
+ * @returns {boolean} True if out of stock, false if in stock
+ */
+export const isCartItemOutOfStock = (cartItem, productList) => {
+  try {
+    const product = productList.find(p => p._id === cartItem.productId);
+    if (!product) return true; // Product not found = out of stock
+
+    if (cartItem.colors && cartItem.colors._id) {
+      // For items with colors, check color inventory
+      const color = product.colors?.find(c => c._id === cartItem.colors._id);
+      return !color || color.inventory <= 0;
+    } else {
+      // For items without colors, check total stock
+      const totalStock = product.colors && product.colors.length > 0
+        ? product.colors.reduce((sum, color) => sum + (color.inventory || 0), 0)
+        : product.totalStock || 0;
+      return totalStock <= 0;
+    }
+  } catch (error) {
+    console.error('Error checking cart item stock:', error);
+    return true; // Assume out of stock on error
+  }
+};
+
+/**
+ * Check if a temp cart item is out of stock
+ * @param {Object} tempItem - Temp cart item to check
+ * @param {Array} productList - Product list for current inventory data
+ * @returns {boolean} True if out of stock, false if in stock
+ */
+export const isTempCartItemOutOfStock = (tempItem, productList) => {
+  try {
+    const product = productList.find(p => p._id === tempItem.productId);
+    if (!product) return true; // Product not found = out of stock
+
+    if (tempItem.colorId) {
+      // For items with colors, check color inventory
+      const color = product.colors?.find(c => c._id === tempItem.colorId);
+      return !color || color.inventory <= 0;
+    } else {
+      // For items without colors, check total stock
+      const totalStock = product.colors && product.colors.length > 0
+        ? product.colors.reduce((sum, color) => sum + (color.inventory || 0), 0)
+        : product.totalStock || 0;
+      return totalStock <= 0;
+    }
+  } catch (error) {
+    console.error('Error checking temp cart item stock:', error);
+    return true; // Assume out of stock on error
   }
 };

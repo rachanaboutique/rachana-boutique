@@ -4,7 +4,7 @@ import { registerFormControls } from "@/config";
 import { registerUser } from "@/store/auth-slice";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/main-logo.png";
 
 const initialState = {
@@ -19,6 +19,7 @@ function AuthRegister() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   // Validate that all fields are non-empty
   useEffect(() => {
@@ -50,7 +51,14 @@ function AuthRegister() {
         toast({
           title: data?.payload?.message,
         });
-        navigate("/auth/login");
+
+        // Check if user came from checkout and preserve redirect parameter
+        const redirectParam = searchParams.get('redirect');
+        if (redirectParam === 'checkout') {
+          navigate("/auth/login?redirect=checkout");
+        } else {
+          navigate("/auth/login");
+        }
       } else {
         toast({
           title: data?.payload?.message,
@@ -73,7 +81,7 @@ function AuthRegister() {
           Already have an account?
           <Link
             className="font-medium ml-2 text-primary hover:underline"
-            to="/auth/login"
+            to={`/auth/login${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`}
           >
             Login
           </Link>
