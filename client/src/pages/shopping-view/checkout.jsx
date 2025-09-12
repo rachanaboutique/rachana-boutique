@@ -3,7 +3,7 @@ import img from "../../assets/jamandi.png";
 import { useDispatch, useSelector } from "react-redux";
 import UserCartItemsContent from "@/components/shopping-view/cart-items-content";
 import TempCartItemsContent from "@/components/shopping-view/temp-cart-items-content";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createNewOrder, capturePayment } from "@/store/shop/order-slice";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -26,6 +26,7 @@ function ShoppingCheckout() {
   const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
   const [isPaymentStart, setIsPaymentStart] = useState(false);
   const [razorpayInstance, setRazorpayInstance] = useState(null);
+  const [showCloseWarning, setShowCloseWarning] = useState(false);
   const { isPaymentLoading } = useSelector((state) => state.shopOrder);
   const [tempCartItems, setTempCartItems] = useState([]);
 
@@ -58,11 +59,14 @@ function ShoppingCheckout() {
   // Format the total to 2 decimal places for display
   const formattedTotal = totalCartAmount.toFixed(2);
 
-  // Load temporary cart items on component mount
+  // Load temporary cart items and fetch latest product data on component mount
   useEffect(() => {
     const tempItems = getTempCartItems();
     setTempCartItems(tempItems);
-  }, []);
+
+    // Fetch latest product data to ensure accurate stock information
+    dispatch(fetchAllFilteredProducts({ filterParams: {}, sortParams: "price-lowtohigh" }));
+  }, [dispatch]);
 
   // Auto-select address if user has only one address
   useEffect(() => {
@@ -71,10 +75,8 @@ function ShoppingCheckout() {
     }
   }, [isAuthenticated, addressList, currentSelectedAddress]);
 
-  // Refresh product data when checkout page loads to ensure latest inventory
-  useEffect(() => {
-    dispatch(fetchAllFilteredProducts({}));
-  }, [dispatch]);
+  // Note: Removed fetchAllFilteredProducts call to prevent infinite loops
+  // Product data should already be available from the page that navigated to checkout
 
   // Calculate temporary cart total
   const tempCartTotal = getTempCartTotal();
@@ -282,8 +284,63 @@ function ShoppingCheckout() {
     setRazorpayInstance(null);
   };
 
-  // Handle window beforeunload event to reset payment state
-  window.addEventListener('beforeunload', resetPaymentState);
+  // Handle browser close warning during payment
+  const handleBeforeUnload = useCallback((event) => {
+    console.log('beforeunload event triggered, isPaymentStart:', isPaymentStart);
+    if (isPaymentStart) {
+      // Show custom warning modal first
+      setShowCloseWarning(true);
+
+      // Show browser's native confirmation dialog
+      const message = "⚠️ PAYMENT IN PROGRESS! Closing this window may result in payment failure or loss of transaction. Are you sure you want to leave?";
+
+      event.preventDefault();
+      event.returnValue = message;
+      return message;
+    }
+  }, [isPaymentStart]);
+
+  // Handle keyboard shortcuts that might close the tab
+  const handleKeyDown = useCallback((event) => {
+    if (isPaymentStart) {
+      // Detect common close tab shortcuts
+      const isCloseShortcut =
+        (event.ctrlKey && event.key === 'w') || // Ctrl+W
+        (event.ctrlKey && event.key === 'F4') || // Ctrl+F4
+        (event.altKey && event.key === 'F4') || // Alt+F4
+        (event.ctrlKey && event.shiftKey && event.key === 'W'); // Ctrl+Shift+W
+
+      if (isCloseShortcut) {
+        event.preventDefault();
+
+        // Show custom alert
+        const userWantsToClose = window.confirm(
+          "⚠️ PAYMENT IN PROGRESS!\n\n" +
+          "Your payment is currently being processed. Closing this window now may:\n" +
+          "• Result in payment failure\n" +
+          "• Loss of transaction\n" +
+          "• Require you to start over\n\n" +
+          "Are you sure you want to close this tab?"
+        );
+
+        if (userWantsToClose) {
+          // User confirmed, allow the close by removing protection temporarily
+          setIsPaymentStart(false);
+          setTimeout(() => {
+            window.close();
+          }, 100);
+        }
+      }
+    }
+  }, [isPaymentStart]);
+
+  // Handle page visibility change (when user switches tabs or minimizes)
+  const handleVisibilityChange = useCallback(() => {
+    if (isPaymentStart && document.hidden) {
+      // User switched away from tab during payment
+      console.warn("User switched away from payment tab");
+    }
+  }, [isPaymentStart]);
 
   function handleInitiateRazorpayPayment() {
     if (cartItems.length === 0) {
@@ -334,11 +391,13 @@ function ShoppingCheckout() {
       })),
       addressInfo: {
         addressId: currentSelectedAddress?._id,
+        name: currentSelectedAddress?.name || "",
         address: currentSelectedAddress?.address,
         state: currentSelectedAddress?.state || "",
         city: currentSelectedAddress?.city || "",
         pincode: currentSelectedAddress?.pincode || "",
         phone: currentSelectedAddress?.phone || "",
+        notes: currentSelectedAddress?.notes || "",
       },
       totalAmount: totalCartAmount,
       orderStatus: "pending",
@@ -377,6 +436,10 @@ function ShoppingCheckout() {
               })
             ).then((captureResponse) => {
               if (captureResponse?.payload?.success) {
+                // Clear payment warning before navigation
+                window.removeEventListener('beforeunload', handleBeforeUnload);
+                setIsPaymentStart(false);
+
                 // Set payment success flags for protected route access
                 sessionStorage.setItem('paymentSuccess', 'true');
                 sessionStorage.setItem('recentPaymentTimestamp', Date.now().toString());
@@ -384,6 +447,7 @@ function ShoppingCheckout() {
                 toast({
                   title: "Payment successful! Redirecting to the success page...",
                   variant: "success",
+                  className: "bg-green-50 text-green-800 border-green-200 font-medium",
                 });
                 navigate("/shop/payment-success");
               } else {
@@ -464,6 +528,36 @@ function ShoppingCheckout() {
     });
   }
 
+  // Effect to manage payment state and browser close warning
+  useEffect(() => {
+    console.log('Payment state changed, isPaymentStart:', isPaymentStart);
+    // Add event listeners when payment starts
+    if (isPaymentStart) {
+      console.log('Adding beforeunload and keyboard event listeners');
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      document.addEventListener('keydown', handleKeyDown);
+
+      // Also set a global flag to prevent navigation
+      window.onbeforeunload = handleBeforeUnload;
+    } else {
+      console.log('Removing beforeunload and keyboard event listeners');
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.onbeforeunload = null;
+    }
+
+    // Cleanup function
+    return () => {
+      console.log('Cleanup: removing all event listeners');
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.onbeforeunload = null;
+    };
+  }, [isPaymentStart, handleBeforeUnload, handleVisibilityChange, handleKeyDown]);
+
   // Cleanup effect to reset payment state when component unmounts
   useEffect(() => {
     return () => {
@@ -476,9 +570,10 @@ function ShoppingCheckout() {
         }
       }
       resetPaymentState();
-      window.removeEventListener('beforeunload', resetPaymentState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [razorpayInstance]);
+  }, [razorpayInstance, handleBeforeUnload, handleKeyDown]);
 
   if (isPaymentLoading) return <Loader />;
 
@@ -645,6 +740,27 @@ function ShoppingCheckout() {
                   </div>
                 </div>
 
+                {/* Payment Warning */}
+                {isPaymentStart && (
+                  <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800">
+                          Payment in Progress
+                        </h3>
+                        <div className="mt-1 text-sm text-yellow-700">
+                          <p>Please do not close this window or navigate away. Doing so may result in payment failure or loss of transaction.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Checkout Button */}
                 <div className="mt-8">
                   <button
@@ -665,6 +781,53 @@ function ShoppingCheckout() {
           </div>
         </div>
       </div>
+
+      {/* Custom Close Warning Modal */}
+      {showCloseWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-white rounded-lg p-8 max-w-md mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833-.23 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                ⚠️ Payment in Progress!
+              </h3>
+              <div className="text-sm text-gray-600 mb-6 text-left">
+                <p className="mb-3">Your payment is currently being processed. Closing this window now may:</p>
+                <ul className="list-disc list-inside space-y-1 mb-4">
+                  <li>Result in payment failure</li>
+                  <li>Loss of transaction</li>
+                  <li>Require you to start over</li>
+                </ul>
+                <p className="font-medium text-red-600">Are you sure you want to close this tab?</p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setShowCloseWarning(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+                >
+                  Stay on Page
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCloseWarning(false);
+                    setIsPaymentStart(false);
+                    setTimeout(() => {
+                      window.close();
+                    }, 100);
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                >
+                  Close Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

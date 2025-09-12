@@ -6,9 +6,8 @@ import { useNavigate } from "react-router-dom";
 import UserCartItemsContent from "./cart-items-content";
 import TempCartItemsContent from "./temp-cart-items-content";
 import { memo } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { getTempCartItems, getTempCartTotal, getTempCartCount } from "@/utils/tempCartManager";
-import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 
 // Custom overlay component
 const CartOverlay = memo(({ isOpen, onClose }) => {
@@ -31,7 +30,6 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
   isLoading
 }) {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [isUpdating, setIsUpdating] = useState(false);
   const [tempCartItems, setTempCartItems] = useState([]);
   const drawerRef = useRef(null);
@@ -63,10 +61,10 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
       // Force refresh temp cart items when drawer opens
       refreshTempCart();
 
-      // Refresh product data to get latest inventory information
-      dispatch(fetchAllFilteredProducts({}));
+      // Note: Removed fetchAllFilteredProducts call to prevent infinite loops
+      // Product data should already be available from the page that opened the cart
     }
-  }, [isOpen, isAuthenticated, dispatch]);
+  }, [isOpen, isAuthenticated]);
 
   // Separate effect to handle authentication state changes
   useEffect(() => {

@@ -124,6 +124,9 @@ const shoppingCartSlice = createSlice({
       state.cartItems = [];
       state.isLoading = false;
     },
+    forceStopLoading: (state) => {
+      state.isLoading = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -195,5 +198,5 @@ const shoppingCartSlice = createSlice({
   },
 });
 
-export const { resetCart } = shoppingCartSlice.actions;
+export const { resetCart, forceStopLoading } = shoppingCartSlice.actions;
 export default shoppingCartSlice.reducer;

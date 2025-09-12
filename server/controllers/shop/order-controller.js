@@ -29,9 +29,13 @@ const createOrder = async (req, res) => {
       cartId,
     } = req.body;
 
+    // Debug: Log the received addressInfo
+    console.log('Received addressInfo:', addressInfo);
+
     // Validate and sanitize addressInfo
     const sanitizedAddressInfo = {
       addressId: String(addressInfo?.addressId || ''),
+      name: String(addressInfo?.name || ''),
       address: String(addressInfo?.address || ''),
       state: String(addressInfo?.state || ''),
       city: String(addressInfo?.city || ''),
@@ -39,6 +43,9 @@ const createOrder = async (req, res) => {
       phone: String(addressInfo?.phone || ''),
       notes: String(addressInfo?.notes || ''),
     };
+
+    // Debug: Log the sanitized addressInfo
+    console.log('Sanitized addressInfo:', sanitizedAddressInfo);
 
     // Create Razorpay order
     const options = {
@@ -98,6 +105,26 @@ const capturePayment = async (req, res) => {
     order.orderStatus = "confirmed";
     order.paymentId = paymentId;
 
+    // Debug: Log order data before sending emails
+    console.log('Order data for email:', {
+      addressInfo: order.addressInfo,
+      user: order.user,
+      orderId: order._id
+    });
+
+    // Helper function to format address with line breaks
+    const formatAddressForEmail = (address) => {
+      if (!address) return 'N/A';
+
+      // If address contains commas, split and format each part on new line
+      if (address.includes(',')) {
+        return address.split(',').map(part => part.trim()).join('<br>');
+      }
+
+      // If no commas, return as is
+      return address;
+    };
+
     // Reduce the total stock and color inventory for each product in the order
     for (let item of order.cartItems) {
       const product = await Product.findById(item.productId);
@@ -141,60 +168,62 @@ const capturePayment = async (req, res) => {
         <p><strong>Payment ID:</strong> ${order.paymentId}</p>
 
         ${order.cartItems && order.cartItems.length ? `
-          <h4 style="margin-top: 20px;">Items Ordered</h4>
-          <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
-            <table style="width: 100%; min-width: 500px; border-collapse: collapse; margin-top: 10px;">
-              <thead>
+          <h4 style="margin-top: 20px; margin-bottom: 15px; color: #2c3315;">Items Ordered</h4>
+
+          <!-- Card Layout (Mobile-First Design) -->
+          <div style="display: block;">
+            ${order.cartItems.map(item => `
+              <table style="width: 100%; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; background-color: #ffffff;" cellpadding="0" cellspacing="0">
                 <tr>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: left;">Product</th>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Code</th>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Quantity</th>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Price</th>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Color</th>
+                  <td style="padding: 15px; text-align: center;">
+                    <img src="${item?.colors?.image || item?.image || ''}" alt="${item?.title || ''}"
+                      style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; display: block; margin: 0 auto;">
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                ${order.cartItems.map(item => `
-                  <tr>
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px;">
-                      <div style="display: flex; align-items: center; gap: 12px;">
-                        <img src="${item?.image || ''}" alt="${item?.title || ''}"
-                          style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; flex-shrink: 0;">
-                        <span style="font-weight: 600;">${item?.title || ''}</span>
-                      </div>
-                    </td>
+                <tr>
+                  <td style="padding: 0 15px 15px 15px; text-align: center;">
+                    <h5 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #2c3315;">${item?.title || 'Product'}</h5>
+                    ${item?.productCode ? `<p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">Code: ${item.productCode}</p>` : ''}
 
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600; font-family: monospace; font-size: 12px; color: #666;">${item?.productCode || "-"}</td>
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600;">${item?.quantity}</td>
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600;">₹${item?.price}</td>
+                    <table style="width: 100%; margin-top: 10px;" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="width: 50%; text-align: center; padding: 8px; background-color: #f8f9fa; border-right: 1px solid #ddd;">
+                          <strong style="font-size: 12px; color: #666;">Quantity</strong><br>
+                          <span style="font-size: 14px; font-weight: 600; color: #2c3315;">${item?.quantity || 1}</span>
+                        </td>
+                        <td style="width: 50%; text-align: center; padding: 8px; background-color: #f8f9fa;">
+                          <strong style="font-size: 12px; color: #666;">Price</strong><br>
+                          <span style="font-size: 14px; font-weight: 600; color: #2c3315;">₹${item?.price || 0}</span>
+                        </td>
+                      </tr>
+                    </table>
 
-
-
-                     <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center;">
-                      ${item?.colors && item.colors.title ? `
+                    ${item?.colors?.title ? `
+                      <div style="margin-top: 12px; padding: 10px; background-color: #fed1d6; border-radius: 6px; border: 1px solid #f8b2c1;">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                          ${item.colors.image ? `<img src="${item.colors.image}" alt="${item.colors.title}" style="width: 25px; height: 25px; object-fit: cover; border-radius: 3px;">` : ''}
-                          <span style="font-weight: 600;">${item.colors.title}</span>
+                          <strong style="font-size: 13px; color: #2c3315;">Color:</strong>
+                          <span style="font-size: 13px; color: #2c3315; font-weight: 600;">${item.colors.title}</span>
                         </div>
-                      ` : ''}
-                    </td>
-
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
+                      </div>
+                    ` : ''}
+                  </td>
+                </tr>
+              </table>
+            `).join('')}
           </div>
+
+
         ` : ''}
 
         <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #2c3315;">
           <h4 style="margin: 0 0 15px 0; color: #2c3315; font-size: 16px;">📍 Shipping Address</h4>
           <div style="background-color: white; padding: 12px; border-radius: 4px; line-height: 1.6;">
-            <p style="margin: 0 0 8px 0; font-weight: 600; color: #2c3315;">${order.user?.userName || 'Customer'}</p>
-            <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.address || 'N/A'}</p>
+            <p style="margin: 0 0 8px 0; font-weight: 600; color: #2c3315;">${order.addressInfo?.name || order.user?.userName || 'Customer'}</p>
+            <p style="margin: 0 0 4px 0; color: #333;">${formatAddressForEmail(order.addressInfo?.address)}</p>
             ${order.addressInfo?.state ? `<p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo.state}</p>` : ''}
             <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.city || 'N/A'} - ${order.addressInfo?.pincode || 'N/A'}</p>
             <p style="margin: 0 0 8px 0; color: #333;"><strong>Phone:</strong> ${order.addressInfo?.phone || 'N/A'}</p>
-            ${order.addressInfo?.notes ? `<p style="margin: 8px 0 0 0; padding: 8px; background-color: #f8f9fa; border-radius: 3px; font-style: italic; color: #666; font-size: 14px;"><strong>Delivery Notes:</strong> ${order.addressInfo.notes}</p>` : ''}
+            ${order.addressInfo?.notes ? `<p style="margin: 8px 0 0 0; padding: 8px; background-color: #f8f9fa; border-radius: 3px; font-style: italic; color: #666; font-size: 14px;"><strong>Landmark:</strong> ${order.addressInfo.notes}</p>` : ''}
           </div>
         </div>
 
@@ -222,7 +251,7 @@ const capturePayment = async (req, res) => {
       message,
     });
 
-    // Send notification email to admin
+    // Send notification email to admin (Updated: Mobile-only layout)
     const adminEmail = "rachanaboutiquechennai@gmail.com";
     const adminMessage = `
     <div style="font-family: Arial, sans-serif; color: #2c3315; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
@@ -241,41 +270,51 @@ const capturePayment = async (req, res) => {
 
         ${order.cartItems && order.cartItems.length > 0 ? `
           <div style="margin-top: 20px;">
-            <h4 style="margin-bottom: 10px;">Items Ordered:</h4>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-              <thead>
-                <tr>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: left;">Product</th>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Code</th>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Quantity</th>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Price</th>
-                  <th style="border-bottom: 2px solid #fed1d6; padding: 12px; background-color: #f0f0f0; text-align: center;">Color</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${order.cartItems.map(item => `
+            <h4 style="margin-bottom: 15px; color: #2c3315;">Items Ordered:</h4>
+
+            <!-- Card Layout (Mobile-First Design) -->
+            <div style="display: block;">
+              ${order.cartItems.map(item => `
+                <table style="width: 100%; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; background-color: #ffffff;" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px;">
-                      <div style="display: flex; align-items: center; gap: 12px;">
-                        <img src="${item?.image || ''}" alt="${item?.title || ''}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; flex-shrink: 0;">
-                        <span style="font-weight: 600;">${item?.title || ''}</span>
-                      </div>
+                    <td style="padding: 15px; text-align: center;">
+                      <img src="${item?.colors?.image || item?.image || ''}" alt="${item?.title || ''}"
+                        style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; display: block; margin: 0 auto;">
                     </td>
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600; font-family: monospace; font-size: 12px; color: #666;">${item?.productCode || "-"}</td>
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600;">${item?.quantity}</td>
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center; font-weight: 600;">₹${item?.price}</td>
-                    <td style="border-bottom: 1px solid #ddd; padding: 12px; text-align: center;">
-                      ${item?.colors && item.colors.title ? `
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                          ${item.colors.image ? `<img src="${item.colors.image}" alt="${item.colors.title}" style="width: 25px; height: 25px; object-fit: cover; border-radius: 3px;">` : ''}
-                          <span style="font-weight: 600;">${item.colors.title}</span>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0 15px 15px 15px; text-align: center;">
+                      <h5 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #2c3315;">${item?.title || 'Product'}</h5>
+                      ${item?.productCode ? `<p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">Code: ${item.productCode}</p>` : ''}
+
+                      <table style="width: 100%; margin-top: 10px;" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="width: 50%; text-align: center; padding: 8px; background-color: #f8f9fa; border-right: 1px solid #ddd;">
+                            <strong style="font-size: 12px; color: #666;">Quantity</strong><br>
+                            <span style="font-size: 14px; font-weight: 600; color: #2c3315;">${item?.quantity || 1}</span>
+                          </td>
+                          <td style="width: 50%; text-align: center; padding: 8px; background-color: #f8f9fa;">
+                            <strong style="font-size: 12px; color: #666;">Price</strong><br>
+                            <span style="font-size: 14px; font-weight: 600; color: #2c3315;">₹${item?.price || 0}</span>
+                          </td>
+                        </tr>
+                      </table>
+
+                      ${item?.colors?.title ? `
+                        <div style="margin-top: 12px; padding: 10px; background-color: #fed1d6; border-radius: 6px; border: 1px solid #f8b2c1;">
+                          <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <strong style="font-size: 13px; color: #2c3315;">Color:</strong>
+                            <span style="font-size: 13px; color: #2c3315; font-weight: 600;">${item.colors.title}</span>
+                          </div>
                         </div>
                       ` : ''}
                     </td>
                   </tr>
-                `).join('')}
-              </tbody>
-            </table>
+                </table>
+              `).join('')}
+            </div>
+
+
           </div>
         ` : ''}
 
@@ -283,17 +322,18 @@ const capturePayment = async (req, res) => {
           <h4 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">👤 Customer & Shipping Information</h4>
           <div style="background-color: white; padding: 12px; border-radius: 4px;">
             <div style="margin-bottom: 15px;">
-              <p style="margin: 0 0 4px 0; font-weight: 600; color: #2c3315; font-size: 15px;">${order.user?.userName || 'Customer'}</p>
-              <p style="margin: 0; color: #666; font-size: 14px;">${order.user?.email || 'N/A'}</p>
+              <p style="margin: 0 0 4px 0; font-weight: 600; color: #2c3315; font-size: 15px;">${order.addressInfo?.name || order.user?.userName || 'Customer'}</p>
+              <p style="margin: 0; color: #666; font-size: 14px;">${order.user?.email || recipientEmail || 'N/A'}</p>
             </div>
             <div style="border-top: 1px solid #eee; padding-top: 12px;">
               <p style="margin: 0 0 8px 0; font-weight: 600; color: #2c3315;">📍 Delivery Address:</p>
               <div style="margin-left: 15px; line-height: 1.5;">
-                <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.address || 'N/A'}</p>
+                ${order.addressInfo?.name ? `<p style="margin: 0 0 4px 0; color: #333; font-weight: 600;"><strong>👤 Name:</strong> ${order.addressInfo.name}</p>` : ''}
+                <p style="margin: 0 0 4px 0; color: #333;">${formatAddressForEmail(order.addressInfo?.address)}</p>
                 ${order.addressInfo?.state ? `<p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo.state}</p>` : ''}
                 <p style="margin: 0 0 4px 0; color: #333;">${order.addressInfo?.city || 'N/A'} - ${order.addressInfo?.pincode || 'N/A'}</p>
                 <p style="margin: 0 0 8px 0; color: #333;"><strong>📞 Phone:</strong> ${order.addressInfo?.phone || 'N/A'}</p>
-                ${order.addressInfo?.notes ? `<p style="margin: 8px 0 0 0; padding: 8px; background-color: #f8f9fa; border-radius: 3px; font-style: italic; color: #666; font-size: 13px;"><strong>📝 Delivery Notes:</strong> ${order.addressInfo.notes}</p>` : ''}
+                ${order.addressInfo?.notes ? `<p style="margin: 8px 0 0 0; padding: 8px; background-color: #f8f9fa; border-radius: 3px; font-style: italic; color: #666; font-size: 13px;"><strong>� Landmark:</strong> ${order.addressInfo.notes}</p>` : ''}
               </div>
             </div>
           </div>

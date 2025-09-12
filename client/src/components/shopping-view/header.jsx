@@ -223,7 +223,7 @@ const messages = [
             isOpen={openCartSheet}
             onClose={() => setOpenCartSheet(false)}
             cartItems={cartItems || []}
-            isLoading={cartItems.length === 0 ? cartIsLoading || isFetchingCart.current : false}
+            isLoading={cartIsLoading && isFetchingCart.current}
           />
         </div>
 
@@ -599,7 +599,7 @@ const messages = [
               isOpen={openCartSheet}
               onClose={() => setOpenCartSheet(false)}
               cartItems={cartItems || []}
-              isLoading={cartItems.length === 0 ? cartIsLoading || isFetchingCart.current : false}
+              isLoading={cartIsLoading && isFetchingCart.current}
             />
           </div>
         </div>

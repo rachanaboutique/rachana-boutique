@@ -361,12 +361,14 @@ export const copyTempCartToUser = async (addToCartFunction, userId) => {
 
         copyResults.push({
           productId: item.productId,
+          productTitle: item.productDetails?.title || 'Unknown Product',
           success: result?.payload?.success || false,
-          error: result?.error || null
+          error: result?.payload?.message || result?.error?.message || result?.error || null
         });
       } catch (error) {
         copyResults.push({
           productId: item.productId,
+          productTitle: item.productDetails?.title || 'Unknown Product',
           success: false,
           error: error.message
         });

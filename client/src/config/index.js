@@ -265,6 +265,18 @@ export const categoryMapping = [
 
 export const addressFormControls = [
   {
+    label: "Full Name",
+    name: "name",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter your full name",
+    validation: {
+      required: true,
+      minLength: 2,
+      maxLength: 100
+    }
+  },
+  {
     label: "Address",
     name: "address",
     componentType: "input",
@@ -319,10 +331,10 @@ export const addressFormControls = [
     }
   },
   {
-    label: "Notes",
+    label: "Landmark",
     name: "notes",
     componentType: "textarea",
-    placeholder: "Enter any additional landmarks or notes (optional)",
+    placeholder: "Enter any additional landmarks (optional)",
     validation: {
       required: false,
       maxLength: 500

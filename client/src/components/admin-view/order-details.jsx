@@ -1,6 +1,6 @@
 import { useState } from "react";
 import CommonForm from "../common/form";
-import { DialogContent } from "../ui/dialog";
+import { DialogContent, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
@@ -11,6 +11,7 @@ import {
   updateOrderStatus,
 } from "@/store/admin/order-slice";
 import { useToast } from "../ui/use-toast";
+import { Copy, Check } from "lucide-react";
 
 const initialFormData = {
   status: "",
@@ -20,9 +21,50 @@ const initialFormData = {
 function AdminOrderDetailsView({ orderDetails }) {
   const [formData, setFormData] = useState(initialFormData);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [copiedOrderId, setCopiedOrderId] = useState(false);
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const { toast } = useToast();
+
+  // Copy order ID to clipboard
+  const copyOrderId = async (orderId) => {
+    try {
+      await navigator.clipboard.writeText(orderId);
+      setCopiedOrderId(true);
+      toast({
+        title: "Order ID copied!",
+        description: "Order ID has been copied to clipboard.",
+      });
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedOrderId(false);
+      }, 2000);
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy order ID to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to format address with proper line breaks
+  const formatAddress = (address) => {
+    if (!address) return 'N/A';
+
+    // If address contains commas, split and format each part on new line
+    if (address.includes(',')) {
+      return address.split(',').map((part, index) => (
+        <span key={index} className="block">
+          {part.trim()}
+        </span>
+      ));
+    }
+
+    // If no commas, return as is
+    return address;
+  };
 
   function handleUpdateStatus(event) {
     event.preventDefault();
@@ -74,11 +116,29 @@ function AdminOrderDetailsView({ orderDetails }) {
 
   return (
     <DialogContent className="w-[800px] bg-playground">
+      <div className="mr-8">
+        <DialogTitle className="text-xl font-medium mb-4">
+          Order Details
+        </DialogTitle>
+      </div>
       <div className="grid gap-6">
         <div className="grid gap-2">
-          <div className="flex mt-6 items-center justify-between">
+          <div className="flex items-center justify-between">
             <p className="font-medium">Order ID</p>
-            <Label>{orderDetails?._id}</Label>
+            <div className="flex items-center gap-2">
+              <Label className="font-mono text-sm">{orderDetails?._id}</Label>
+              <button
+                onClick={() => copyOrderId(orderDetails?._id)}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                title="Copy Order ID"
+              >
+                {copiedOrderId ? (
+                  <Check className="h-3.5 w-3.5 text-green-600" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700" />
+                )}
+              </button>
+            </div>
           </div>
           <div className="flex mt-2 items-center justify-between">
             <p className="font-medium">Order Date</p>
@@ -154,17 +214,18 @@ function AdminOrderDetailsView({ orderDetails }) {
           <div className="grid gap-2">
             <div className="font-medium">Shipping Info</div>
             <div className="grid gap-0.5 text-muted-foreground">
-              <span>{orderDetails?.user?.name}</span>
-              <span>{orderDetails?.user?.email}</span>
-              <span>{orderDetails?.addressInfo?.address}</span>
+              <span><strong>Customer:</strong> {orderDetails?.addressInfo?.name || orderDetails?.user?.name || orderDetails?.user?.userName}</span>
+              <span><strong>Email:</strong> {orderDetails?.user?.email}</span>
+              <span><strong>Delivery Name:</strong> {orderDetails?.addressInfo?.name || orderDetails?.user?.name || orderDetails?.user?.userName}</span>
+              <span><strong>Address:</strong> {formatAddress(orderDetails?.addressInfo?.address)}</span>
               {orderDetails?.addressInfo?.state && (
-                <span>{orderDetails?.addressInfo?.state}</span>
+                <span><strong>State:</strong> {orderDetails?.addressInfo?.state}</span>
               )}
-              <span>{orderDetails?.addressInfo?.city}</span>
-              <span>{orderDetails?.addressInfo?.pincode}</span>
-              <span>{orderDetails?.addressInfo?.phone}</span>
+              <span><strong>City:</strong> {orderDetails?.addressInfo?.city}</span>
+              <span><strong>Pincode:</strong> {orderDetails?.addressInfo?.pincode}</span>
+              <span><strong>Phone:</strong> {orderDetails?.addressInfo?.phone}</span>
               {orderDetails?.addressInfo?.notes && (
-                <span>{orderDetails?.addressInfo?.notes}</span>
+                <span><strong>Landmark:</strong> {orderDetails?.addressInfo?.notes}</span>
               )}
             </div>
           </div>

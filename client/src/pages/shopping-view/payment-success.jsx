@@ -5,12 +5,31 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { purchaseEvent } from "@/utils/metaPixelEvents";
 import { getOrderDetails } from "@/store/shop/order-slice";
+import { cleanupCartFromOrder } from "@/utils/cartCleanupManager";
 
 function PaymentSuccessPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { orderDetails } = useSelector((state) => state.shopOrder);
+  const { user } = useSelector((state) => state.auth);
   const [purchaseTracked, setPurchaseTracked] = useState(false);
+  const [cartCleaned, setCartCleaned] = useState(false);
+
+  // Clear any payment warning when reaching success page
+  useEffect(() => {
+    // Remove any beforeunload event listeners that might be active
+    const clearPaymentWarning = () => {
+      // This will clear any existing beforeunload listeners
+      window.onbeforeunload = null;
+    };
+
+    clearPaymentWarning();
+
+    // Cleanup on unmount
+    return () => {
+      clearPaymentWarning();
+    };
+  }, []);
 
   // Enhanced purchase tracking with order details fetching
   useEffect(() => {
@@ -83,6 +102,62 @@ function PaymentSuccessPage() {
     return () => clearTimeout(timeoutId);
   }, [orderDetails, dispatch, purchaseTracked]);
 
+  // Clean up cart items after successful purchase
+  useEffect(() => {
+    const cleanupPurchasedItems = async () => {
+      // Prevent duplicate cleanup
+      if (cartCleaned || !user?.id) return;
+
+      let finalOrderDetails = orderDetails;
+
+      // If no order details in state, try to get from session storage
+      if (!finalOrderDetails || !finalOrderDetails.cartItems) {
+        const sessionOrderId = sessionStorage.getItem('currentOrderId');
+        if (sessionOrderId) {
+          try {
+            const orderIdParsed = JSON.parse(sessionOrderId);
+            const orderResponse = await dispatch(getOrderDetails(orderIdParsed));
+            if (orderResponse?.payload?.success) {
+              finalOrderDetails = orderResponse.payload.data;
+            }
+          } catch (error) {
+            console.error('Error fetching order details for cart cleanup:', error);
+          }
+        }
+      }
+
+      // Remove purchased items from both actual cart and temp cart
+      if (finalOrderDetails && finalOrderDetails.cartItems && finalOrderDetails.cartItems.length > 0) {
+        try {
+          console.log('Starting cart cleanup for order:', finalOrderDetails._id, 'with', finalOrderDetails.cartItems.length, 'items');
+
+          const cleanupResult = await cleanupCartFromOrder(finalOrderDetails, user.id, dispatch);
+
+          if (cleanupResult.success) {
+            console.log('✅ Cart cleanup successful:', {
+              actualCartCleaned: cleanupResult.actualCartCleaned,
+              tempCartCleaned: cleanupResult.tempCartCleaned,
+              totalItemsProcessed: finalOrderDetails.cartItems.length
+            });
+          } else {
+            console.warn('⚠️ Cart cleanup completed with issues:', cleanupResult);
+          }
+        } catch (error) {
+          console.error('❌ Error during cart cleanup:', error);
+        }
+      } else {
+        console.log('No cart items found in order details for cleanup');
+      }
+
+      setCartCleaned(true);
+    };
+
+    // Clean up cart with a delay to ensure order processing is complete
+    const cleanupTimeoutId = setTimeout(cleanupPurchasedItems, 2000);
+
+    return () => clearTimeout(cleanupTimeoutId);
+  }, [orderDetails, dispatch, cartCleaned, user?.id]);
+
   return (
     <>
       <Helmet>
@@ -98,8 +173,6 @@ function PaymentSuccessPage() {
             <div className="w-16 h-0.5 bg-black mx-auto"></div>
           </div>
         </div>
-
-     x
 
         {/* Success Content */}
         <div className="flex-1 flex items-center justify-center py-8">

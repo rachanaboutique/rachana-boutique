@@ -13,6 +13,23 @@ function AddressCard({
 }) {
   const [stateName, setStateName] = useState(addressInfo?.state || '');
 
+  // Function to format address with proper line breaks
+  const formatAddress = (address) => {
+    if (!address) return 'N/A';
+
+    // If address contains commas, split and format each part on new line
+    if (address.includes(',')) {
+      return address.split(',').map((part, index) => (
+        <span key={index} className="block">
+          {part.trim()}
+        </span>
+      ));
+    }
+
+    // If no commas, return as is
+    return address;
+  };
+
   // Resolve state name if it's a code
   useEffect(() => {
     const resolveStateName = async () => {
@@ -49,14 +66,15 @@ function AddressCard({
       }`}
     >
       <CardContent className="grid p-4 gap-4">
-        <Label>Address: {addressInfo?.address}</Label>
+        {addressInfo?.name && <Label>Name: {addressInfo.name}</Label>}
+        <Label>Address: {formatAddress(addressInfo?.address)}</Label>
         {addressInfo?.state && (
           <Label>State: {stateName}</Label>
         )}
         <Label>City: {addressInfo?.city}</Label>
         <Label>Pincode: {addressInfo?.pincode}</Label>
         <Label>Phone: {addressInfo?.phone}</Label>
-        {addressInfo?.notes && <Label>Notes: {addressInfo?.notes}</Label>}
+        {addressInfo?.notes && <Label>Landmark: {addressInfo?.notes}</Label>}
       </CardContent>
       <CardFooter className="p-3 flex justify-between">
         <Button onClick={() => handleEditAddress(addressInfo)}>Edit</Button>

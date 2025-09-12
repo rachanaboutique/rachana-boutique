@@ -84,9 +84,53 @@ function AuthLogin() {
                 }
               } else {
                 completeCartCopy(user.id, false);
+
+                // Create user-friendly error message based on the failure reasons
+                let errorTitle = "Some items couldn't be added to your cart";
+                let errorDescription = "";
+
+                if (copyResult.copied > 0) {
+                  errorDescription = `${copyResult.copied} item${copyResult.copied > 1 ? 's' : ''} were added successfully. `;
+                }
+
+                // Analyze the failure reasons to provide specific guidance
+                const failureReasons = copyResult.results?.filter(r => !r.success) || [];
+
+                // Categorize the types of failures
+                const inventoryIssues = failureReasons.filter(r =>
+                  r.error?.includes('more items available') ||
+                  r.error?.includes('out of stock') ||
+                  r.error?.includes('Only')
+                );
+
+                const duplicateIssues = failureReasons.filter(r =>
+                  r.error?.includes('already in cart') ||
+                  r.error?.includes('duplicate')
+                );
+
+                const otherIssues = failureReasons.filter(r =>
+                  !inventoryIssues.includes(r) && !duplicateIssues.includes(r)
+                );
+
+                // Create specific error messages based on issue types
+                if (inventoryIssues.length > 0 && duplicateIssues.length === 0 && otherIssues.length === 0) {
+                  // Only inventory issues
+                  errorDescription += "Some items are no longer available or have limited stock. Please check your cart and adjust quantities as needed.";
+                } else if (duplicateIssues.length > 0 && inventoryIssues.length === 0 && otherIssues.length === 0) {
+                  // Only duplicate issues
+                  errorDescription += "Some items were already in your cart, so they weren't added again.";
+                  errorTitle = "Items already in cart";
+                } else if (inventoryIssues.length > 0 && duplicateIssues.length > 0) {
+                  // Mixed issues
+                  errorDescription += "Some items were already in your cart, and others have limited stock. Please review your cart.";
+                } else {
+                  // Other or mixed issues
+                  errorDescription += `${copyResult.failed || 0} item${copyResult.failed > 1 ? 's' : ''} couldn't be added. Please try adding them manually from your temporary cart.`;
+                }
+
                 toast({
-                  title: "Some items couldn't be copied",
-                  description: `${copyResult.copied || 0} items copied, ${copyResult.failed || 0} failed.`,
+                  title: errorTitle,
+                  description: errorDescription,
                   variant: "destructive",
                 });
               }

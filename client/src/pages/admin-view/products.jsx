@@ -107,41 +107,95 @@ function AdminProducts() {
     };
 
     if (currentEditedId !== null) {
-      dispatch(editProduct({ id: currentEditedId, formData: updatedFormData })).then((data) => {
-        if (data?.payload?.success) {
-          dispatch(fetchAllProducts());
-          setFormData(initialFormData);
-          setUploadedImageUrls([]);
-          setImageFiles([]);
-          setOpenCreateProductsDialog(false);
-          setCurrentEditedId(null);
+      dispatch(editProduct({ id: currentEditedId, formData: updatedFormData }))
+        .then((data) => {
+          if (data?.payload?.success) {
+            dispatch(fetchAllProducts());
+            setFormData(initialFormData);
+            setUploadedImageUrls([]);
+            setImageFiles([]);
+            setOpenCreateProductsDialog(false);
+            setCurrentEditedId(null);
+            toast({
+              title: "Product updated successfully",
+            });
+          } else {
+            // Handle validation errors
+            toast({
+              title: "Failed to update product",
+              description: data?.payload?.message || "An error occurred while updating the product",
+              variant: "destructive",
+            });
+          }
+        })
+        .catch((error) => {
+          // Handle network or other errors
+          console.error("Error updating product:", error);
           toast({
-            title: "Product updated successfully",
+            title: "Failed to update product",
+            description: "Network error or server is unavailable",
+            variant: "destructive",
           });
-        }
-      });
+        });
     } else {
-      dispatch(addNewProduct(updatedFormData)).then((data) => {
-        if (data?.payload?.success) {
-          dispatch(fetchAllProducts());
-          setOpenCreateProductsDialog(false);
-          setImageFiles([]);
-          setUploadedImageUrls([]);
-          setFormData(initialFormData);
+      dispatch(addNewProduct(updatedFormData))
+        .then((data) => {
+          if (data?.payload?.success) {
+            dispatch(fetchAllProducts());
+            setOpenCreateProductsDialog(false);
+            setImageFiles([]);
+            setUploadedImageUrls([]);
+            setFormData(initialFormData);
+            toast({
+              title: "Product added successfully",
+            });
+          } else {
+            // Handle validation errors
+            toast({
+              title: "Failed to add product",
+              description: data?.payload?.message || "An error occurred while adding the product",
+              variant: "destructive",
+            });
+          }
+        })
+        .catch((error) => {
+          // Handle network or other errors
+          console.error("Error adding product:", error);
           toast({
-            title: "Product added successfully",
+            title: "Failed to add product",
+            description: "Network error or server is unavailable",
+            variant: "destructive",
           });
-        }
-      });
+        });
     }
   }
 
   function handleDelete(productId) {
-    dispatch(deleteProduct(productId)).then((data) => {
-      if (data?.payload?.success) {
-        dispatch(fetchAllProducts());
-      }
-    });
+    dispatch(deleteProduct(productId))
+      .then((data) => {
+        if (data?.payload?.success) {
+          dispatch(fetchAllProducts());
+          toast({
+            title: "Product deleted successfully",
+          });
+        } else {
+          // Handle deletion errors
+          toast({
+            title: "Failed to delete product",
+            description: data?.payload?.message || "An error occurred while deleting the product",
+            variant: "destructive",
+          });
+        }
+      })
+      .catch((error) => {
+        // Handle network or other errors
+        console.error("Error deleting product:", error);
+        toast({
+          title: "Failed to delete product",
+          description: "Network error or server is unavailable",
+          variant: "destructive",
+        });
+      });
   }
 
   function handleEdit(product) {

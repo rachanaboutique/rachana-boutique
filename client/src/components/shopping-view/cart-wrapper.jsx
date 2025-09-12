@@ -1,21 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import UserCartItemsContent from "./cart-items-content";
-import { memo, useMemo, useEffect } from "react";
+import { memo, useMemo } from "react";
 import { Loader2 } from "lucide-react";
-import { useDispatch } from "react-redux";
-import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 
 // A simplified cart wrapper component that can be used inside any container
 // This is kept for backward compatibility but we now use custom-cart-drawer.jsx
 const UserCartWrapper = memo(function UserCartWrapper({ cartItems, isLoading, onCheckout }) {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
-  // Refresh product data when component mounts to ensure latest inventory
-  useEffect(() => {
-    dispatch(fetchAllFilteredProducts({}));
-  }, [dispatch]);
+  // Note: Removed fetchAllFilteredProducts call to prevent infinite loops
+  // Product data should already be available from the parent component
 
   // Calculate total with proper type conversion and error handling
   const { formattedTotal } = useMemo(() => {

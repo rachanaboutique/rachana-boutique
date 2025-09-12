@@ -12,10 +12,16 @@ export const fetchAllFilteredProducts = createAsyncThunk(
   "/products/fetchAllProducts",
   async ({ filterParams, sortParams }, { rejectWithValue }) => {
 
-    const query = new URLSearchParams({
+    const queryParams = {
       ...filterParams,
-      sortBy: sortParams,
-    }).toString();
+    };
+
+    // Only add sortBy if sortParams is provided and not null/undefined
+    if (sortParams) {
+      queryParams.sortBy = sortParams;
+    }
+
+    const query = new URLSearchParams(queryParams).toString();
 
     // Construct the URL using Vite's environment variable
     const url = `${import.meta.env.VITE_BACKEND_URL}/shop/products/get?${query}`;

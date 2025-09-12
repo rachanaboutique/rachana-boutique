@@ -11,6 +11,7 @@ import { getStatesList, searchCitiesByState, getStateNameByCode, getStateCodeByN
 
 // Initial form data constant
 const initialAddressFormData = {
+  name: "",
   address: "",
   state: "",
   city: "",
@@ -257,6 +258,7 @@ if (typeof setCurrentSelectedAddress === 'function') {
 
     setFormData({
       ...formData,
+      name: getCurrentAddress?.name || "",
       address: getCurrentAddress?.address || "",
       state: stateCode,
       city: getCurrentAddress?.city || "",

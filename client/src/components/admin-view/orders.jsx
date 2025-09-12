@@ -18,12 +18,16 @@ import {
   resetOrderDetails,
 } from "@/store/admin/order-slice";
 import { Badge } from "../ui/badge";
+import { Copy, Check } from "lucide-react";
+import { useToast } from "../ui/use-toast";
 
 function AdminOrdersView() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [copiedOrderId, setCopiedOrderId] = useState(null);
   const { orderList, orderDetails, isLoading } = useSelector((state) => state.adminOrder);
   const dispatch = useDispatch();
+  const { toast } = useToast();
 
   // Fetch order details on clicking view details button
   function handleFetchOrderDetails(getId) {
@@ -58,6 +62,29 @@ function AdminOrdersView() {
         (a, b) => new Date(b.orderDate) - new Date(a.orderDate)
       )
     : [];
+
+  // Copy order ID to clipboard
+  const copyOrderId = async (orderId) => {
+    try {
+      await navigator.clipboard.writeText(orderId);
+      setCopiedOrderId(orderId);
+      toast({
+        title: "Order ID copied!",
+        description: "Order ID has been copied to clipboard.",
+      });
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedOrderId(null);
+      }, 2000);
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy order ID to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
 
@@ -102,7 +129,25 @@ function AdminOrdersView() {
             {sortedOrderList && sortedOrderList.length > 0
               ? sortedOrderList.map((orderItem) => (
                   <TableRow key={orderItem._id}>
-                    <TableCell>{orderItem?._id}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm">{orderItem?._id}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyOrderId(orderItem._id);
+                          }}
+                          className="p-1 hover:bg-gray-100 rounded transition-colors"
+                          title="Copy Order ID"
+                        >
+                          {copiedOrderId === orderItem._id ? (
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700" />
+                          )}
+                        </button>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {new Date(orderItem?.orderDate).toLocaleDateString(
                         "en-GB",

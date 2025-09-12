@@ -15,16 +15,19 @@ import {
   getOrderDetails,
   resetOrderDetails,
 } from "@/store/shop/order-slice";
-import { Eye, ShoppingBag, Search, X, Calendar, Tag } from "lucide-react";
+import { Eye, ShoppingBag, Search, X, Calendar, Tag, Copy, Check } from "lucide-react";
 import { Input } from "../ui/input";
+import { useToast } from "../ui/use-toast";
 
 function ShoppingOrders() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [copiedOrderId, setCopiedOrderId] = useState(null);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { orderList, orderDetails } = useSelector((state) => state.shopOrder);
+  const { toast } = useToast();
 
   function handleFetchOrderDetails(getId) {
     dispatch(getOrderDetails(getId));
@@ -88,6 +91,29 @@ function ShoppingOrders() {
     }
   };
 
+  // Copy order ID to clipboard
+  const copyOrderId = async (orderId) => {
+    try {
+      await navigator.clipboard.writeText(orderId);
+      setCopiedOrderId(orderId);
+      toast({
+        title: "Order ID copied!",
+        description: "Order ID has been copied to clipboard.",
+      });
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedOrderId(null);
+      }, 2000);
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy order ID to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div>
       {sortedOrderList && sortedOrderList.length > 0 ? (
@@ -148,15 +174,31 @@ function ShoppingOrders() {
                       className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                     >
                       <TableCell className="py-4 px-4 text-sm">
-                        <button
-                          onClick={() => toggleOrderIdExpansion(orderItem._id)}
-                          className="font-medium text-gray-900 hover:text-black focus:outline-none"
-                        >
-                          {expandedOrderId === orderItem._id
-                            ? orderItem._id
-                            : `${orderItem._id.substring(0, 8)}...`
-                          }
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleOrderIdExpansion(orderItem._id)}
+                            className="font-medium text-gray-900 hover:text-black focus:outline-none"
+                          >
+                            {expandedOrderId === orderItem._id
+                              ? orderItem._id
+                              : `${orderItem._id.substring(0, 8)}...`
+                            }
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyOrderId(orderItem._id);
+                            }}
+                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                            title="Copy Order ID"
+                          >
+                            {copiedOrderId === orderItem._id ? (
+                              <Check className="h-3.5 w-3.5 text-green-600" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700" />
+                            )}
+                          </button>
+                        </div>
                       </TableCell>
                       <TableCell className="py-4 px-4 text-sm text-gray-600">
                         {formatDate(orderItem?.orderDate)}

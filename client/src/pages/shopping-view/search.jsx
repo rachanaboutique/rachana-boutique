@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { useToast } from "@/components/ui/use-toast";
-import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
+import { addToCart } from "@/store/shop/cart-slice";
 import { fetchAllFilteredProducts } from "@/store/shop/products-slice";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -107,16 +107,18 @@ function SearchProducts() {
       setSearchParams({});
     }
   }, [keyword, productList, setSearchParams]);
-  // Fetch all products when component mounts
+  // Fetch all products when component mounts (only if not already loaded)
   useEffect(() => {
-    // Fetch all products with no filters
-    dispatch(
-      fetchAllFilteredProducts({
-        filterParams: null,
-        sortParams: "price-lowtohigh",
-      })
-    );
-  }, [dispatch]);
+    // Only fetch if productList is empty to prevent unnecessary requests
+    if (productList.length === 0) {
+      dispatch(
+        fetchAllFilteredProducts({
+          filterParams: null,
+          sortParams: "price-lowtohigh",
+        })
+      );
+    }
+  }, [dispatch, productList.length]);
 
   // Focus input on page load
   useEffect(() => {
@@ -148,24 +150,32 @@ function SearchProducts() {
       const result = addToTempCart(tempCartItem, [product], cartItems || []); // Pass product and cart items for validation
 
       if (result.success) {
-        // Track Meta Pixel AddToCart event
-        setTimeout(() => {
-          addToCartEvent({
-            content_ids: [getCurrentProductId],
-            content_type: 'product',
-            value: product?.salePrice || product?.price || 0,
-            currency: 'INR',
-            content_name: product?.title,
-            content_category: product?.category,
-            num_items: 1
-          });
+        // Track Meta Pixel AddToCart event with error handling
+        try {
+          setTimeout(() => {
+            try {
+              addToCartEvent({
+                content_ids: [getCurrentProductId],
+                content_type: 'product',
+                value: product?.salePrice || product?.price || 0,
+                currency: 'INR',
+                content_name: product?.title,
+                content_category: product?.category,
+                num_items: 1
+              });
 
-          console.log('Meta Pixel: AddToCart tracked from Search (temp cart)', {
-            productId: getCurrentProductId,
-            productName: product?.title,
-            value: product?.salePrice || product?.price || 0
-          });
-        }, 100);
+              console.log('Meta Pixel: AddToCart tracked from Search (temp cart)', {
+                productId: getCurrentProductId,
+                productName: product?.title,
+                value: product?.salePrice || product?.price || 0
+              });
+            } catch (pixelError) {
+              console.warn('Meta Pixel tracking failed:', pixelError);
+            }
+          }, 100);
+        } catch (timeoutError) {
+          console.warn('Meta Pixel timeout setup failed:', timeoutError);
+        }
 
         toast({
           title: result.message,
@@ -245,10 +255,15 @@ function SearchProducts() {
       })
     ).then((data) => {
       if (data?.payload?.success) {
-        // Track Meta Pixel AddToCart event
-        trackAddToCart(getCurrentProductId, colorId, 1);
+        // Track Meta Pixel AddToCart event with error handling
+        try {
+          trackAddToCart(getCurrentProductId, colorId, 1);
+        } catch (pixelError) {
+          console.warn('Meta Pixel tracking failed:', pixelError);
+        }
 
-        dispatch(fetchCartItems(user?.id));
+        // Note: Cart items will be automatically refreshed when cart drawer opens
+        // No need to manually fetch here to prevent flickering
         toast({
           title: "Product is added to cart",
         });
