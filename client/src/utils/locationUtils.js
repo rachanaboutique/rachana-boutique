@@ -127,17 +127,25 @@ export const getStateNameByCode = async (stateCode) => {
 };
 
 /**
- * Get state code by name
+ * Get state code by name (synchronous if states are cached)
  * @param {string} stateName - State name
- * @returns {Promise<string>} State ISO code
+ * @returns {string|Promise<string>} State ISO code
  */
-export const getStateCodeByName = async (stateName) => {
+export const getStateCodeByName = (stateName) => {
   try {
     if (!stateName) return '';
 
-    const states = await getStatesList();
-    const state = states.find(s => s.label === stateName);
-    return state ? state.value : stateName;
+    // If states are cached, return synchronously
+    if (statesCache) {
+      const state = statesCache.find(s => s.label === stateName);
+      return state ? state.value : stateName;
+    }
+
+    // If not cached, return a promise
+    return getStatesList().then(states => {
+      const state = states.find(s => s.label === stateName);
+      return state ? state.value : stateName;
+    }).catch(() => stateName);
   } catch (error) {
     return stateName;
   }

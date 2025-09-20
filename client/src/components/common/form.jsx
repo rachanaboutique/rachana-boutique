@@ -12,10 +12,18 @@ import {
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { getOptimizedImageUrl, getOptimizedVideoUrl } from "../../lib/utils";
 import { optimizeImageForUpload, isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
 import { searchCitiesByState } from "@/utils/locationUtils";
+
+// Loading Spinner Component
+const LoadingSpinner = ({ message = "Loading..." }) => (
+  <div className="flex items-center justify-center p-3 border border-gray-300 rounded-md bg-gray-50">
+    <Loader2 className="h-4 w-4 animate-spin mr-2 text-gray-500" />
+    <span className="text-sm text-gray-500">{message}</span>
+  </div>
+);
 
 
 function CommonForm({
@@ -351,6 +359,17 @@ const uploadVideo = async (file) => {
           break;
 
       case "select":
+        // Show spinner instead of dropdown when loading
+        if (controlItem.name === "state" && isLoadingStates) {
+          element = <LoadingSpinner message="Loading states..." />;
+          break;
+        }
+
+        if (controlItem.name === "city" && isLoadingCities) {
+          element = <LoadingSpinner message="Loading cities..." />;
+          break;
+        }
+
         let selectOptions = [];
 
         // Handle state and city dropdowns
@@ -388,18 +407,8 @@ const uploadVideo = async (file) => {
               align="start"
               className="z-50 max-h-60 overflow-auto"
             >
-              {/* Show loading message for states */}
-              {controlItem.name === "state" && isLoadingStates ? (
-                <SelectItem value="loading" disabled>
-                  Fetching States...
-                </SelectItem>
-              ) : /* Show loading message for cities */
-              controlItem.name === "city" && isLoadingCities ? (
-                <SelectItem value="loading" disabled>
-                  Fetching Cities...
-                </SelectItem>
-              ) : /* Show city-specific message when no state selected */
-              controlItem.name === "city" && !formData.state ? (
+              {/* Show city-specific message when no state selected */}
+              {controlItem.name === "city" && !formData.state ? (
                 <SelectItem value="no-state" disabled>
                   Please select a state first
                 </SelectItem>

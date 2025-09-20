@@ -30,10 +30,23 @@ const shopContactRouter = require("./routes/shop/contact-routes");
 const shopNewsLetter = require("./routes/shop/newsletter-routes");
 
 
+// mongoose
+//   .connect(process.env.MONGO_URI)
+//   .then(() => console.log("MongoDB connected"))
+//   .catch((error) => console.log(error)); 
+
 mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.log(error)); 
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    maxPoolSize: 5,  // Keep default or lower for free tier (M0)
+    minPoolSize: 1,  // Keep some ready connections open to reduce latency
+    socketTimeoutMS: 45000, // Close socket after 45s inactivity to free resources
+    family: 4, // Prefer IPv4; optional
+  })
+  .then(() => console.log("MongoDB connected with optimized pool"))
+  .catch((error) => console.log("MongoDB connection error:", error));
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -31,6 +31,7 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
   const [formErrors, setFormErrors] = useState({});
   const [isLoadingStates, setIsLoadingStates] = useState(true);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [currentStateForCities, setCurrentStateForCities] = useState(null);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { addressList } = useSelector((state) => state.shopAddress);
@@ -57,6 +58,52 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
     loadStates();
   }, [toast]);
 
+  // Helper function to load cities for a state
+  const loadCitiesForState = async (stateCode) => {
+    // Skip loading if cities are already loaded for this state
+    if (currentStateForCities === stateCode && availableCities.length > 0) {
+      return;
+    }
+
+    try {
+      setIsLoadingCities(true);
+      setAvailableCities([]); // Clear previous cities
+      setCurrentStateForCities(stateCode);
+
+      // Get all cities for the state by searching with common prefixes
+      const commonPrefixes = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+      const allCities = [];
+
+      // Search with multiple prefixes to get comprehensive city list
+      for (const prefix of commonPrefixes.slice(0, 5)) { // Limit to first 5 to avoid too many API calls
+        try {
+          const cities = await searchCitiesByState(prefix, stateCode);
+          cities.forEach(city => {
+            if (!allCities.find(c => c.value === city.value)) {
+              allCities.push(city);
+            }
+          });
+        } catch (error) {
+          // Continue with other prefixes if one fails
+        }
+      }
+
+      // Sort cities alphabetically
+      allCities.sort((a, b) => a.label.localeCompare(b.label));
+      setAvailableCities(allCities);
+    } catch (error) {
+      toast({
+        title: "Error loading cities",
+        description: "Please try again or enter city manually.",
+        variant: "destructive",
+      });
+      setAvailableCities([]);
+      setCurrentStateForCities(null);
+    } finally {
+      setIsLoadingCities(false);
+    }
+  };
+
   // Handle state change and load cities
   const handleStateChange = async (selectedStateCode) => {
     setFormData(prev => ({
@@ -67,43 +114,10 @@ function Address({ setCurrentSelectedAddress, selectedId }) {
 
     // Load cities for the selected state
     if (selectedStateCode) {
-      try {
-        setIsLoadingCities(true);
-        setAvailableCities([]); // Clear previous cities
-
-        // Get all cities for the state by searching with common prefixes
-        const commonPrefixes = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
-        const allCities = [];
-
-        // Search with multiple prefixes to get comprehensive city list
-        for (const prefix of commonPrefixes.slice(0, 5)) { // Limit to first 5 to avoid too many API calls
-          try {
-            const cities = await searchCitiesByState(prefix, selectedStateCode);
-            cities.forEach(city => {
-              if (!allCities.find(c => c.value === city.value)) {
-                allCities.push(city);
-              }
-            });
-          } catch (error) {
-            // Continue with other prefixes if one fails
-          }
-        }
-
-        // Sort cities alphabetically
-        allCities.sort((a, b) => a.label.localeCompare(b.label));
-        setAvailableCities(allCities);
-      } catch (error) {
-        toast({
-          title: "Error loading cities",
-          description: "Please try again or enter city manually.",
-          variant: "destructive",
-        });
-        setAvailableCities([]);
-      } finally {
-        setIsLoadingCities(false);
-      }
+      loadCitiesForState(selectedStateCode);
     } else {
       setAvailableCities([]);
+      setCurrentStateForCities(null);
     }
   };
 
@@ -244,7 +258,7 @@ if (typeof setCurrentSelectedAddress === 'function') {
     setAddressToDelete(null);
   }
 
-  function handleEditAddress(getCurrentAddress) {
+  async function handleEditAddress(getCurrentAddress) {
     setCurrentEditedId(getCurrentAddress?._id);
 
     // Handle state - if it's a name, convert to code; if it's already a code, use as is
@@ -253,9 +267,17 @@ if (typeof setCurrentSelectedAddress === 'function') {
 
     // Check if the state value is a name (longer than 3 chars) and convert to code
     if (stateValue && stateValue.length > 3) {
-      stateCode = getStateCodeByName(stateValue) || stateValue;
+      try {
+        const result = getStateCodeByName(stateValue);
+        // Handle both synchronous and asynchronous returns
+        stateCode = (typeof result === 'string') ? result : await result;
+        stateCode = stateCode || stateValue;
+      } catch (error) {
+        stateCode = stateValue;
+      }
     }
 
+    // Set form data first
     setFormData({
       ...formData,
       name: getCurrentAddress?.name || "",
@@ -267,7 +289,10 @@ if (typeof setCurrentSelectedAddress === 'function') {
       notes: getCurrentAddress?.notes || "",
     });
 
-    // Note: Cities are now entered as text input, no need to load city options
+    // Load cities for the selected state when editing
+    if (stateCode) {
+      loadCitiesForState(stateCode);
+    }
 
     setShowForm(true);
   }
