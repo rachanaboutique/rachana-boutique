@@ -4,6 +4,7 @@ import { deleteCartItem, updateCartQuantity, fetchCartItems } from "@/store/shop
 import { useToast } from "../ui/use-toast";
 import { useState, useRef, useEffect, memo, useMemo, useCallback } from "react";
 import { isCartItemOutOfStock } from "@/utils/cartValidation";
+import { useNavigate } from "react-router-dom";
 
 // Helper function to compute initial selection based on cartItem and available colors
 const getInitialSelection = (cartItem, availableColors) => {
@@ -39,9 +40,10 @@ const areEqual = (prevProps, nextProps) => {
   );
 };
 
-const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
+const UserCartItemsContent = function UserCartItemsContent({ cartItem, onClose }) {
   const dispatch = useDispatch();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { productList } = useSelector((state) => state.shopProducts);
   // Use a more specific selector to prevent unnecessary re-renders
@@ -306,15 +308,24 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
     })}`;
   };
 
+  // Handle navigation to product details
+  const handleProductClick = useCallback(() => {
+    navigate(`/shop/details/${cartItem?.productId}`);
+    // Close the cart drawer if onClose function is provided
+    if (onClose) {
+      onClose();
+    }
+  }, [navigate, cartItem?.productId, onClose]);
+
   return (
     <div className="flex flex-col w-full border-b border-gray-200 last:border-b-0 py-4 px-2">
       <div className="flex items-start gap-3">
         {/* Product Image */}
-        <div className="w-16 h-16 flex-shrink-0">
+        <div className="w-16 h-16 flex-shrink-0 cursor-pointer" onClick={handleProductClick}>
           <img
             src={selectedColor?.image || selectedImage || cartItem?.image?.[0] || "default-image-url.jpg"}
             alt={cartItem?.title || "Product"}
-            className="w-full h-full object-cover border border-gray-200"
+            className="w-full h-full object-cover border border-gray-200 hover:opacity-80 transition-opacity"
             onError={(e) => {
               // If image fails to load, try the first image from cartItem
               if (cartItem?.image?.[0] && e.target.src !== cartItem.image[0]) {
@@ -331,7 +342,12 @@ const UserCartItemsContent = function UserCartItemsContent({ cartItem }) {
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start w-full">
             <div className="flex-1 pr-6">
-              <h3 className="text-sm font-medium mb-1 line-clamp-2">{cartItem?.title}</h3>
+              <h3
+                className="text-sm font-medium mb-1 line-clamp-2 cursor-pointer hover:text-gray-600 transition-colors"
+                onClick={handleProductClick}
+              >
+                {cartItem?.title}
+              </h3>
               {cartItem?.productCode && (
                 <p className="text-xs text-gray-500 mb-1">
                   Code: {cartItem.productCode}

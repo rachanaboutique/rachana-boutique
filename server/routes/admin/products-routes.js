@@ -5,8 +5,9 @@ const {
   handleVideoUpload,
   addProduct,
   editProduct,
-  fetchAllProducts, 
+  fetchAllProducts,
   deleteProduct,
+  deleteCloudinaryAssets,
 } = require("../../controllers/admin/products-controller");
 
 const { upload } = require("../../helpers/cloudinary");
@@ -17,6 +18,9 @@ router.post("/upload-image", upload.array("my_file"), handleImageUpload);
 router.post("/upload-video", upload.single("my_file"), handleVideoUpload);
 router.post("/add", addProduct);
 router.put("/edit/:id", editProduct);
+// Delete Cloudinary assets by URLs or public IDs
+router.post("/delete-cloudinary-assets", deleteCloudinaryAssets);
+
 router.delete("/delete/:id", deleteProduct);
 router.get("/get", fetchAllProducts);
 

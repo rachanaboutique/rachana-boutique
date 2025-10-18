@@ -11,7 +11,7 @@ import iosAutoplayManager from "../../utils/iosAutoplayManager";
 
 // Enhanced Video Player Component with iOS Support
 const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
-  videoUrl,
+  videoUrl: rawVideoUrl,
   isPlaying,
   isMuted = true,
   loop = true,
@@ -24,6 +24,8 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
   autoplay = false,
   playsInline = true
 }) {
+  const videoUrl = typeof rawVideoUrl === 'string' ? rawVideoUrl : (rawVideoUrl && typeof rawVideoUrl.url === 'string' ? rawVideoUrl.url : null);
+  const posterUrl = typeof poster === 'string' ? poster : (poster && typeof poster === 'object' ? (poster.secure_url || poster.url || '') : '');
   const cloudinaryRef = useRef();
   const videoRef = useRef();
   const playerInstanceRef = useRef();
@@ -57,7 +59,7 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
 
   // Extract public ID from Cloudinary URL
   const extractPublicId = (url) => {
-    if (!url || !url.includes('cloudinary.com')) {
+    if (typeof url !== 'string' || !url.includes('cloudinary.com')) {
       return url;
     }
 
@@ -68,17 +70,34 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
 
       if (uploadIndex === -1) return url;
 
-      // Get everything after upload/ and before file extension
+      // Get everything after upload/
       const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
 
-      // Remove transformations (anything before the last segment that doesn't contain a dot)
+      // Split into segments to inspect for version folders or transformations
       const segments = pathAfterUpload.split('/');
+
+      // Skip all transformation segments (e.g. "q_auto", "f_auto", "q_auto,f_auto") if present
+      while (segments.length > 1 && /[,_=]/.test(segments[0])) {
+        segments.shift();
+      }
+
+      // Skip version segment (e.g. "v1234567890") if present
+      if (segments.length > 1 && /^v\d+$/.test(segments[0])) {
+        segments.shift();
+      }
+
       const fileSegment = segments[segments.length - 1];
 
-      // Remove file extension (.mp4, .mov, etc.)
-      const publicId = fileSegment.replace(/\.[^/.]+$/, '');
+      if (!fileSegment) {
+        return url;
+      }
 
-      return publicId;
+      // Remove file extension (.mp4, .mov, etc.) and preserve folder path
+      const last = segments.pop();
+      const withoutExt = last.replace(/\.[^/.]+$/, '');
+      segments.push(withoutExt);
+
+      return segments.join('/');
     } catch (error) {
       console.error('Error extracting public ID:', error);
       return url;
@@ -171,7 +190,15 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
               // Set video source when player is ready
               try {
                 const publicId = extractPublicId(videoUrl);
+                console.log('Setting video source with public ID:', publicId);
+
+                // Ensure publicId is a string
+                if (typeof publicId !== 'string' || !publicId) {
+                  throw new Error('Invalid public ID extracted');
+                }
+
                 playerInstanceRef.current.source(publicId, {
+                  sourceTypes: ['mp4'],
                   transformation: {
                     quality: 'auto',
                     fetch_format: 'auto'
@@ -335,7 +362,7 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
           playsInline={true}
           webkit-playsinline="true"
           controls={controls}
-          poster={poster}
+          poster={typeof posterUrl === 'string' && posterUrl ? posterUrl : undefined}
           onLoadedData={handleNativeVideoLoad}
           onError={handleNativeVideoError}
           onLoadedMetadata={handleNativeVideoLoad}
@@ -369,7 +396,7 @@ const CloudinaryVideoPlayer = React.memo(function CloudinaryVideoPlayer({
         muted
         onContextMenu={(e) => e.preventDefault()}
         suppressHydrationWarning={true}
-        poster={poster}
+        poster={typeof posterUrl === 'string' && posterUrl ? posterUrl : undefined}
         x-webkit-airplay="allow"
         controls={false}
       />
@@ -394,7 +421,7 @@ const FastMovingCard = ({ item, index, activeItem, handleAddtoCart, isMobileCard
     rootMargin: '100px 0px', // Load videos 100px before they come into view
   });
 
-  // Determine if the card is currently active (desktop slider logic)
+  // Determine if the card is currently active (desktop @slider logic)
   const isStripeOpen = activeItem === index;
 
   // State to track liked status for the heart icon

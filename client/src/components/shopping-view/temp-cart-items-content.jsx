@@ -4,6 +4,7 @@ import { useToast } from "../ui/use-toast";
 import { useState, useRef, useEffect, memo, useMemo, useCallback } from "react";
 import { updateTempCartQuantity, removeFromTempCart, changeTempCartColor } from "@/utils/tempCartManager";
 import { isTempCartItemOutOfStock } from "@/utils/cartValidation";
+import { useNavigate } from "react-router-dom";
 
 // Helper function to format currency
 const formatCurrency = (amount) => {
@@ -33,11 +34,13 @@ const getInitialSelection = (tempItem, availableColors) => {
   return { defaultColor: null, defaultImage: tempItem.productDetails.image };
 };
 
-const TempCartItemsContent = memo(function TempCartItemsContent({ 
-  tempItem, 
-  onUpdate 
+const TempCartItemsContent = memo(function TempCartItemsContent({
+  tempItem,
+  onUpdate,
+  onClose
 }) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { productList } = useSelector((state) => state.shopProducts);
   const dropdownRef = useRef(null);
 
@@ -195,14 +198,23 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
   const itemPrice = tempItem.productDetails?.salePrice || tempItem.productDetails?.price || 0;
   const totalPrice = itemPrice * tempItem.quantity;
 
+  // Handle navigation to product details
+  const handleProductClick = useCallback(() => {
+    navigate(`/shop/details/${tempItem.productId}`);
+    // Close the cart drawer if onClose function is provided
+    if (onClose) {
+      onClose();
+    }
+  }, [navigate, tempItem.productId, onClose]);
+
   return (
     <div className="flex items-start space-x-4 py-4 border-b border-gray-100">
       {/* Product Image */}
-      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden">
-        <img 
-          src={selectedImage} 
-          alt={tempItem.productDetails?.title || 'Product'} 
-          className="w-full h-full object-cover"
+      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-md overflow-hidden cursor-pointer" onClick={handleProductClick}>
+        <img
+          src={selectedImage}
+          alt={tempItem.productDetails?.title || 'Product'}
+          className="w-full h-full object-cover hover:opacity-80 transition-opacity"
           onError={(e) => {
             e.target.src = tempItem.productDetails?.image || "default-image-url.jpg";
           }}
@@ -213,7 +225,10 @@ const TempCartItemsContent = memo(function TempCartItemsContent({
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start w-full">
           <div className="flex-1 pr-6">
-            <h3 className="text-sm font-medium mb-1 line-clamp-2">
+            <h3
+              className="text-sm font-medium mb-1 line-clamp-2 cursor-pointer hover:text-gray-600 transition-colors"
+              onClick={handleProductClick}
+            >
               {tempItem.productDetails?.title || 'Product'}
             </h3>
             {tempItem.productDetails?.productCode && (

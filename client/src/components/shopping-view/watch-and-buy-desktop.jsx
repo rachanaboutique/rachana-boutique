@@ -17,34 +17,60 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
 
   // Extract public ID from Cloudinary URL
   const extractPublicId = (url) => {
-    if (!url || !url.includes('cloudinary.com')) {
-      return url;
+    if (!url || typeof url !== 'string') {
+      console.error('Invalid URL provided to extractPublicId:', url);
+      return null;
+    }
+
+    if (!url.includes('cloudinary.com')) {
+      console.warn('URL does not appear to be a Cloudinary URL:', url);
+      return null;
     }
 
     try {
+      // Handle different Cloudinary URL formats
+      const urlParts = url.split('/');
+      const uploadIndex = urlParts.findIndex(part => part === 'upload');
 
-      // Find the upload part and get everything after it
-      const uploadIndex = url.indexOf('/upload/');
       if (uploadIndex === -1) {
-        return url;
+        console.error('Could not find "upload" in URL:', url);
+        return null;
       }
 
-      // Get the part after /upload/
-      const afterUpload = url.substring(uploadIndex + 8); // 8 = length of '/upload/'
+      // Get everything after upload/
+      const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
 
-      // Split by '/' to get segments
-      const segments = afterUpload.split('/');
+      // Split into segments to inspect for version folders or transformations
+      const segments = pathAfterUpload.split('/');
 
-      // Find the last segment (which contains the public ID + extension)
-      const lastSegment = segments[segments.length - 1];
+      // Skip all transformation segments (e.g. "q_auto", "f_auto", "q_auto,f_auto") if present
+      while (segments.length > 1 && /[,_=]/.test(segments[0])) {
+        segments.shift();
+      }
 
-      // Remove file extension (.mp4, .mov, etc.)
-      const publicId = lastSegment.replace(/\.[^/.]+$/, '');
+      // Skip version segment (e.g. "v1234567890") if present
+      if (segments.length > 1 && /^v\d+$/.test(segments[0])) {
+        segments.shift();
+      }
 
+      const fileSegment = segments[segments.length - 1];
+
+      if (!fileSegment) {
+        console.error('Could not extract file segment from URL:', url);
+        return null;
+      }
+
+      // Remove file extension (.mp4, .mov, etc.) and preserve folder path
+      const last = segments.pop();
+      const withoutExt = last.replace(/\.[^/.]+$/, '');
+      segments.push(withoutExt);
+
+      const publicId = segments.join('/');
+      console.log('Extracted public ID:', publicId, 'from URL:', url);
       return publicId;
     } catch (error) {
       console.error('Error extracting public ID:', error);
-      return url;
+      return null;
     }
   };
 
@@ -168,7 +194,13 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
               try {
                 const publicId = extractPublicId(videoUrl);
 
+                if (!publicId || typeof publicId !== 'string') {
+                  console.error('Failed to extract valid public ID from:', videoUrl);
+                  return;
+                }
+
                 playerInstanceRef.current.source(publicId, {
+                  sourceTypes: ['mp4'],
                   transformation: {
                     quality: 'auto',
                     fetch_format: 'auto'
@@ -250,7 +282,13 @@ function VideoPlayer({ videoUrl, isPlaying, isMuted, onProgress, onEnded, onErro
       try {
         const publicId = extractPublicId(videoUrl);
 
+        if (!publicId || typeof publicId !== 'string') {
+          console.error('Failed to extract valid public ID from:', videoUrl);
+          return;
+        }
+
         playerInstanceRef.current.source(publicId, {
+          sourceTypes: ['mp4'],
           transformation: {
             quality: 'auto',
             fetch_format: 'auto'

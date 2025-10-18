@@ -30,7 +30,8 @@ export function addCloudinaryTransformations(url, transformations = ['q_auto', '
 
 // Optimized image URL with automatic quality and format (recommended)
 export function getOptimizedImageUrl(url) {
-  return addCloudinaryTransformations(url, ['q_auto', 'f_auto']);
+  // Prefer AVIF with best automatic quality as per user preference
+  return addCloudinaryTransformations(url, ['f_avif', 'q_auto:best']);
 }
 
 // Alternative: Force WebP conversion with optimizations
@@ -40,7 +41,8 @@ export function getWebPOptimizedImageUrl(url) {
 
 // Smart format selection (same as getOptimizedImageUrl)
 export function getSmartOptimizedImageUrl(url) {
-  return addCloudinaryTransformations(url, ['q_auto', 'f_auto']);
+  // Same as getOptimizedImageUrl: AVIF with best quality
+  return addCloudinaryTransformations(url, ['f_avif', 'q_auto:best']);
 }
 
 // Optimized video URL with automatic quality and format

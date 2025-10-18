@@ -447,7 +447,7 @@ function ShoppingHome() {
 
 
         {/* Watch and Buy Section - Desktop and Mobile versions */}
-        {/* <section className="">
+        <section className="">
           {hasWatchAndBuyProducts && (
             <>
            
@@ -461,7 +461,7 @@ function ShoppingHome() {
               </div>
             </>
           )}
-        </section> */}
+        </section>
 
         <section className="py-8">
           <Banner

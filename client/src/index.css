@@ -194,7 +194,7 @@ form button {
   position: absolute !important;
   right: 0 !important;
   top: 0 !important;
-  height: 100% !important;
+  /* height: 100% !important; */
   display: flex !important;
   align-items: center !important;
   padding-right: 0.75rem !important;

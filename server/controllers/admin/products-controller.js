@@ -2,6 +2,7 @@ const { imageUploadUtil, videoUploadUtil } = require("../../helpers/cloudinary")
 const Product = require("../../models/Product");
 const ProductReview = require("../../models/Review");
 const sharp = require("sharp");
+const cloudinary = require("cloudinary").v2;
 
 // Handles image upload for both single and multiple files
 /* const handleImageUpload = async (req, res) => {
@@ -41,7 +42,7 @@ const handleImageUpload = async (req, res) => {
 
     // Define supported input formats
     const supportedInputFormats = [
-      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
       'image/webp', 'image/avif', 'image/tiff', 'image/bmp',
       'image/svg+xml', 'image/heic', 'image/heif'
     ];
@@ -67,7 +68,7 @@ const handleImageUpload = async (req, res) => {
         if (inputMimetype === 'image/gif') {
           return { format: 'webp', quality: 80, animated: true };
         }
-        
+
         // For vector graphics, convert to PNG to maintain quality
         if (inputMimetype === 'image/svg+xml') {
           return { format: 'png', quality: 100 };
@@ -97,9 +98,9 @@ const handleImageUpload = async (req, res) => {
 
       // Apply transformations
       let processedImage = sharpInstance
-        .resize({ 
-          width: 1024, 
-          height: 1024, 
+        .resize({
+          width: 1024,
+          height: 1024,
           fit: 'inside', // Maintain aspect ratio
           withoutEnlargement: true // Don't upscale smaller images
         })
@@ -108,27 +109,27 @@ const handleImageUpload = async (req, res) => {
       // Apply format-specific options
       switch (outputFormat) {
         case 'avif':
-          processedImage = processedImage.avif({ 
-            quality, 
+          processedImage = processedImage.avif({
+            quality,
             effort: 6 // Higher effort for better compression
           });
           break;
         case 'webp':
-          processedImage = processedImage.webp({ 
+          processedImage = processedImage.webp({
             quality,
             effort: 6,
             animated: formatConfig.animated || false
           });
           break;
         case 'jpeg':
-          processedImage = processedImage.jpeg({ 
+          processedImage = processedImage.jpeg({
             quality,
             progressive: true,
             mozjpeg: true // Use mozjpeg encoder for better compression
           });
           break;
         case 'png':
-          processedImage = processedImage.png({ 
+          processedImage = processedImage.png({
             quality,
             progressive: true,
             compressionLevel: 9
@@ -144,27 +145,27 @@ const handleImageUpload = async (req, res) => {
         const compressedBuffer = await processedImage.toBuffer();
         const b64 = compressedBuffer.toString("base64");
         const url = `data:image/${outputFormat};base64,${b64}`;
-        
+
         return await imageUploadUtil(url);
       } catch (sharpError) {
         // If Sharp fails with the chosen format, fallback to JPEG
         console.warn(`Failed to process as ${outputFormat}, falling back to JPEG:`, sharpError.message);
-        
+
         const fallbackBuffer = await sharp(file.buffer)
           .resize({ width: 1024, fit: 'inside', withoutEnlargement: true })
           .jpeg({ quality: 90 })
           .toBuffer();
-        
+
         const b64 = fallbackBuffer.toString("base64");
         const url = `data:image/jpeg;base64,${b64}`;
-        
+
         return await imageUploadUtil(url);
       }
     };
 
     // Validate that files exist
     const filesToProcess = [];
-    
+
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
       filesToProcess.push(...req.files);
     } else if (req.file) {
@@ -208,9 +209,9 @@ const handleImageUpload = async (req, res) => {
     return res.json({
       success: true,
       result: successes,
-      ...(errors.length > 0 && { 
+      ...(errors.length > 0 && {
         warnings: `${errors.length} file(s) failed to process`,
-        failed_files: errors 
+        failed_files: errors
       })
     });
 
@@ -396,6 +397,12 @@ const editProduct = async (req, res) => {
       }
     }
 
+    // Get current product to compute removed images after update
+    const currentProduct = await Product.findById(id);
+    if (!currentProduct) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
@@ -419,26 +426,61 @@ const editProduct = async (req, res) => {
     );
 
     if (!updatedProduct) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found"
-      });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: updatedProduct
-    });
+    // Best-effort: delete any images that were removed during edit
+    try {
+      const before = Array.isArray(currentProduct.image) ? currentProduct.image : (currentProduct.image ? [currentProduct.image] : []);
+      const after = Array.isArray(updatedProduct.image) ? updatedProduct.image : (updatedProduct.image ? [updatedProduct.image] : []);
+      const afterSet = new Set(after);
+      const removed = before.filter((u) => u && !afterSet.has(u));
+      const removedIds = removed.map(extractPublicIdFromUrl).filter(Boolean);
+      if (removedIds.length > 0) {
+        await cloudinary.api.delete_resources(removedIds, { resource_type: 'image' });
+      }
+    } catch (cleanupErr) {
+      console.warn('Cloudinary image diff cleanup failed:', cleanupErr?.message || cleanupErr);
+    }
+
+    return res.status(200).json({ success: true, data: updatedProduct });
   } catch (e) {
     console.error(e);
-    return res.status(500).json({
-      success: false,
-      message: "Error occurred"
-    });
+    return res.status(500).json({ success: false, message: "Error occurred" });
   }
 };
 
-// Delete a product
+// Helper: extract Cloudinary public ID from a resource URL
+function extractPublicIdFromUrl(url) {
+  try {
+    if (!url || typeof url !== 'string') return null;
+    const uploadIndex = url.indexOf('/upload/');
+    if (uploadIndex === -1) return null;
+
+    const right = url.substring(uploadIndex + '/upload/'.length);
+    const parts = right.split('/');
+
+    // Skip transformation segments (commonly contain commas, underscores, or colons)
+    while (parts.length > 1 && (/[,:_]/.test(parts[0]))) {
+      parts.shift();
+    }
+
+    // Skip version segment like v1234567890
+    if (parts.length > 1 && /^v\d+$/.test(parts[0])) {
+      parts.shift();
+    }
+
+    // Remove file extension from last segment and preserve folders
+    const last = parts.pop();
+    const withoutExt = last.replace(/\.[^/.]+$/, '');
+    parts.push(withoutExt);
+    return parts.join('/');
+  } catch {
+    return null;
+  }
+}
+
+// Delete a product (and its Cloudinary images)
 const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -449,6 +491,18 @@ const deleteProduct = async (req, res) => {
         success: false,
         message: "Product not found",
       });
+    }
+
+    // Attempt to delete associated Cloudinary images (best-effort)
+    try {
+      const urls = Array.isArray(product.image) ? product.image : (product.image ? [product.image] : []);
+      const publicIds = urls.map(extractPublicIdFromUrl).filter(Boolean);
+      if (publicIds.length > 0) {
+        await cloudinary.api.delete_resources(publicIds, { resource_type: 'image' });
+      }
+    } catch (cloudErr) {
+      console.warn('Cloudinary image cleanup failed:', cloudErr?.message || cloudErr);
+      // continue; product is already deleted in DB
     }
 
     return res.status(200).json({
@@ -464,6 +518,27 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// Endpoint: delete Cloudinary assets by URLs or public IDs (secure, server-side)
+const deleteCloudinaryAssets = async (req, res) => {
+  try {
+    const { urls = [], publicIds = [], resourceType = 'image' } = req.body || {};
+    let ids = Array.isArray(publicIds) ? publicIds.filter(Boolean) : [];
+    if (ids.length === 0 && Array.isArray(urls) && urls.length > 0) {
+      ids = urls.map(extractPublicIdFromUrl).filter(Boolean);
+    }
+
+    if (!ids || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid public IDs provided' });
+    }
+
+    const result = await cloudinary.api.delete_resources(ids, { resource_type: resourceType });
+    return res.status(200).json({ success: true, result });
+  } catch (err) {
+    console.error('deleteCloudinaryAssets error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to delete Cloudinary assets' });
+  }
+};
+
 module.exports = {
   handleImageUpload,
   handleVideoUpload,
@@ -471,4 +546,5 @@ module.exports = {
   fetchAllProducts,
   editProduct,
   deleteProduct,
+  deleteCloudinaryAssets,
 };

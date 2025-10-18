@@ -195,6 +195,7 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
           <UserCartItemsContent
             key={`${item.productId}-${item.colors?._id || 'default'}`}
             cartItem={item}
+            onClose={onClose}
           />
         );
       });
@@ -216,6 +217,7 @@ const CustomCartDrawer = memo(function CustomCartDrawer({
             key={`temp-${item.productId}-${item.colorId || 'default'}-${index}`}
             tempItem={item}
             onUpdate={refreshTempCart}
+            onClose={onClose}
           />
         );
       });

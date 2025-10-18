@@ -1,5 +1,6 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import ProductImageUpload from "@/components/admin-view/image-upload";
 import AdminProductTile from "@/components/admin-view/product-tile";
@@ -41,6 +42,20 @@ function AdminProducts() {
   const { productList, isLoading } = useSelector((state) => state.adminProducts);
   const { categoriesList } = useSelector((state) => state.shopCategories);
   const [searchQuery, setSearchQuery] = useState("");
+  const [originalImageUrls, setOriginalImageUrls] = useState([]);
+  const sheetClosedBySubmitRef = useRef(false);
+
+  const backendBaseUrl = useMemo(() => import.meta.env.VITE_BACKEND_URL, []);
+
+  async function deleteCloudinaryImagesByUrls(urls = []) {
+    try {
+      if (!urls || urls.length === 0) return;
+      await axios.post(`${backendBaseUrl}/admin/products/delete-cloudinary-assets`, { urls, resourceType: 'image' });
+    } catch (err) {
+      console.warn('Failed to delete Cloudinary images (cleanup):', err?.response?.data || err?.message || err);
+    }
+  }
+
   const [filterOption, setFilterOption] = useState("all");
 
   const dispatch = useDispatch();
@@ -111,11 +126,14 @@ function AdminProducts() {
         .then((data) => {
           if (data?.payload?.success) {
             dispatch(fetchAllProducts());
+            // Mark that the sheet is closing due to a successful submit (skip cleanup)
+            sheetClosedBySubmitRef.current = true;
             setFormData(initialFormData);
             setUploadedImageUrls([]);
             setImageFiles([]);
             setOpenCreateProductsDialog(false);
             setCurrentEditedId(null);
+            setOriginalImageUrls([]);
             toast({
               title: "Product updated successfully",
             });
@@ -142,10 +160,13 @@ function AdminProducts() {
         .then((data) => {
           if (data?.payload?.success) {
             dispatch(fetchAllProducts());
+            // Mark that the sheet is closing due to a successful submit (skip cleanup)
+            sheetClosedBySubmitRef.current = true;
             setOpenCreateProductsDialog(false);
             setImageFiles([]);
             setUploadedImageUrls([]);
             setFormData(initialFormData);
+            setOriginalImageUrls([]);
             toast({
               title: "Product added successfully",
             });
@@ -175,11 +196,8 @@ function AdminProducts() {
       .then((data) => {
         if (data?.payload?.success) {
           dispatch(fetchAllProducts());
-          toast({
-            title: "Product deleted successfully",
-          });
+          toast({ title: "Product deleted successfully" });
         } else {
-          // Handle deletion errors
           toast({
             title: "Failed to delete product",
             description: data?.payload?.message || "An error occurred while deleting the product",
@@ -188,7 +206,6 @@ function AdminProducts() {
         }
       })
       .catch((error) => {
-        // Handle network or other errors
         console.error("Error deleting product:", error);
         toast({
           title: "Failed to delete product",
@@ -217,7 +234,9 @@ function AdminProducts() {
       isWatchAndBuy: product.isWatchAndBuy,
       video: product.video || ""
     });
-    setUploadedImageUrls(product.image || []);
+    const originals = Array.isArray(product.image) ? product.image : (product.image ? [product.image] : []);
+    setOriginalImageUrls(originals);
+    setUploadedImageUrls(originals);
     setOpenCreateProductsDialog(true);
   }
 
@@ -363,6 +382,7 @@ function AdminProducts() {
             setFormData(initialFormData);
             setUploadedImageUrls([]);
             setImageFiles([]);
+            setOriginalImageUrls([]);
             setOpenCreateProductsDialog(true);
           }}
         >
@@ -396,12 +416,26 @@ function AdminProducts() {
 
       <Sheet
         open={openCreateProductsDialog}
-        onOpenChange={() => {
-          setOpenCreateProductsDialog(false);
-          setCurrentEditedId(null);
-          setFormData(initialFormData);
-          setUploadedImageUrls([]);
-          setImageFiles([]);
+        onOpenChange={async (open) => {
+          if (!open) {
+            // Cleanup newly uploaded images only if the sheet is closed via cancel/close
+            if (!sheetClosedBySubmitRef.current) {
+              const originalSet = new Set(originalImageUrls || []);
+              const toDelete = (uploadedImageUrls || []).filter((url) => url && !originalSet.has(url));
+              await deleteCloudinaryImagesByUrls(toDelete);
+            }
+            // reset the flag for next open/close
+            sheetClosedBySubmitRef.current = false;
+
+            setOpenCreateProductsDialog(false);
+            setCurrentEditedId(null);
+            setFormData(initialFormData);
+            setUploadedImageUrls([]);
+            setImageFiles([]);
+            setOriginalImageUrls([]);
+          } else {
+            setOpenCreateProductsDialog(true);
+          }
         }}
       >
         <SheetContent side="right" className="overflow-auto">
@@ -419,6 +453,7 @@ function AdminProducts() {
             imageLoadingStates={imageLoadingStates}
             setImageLoadingStates={setImageLoadingStates}
             setImageLoadingState={setImageLoadingState}
+            originalImageUrls={originalImageUrls}
             isSingleImage={false}
           />
           <div className="py-6">

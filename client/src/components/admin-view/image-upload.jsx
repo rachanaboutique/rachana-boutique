@@ -7,7 +7,7 @@ import axios from "axios";
 import { Skeleton } from "../ui/skeleton";
 import { useToast } from "../ui/use-toast";
 import { getOptimizedImageUrl } from "../../lib/utils";
-import { optimizeImageForUpload, isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
+import { isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
 
 function ProductImageUpload({
   imageFiles = [],
@@ -16,6 +16,7 @@ function ProductImageUpload({
   uploadedImageUrls = [],
   setUploadedImageUrls,
   setImageLoadingStates,
+  originalImageUrls = [], // originals when editing
   isCustomStyling = false,
   isSingleImage = false, // Controls single vs. multiple uploads
 }) {
@@ -25,6 +26,21 @@ function ProductImageUpload({
   const [pendingUploads, setPendingUploads] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
   const inputRef = useRef(null);
+  const backendBaseUrl = import.meta.env.VITE_BACKEND_URL;
+
+  async function deleteCloudinaryImageByUrl(url) {
+    try {
+      if (!url || typeof url !== 'string') return;
+      if (!/res\.cloudinary\.com/.test(url)) return; // only cloudinary urls
+      await axios.post(`${backendBaseUrl}/admin/products/delete-cloudinary-assets`, {
+        urls: [url],
+        resourceType: 'image',
+      });
+    } catch (err) {
+      console.warn('Failed to delete image from Cloudinary:', err?.response?.data || err?.message || err);
+    }
+  }
+
 
   // Ensure arrays are initialized
   useEffect(() => {
@@ -167,7 +183,7 @@ function ProductImageUpload({
     event.preventDefault();
   }
 
-  function handleRemoveImage(index) {
+  async function handleRemoveImage(index) {
     // Validate arrays before proceeding
     if (!Array.isArray(imageLoadingStates)) {
       console.error("imageLoadingStates is not an array! Resetting...");
@@ -187,23 +203,33 @@ function ProductImageUpload({
       return;
     }
 
+    const urlToRemove = isSingleImage ? uploadedImageUrls?.[0] : uploadedImageUrls?.[index];
+    const isOriginal = Array.isArray(originalImageUrls) && originalImageUrls.includes(urlToRemove);
+
     // Set removing flag to prevent triggering uploads
     setIsRemoving(true);
 
-    if (isSingleImage) {
-      setImageFiles([]);
-      setUploadedImageUrls([]);
-      setImageLoadingStates([]);
-    } else {
-      setImageFiles((prev) => Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []);
-      setUploadedImageUrls((prev) => Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []);
-      setImageLoadingStates((prev) => Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []);
-    }
+    try {
+      // Immediately delete only if it was uploaded in this session (not an original)
+      if (urlToRemove && !isOriginal) {
+        await deleteCloudinaryImageByUrl(urlToRemove);
+      }
+    } finally {
+      if (isSingleImage) {
+        setImageFiles([]);
+        setUploadedImageUrls([]);
+        setImageLoadingStates([]);
+      } else {
+        setImageFiles((prev) => Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []);
+        setUploadedImageUrls((prev) => Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []);
+        setImageLoadingStates((prev) => Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []);
+      }
 
-    // Reset removing flag after a short delay to ensure state updates have completed
-    setTimeout(() => {
-      setIsRemoving(false);
-    }, 100);
+      // Reset removing flag after a short delay to ensure state updates have completed
+      setTimeout(() => {
+        setIsRemoving(false);
+      }, 100);
+    }
   }
 
   async function uploadImageToCloudinary(file, index) {
@@ -256,11 +282,11 @@ function ProductImageUpload({
     setIsUploading(true);
 
     try {
-      // Apply the same optimization logic as backend
-      const optimizedFile = await optimizeImageForUpload(file);
+      // Do not transform/compress on client — preserve original quality (<=1MB enforced earlier)
+      const fileToUpload = file;
 
       const cloudinaryFormData = new FormData();
-      cloudinaryFormData.append("file", optimizedFile);
+      cloudinaryFormData.append("file", fileToUpload);
       cloudinaryFormData.append("upload_preset", "upload_product_image");
       cloudinaryFormData.append("resource_type", "image");
 
