@@ -1,12 +1,10 @@
-import { FileIcon, UploadCloudIcon, XIcon, Loader2, GripIcon } from "lucide-react";
+import { UploadCloudIcon, XIcon, Loader2, GripIcon } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "../ui/button";
 import axios from "axios";
-import { Skeleton } from "../ui/skeleton";
 import { useToast } from "../ui/use-toast";
-import { getOptimizedImageUrl } from "../../lib/utils";
+import { addCloudinaryTransformations } from "../../lib/utils";
 import { isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
 
 function ProductImageUpload({
@@ -26,6 +24,8 @@ function ProductImageUpload({
   const [pendingUploads, setPendingUploads] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
   const inputRef = useRef(null);
+  const [deletingMap, setDeletingMap] = useState({});
+
   const backendBaseUrl = import.meta.env.VITE_BACKEND_URL;
 
   async function deleteCloudinaryImageByUrl(url) {
@@ -206,6 +206,8 @@ function ProductImageUpload({
     const urlToRemove = isSingleImage ? uploadedImageUrls?.[0] : uploadedImageUrls?.[index];
     const isOriginal = Array.isArray(originalImageUrls) && originalImageUrls.includes(urlToRemove);
 
+    // Mark index as deleting (keep X button visible but disabled)
+    setDeletingMap((prev) => ({ ...prev, [index]: true }));
     // Set removing flag to prevent triggering uploads
     setIsRemoving(true);
 
@@ -225,8 +227,9 @@ function ProductImageUpload({
         setImageLoadingStates((prev) => Array.isArray(prev) ? prev.filter((_, i) => i !== index) : []);
       }
 
-      // Reset removing flag after a short delay to ensure state updates have completed
+      // Clear deleting flag and reset removing flag after short delay
       setTimeout(() => {
+        setDeletingMap((prev) => { const copy = { ...prev }; delete copy[index]; return copy; });
         setIsRemoving(false);
       }, 100);
     }
@@ -299,7 +302,8 @@ function ProductImageUpload({
 
       if (response?.data?.secure_url) {
         const secureUrl = response.data.secure_url;
-        const optimizedUrl = getOptimizedImageUrl(secureUrl); // Apply q_auto,f_auto transformations
+        // For admin previews, prefer f_auto for max browser compatibility (JPG/PNG/WebP/AVIF)
+        const optimizedUrl = addCloudinaryTransformations(secureUrl, ['f_auto', 'q_auto:best']);
 
         if (isSingleImage) {
           setUploadedImageUrls([optimizedUrl]);
@@ -511,20 +515,24 @@ function ProductImageUpload({
                         <GripIcon className="w-4 h-4" />
                       </div>
                     )}
-                    {isLoading ? (
+                    {/* Keep the X button visible; disable during upload or delete */}
+                    <button
+                      type="button"
+                      className={`p-2 rounded-md bg-gray-100 absolute top-0 right-0 text-muted-foreground hover:bg-foreground hover:text-background ${
+                        (isUploading || isLoading || deletingMap[index]) ? 'opacity-60 cursor-not-allowed' : ''
+                      }`}
+                      onClick={() => handleRemoveImage(index)}
+                      disabled={isUploading || isLoading || deletingMap[index]}
+                    >
+                      <XIcon className="w-4 h-4" />
+                      <span className="sr-only">Remove Image</span>
+                    </button>
+
+                    {/* Show spinner only for uploads (not for delete) */}
+                    {isLoading && (
                       <div className="absolute top-0 right-0 p-2 rounded-md bg-gray-100">
                         <Loader2 className="w-4 h-4 animate-spin" />
                       </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="p-2 rounded-md bg-gray-100 absolute top-0 right-0 text-muted-foreground hover:bg-foreground hover:text-background"
-                        onClick={() => handleRemoveImage(index)}
-                        disabled={isUploading}
-                      >
-                        <XIcon className="w-4 h-4" />
-                        <span className="sr-only">Remove Image</span>
-                      </button>
                     )}
                     {!isSingleImage && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gray-800 bg-opacity-70 text-white text-xs p-1 text-center rounded-b-lg">

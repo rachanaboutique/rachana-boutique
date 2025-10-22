@@ -1,5 +1,6 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 import BannerTile from "@/components/admin-view/banner-tile";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,22 @@ function AdminBanners() {
 
   const [imageLoadingStates, setImageLoadingStates] = useState([]);
 
+  const [originalImageUrls, setOriginalImageUrls] = useState([]);
+  const sheetClosedBySubmitRef = useRef(false);
+  const backendBaseUrl = import.meta.env.VITE_BACKEND_URL;
+
+  async function deleteCloudinaryImagesByUrls(urls = []) {
+    try {
+      if (!urls || urls.length === 0) return;
+      await axios.post(`${backendBaseUrl}/admin/products/delete-cloudinary-assets`, {
+        urls,
+        resourceType: 'image',
+      });
+    } catch (err) {
+      console.warn('Failed to delete Cloudinary images (banner cleanup):', err?.response?.data || err?.message || err);
+    }
+  }
+
   const [imageLoadingState, setImageLoadingState] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState(null);
 
@@ -46,6 +63,7 @@ function AdminBanners() {
       description: banner.description,
     });
     setUploadedImageUrls([banner.image]);
+    setOriginalImageUrls([banner.image]);
     setCurrentEditedId(banner._id);
     setOpenCreateBannersDialog(true);
   }
@@ -64,6 +82,7 @@ function AdminBanners() {
         })
       ).then((data) => {
         if (data?.payload?.success) {
+          sheetClosedBySubmitRef.current = true;
           dispatch(fetchAllBanners());
           resetForm();
         }
@@ -76,6 +95,7 @@ function AdminBanners() {
         })
       ).then((data) => {
         if (data?.payload?.success) {
+          sheetClosedBySubmitRef.current = true;
           dispatch(fetchAllBanners());
           resetForm();
           toast({
@@ -88,8 +108,9 @@ function AdminBanners() {
 
   function resetForm() {
     setFormData(initialFormData);
-    setUploadedImageUrls("");
-    setImageFiles(null);
+    setUploadedImageUrls([]);
+    setImageFiles([]);
+    setOriginalImageUrls([]);
     setCurrentEditedId(null);
     setOpenCreateBannersDialog(false);
   }
@@ -131,9 +152,9 @@ function AdminBanners() {
 
       {isLoading ? (
       <div className="flex items-center justify-center w-full mt-16 mb-1">
-      
+
         <span className="text-lg whitespace-nowrap px-2">Loading banners...</span>
-       
+
       </div>
     ) : (
       <div className="flex flex-col gap-5">
@@ -153,9 +174,22 @@ function AdminBanners() {
 
       <Sheet
         open={openCreateBannersDialog}
-        onOpenChange={() => {
-          setOpenCreateBannersDialog(false);
-          resetForm();
+        onOpenChange={(open) => {
+          if (!open) {
+            // Cleanup any newly uploaded images if closing without submit
+            if (!sheetClosedBySubmitRef.current) {
+              const originalsSet = new Set(originalImageUrls || []);
+              const toDelete = (uploadedImageUrls || []).filter((u) => u && !originalsSet.has(u));
+              if (toDelete.length) {
+                deleteCloudinaryImagesByUrls(toDelete);
+              }
+            }
+            sheetClosedBySubmitRef.current = false;
+            setOpenCreateBannersDialog(false);
+            resetForm();
+          } else {
+            setOpenCreateBannersDialog(true);
+          }
         }}
       >
         <SheetContent side="right" className="overflow-auto">
@@ -173,6 +207,7 @@ function AdminBanners() {
             setImageLoadingStates={setImageLoadingStates}
             imageLoadingState={imageLoadingState}
             imageLoadingStates={imageLoadingStates}
+            originalImageUrls={originalImageUrls}
             isSingleImage={true}
             isEditMode={currentEditedId !== null || currentEditedId === null}
           />

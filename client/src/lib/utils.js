@@ -11,20 +11,20 @@ export function addCloudinaryTransformations(url, transformations = ['q_auto', '
     return url;
   }
 
-  // Check if transformations are already applied
-  const hasTransformations = transformations.some(transform => url.includes(transform));
-  if (hasTransformations) {
+  // If ALL requested transformations already exist, return as-is
+  const allPresent = transformations.every((t) => url.includes(`/${t}/`) || url.includes(`/${t},`) || url.includes(`,${t}/`) || url.includes(`,${t},`));
+  if (allPresent) {
     return url;
   }
 
-  // Split the URL to insert transformations
+  // Split the URL to insert transformations after /upload/
   const parts = url.split('/upload/');
   if (parts.length !== 2) {
     return url;
   }
 
-  // Join transformations with forward slashes for Cloudinary URL format
-  const transformationString = transformations.join('/');
+  // Build a single transformation step joined by commas (Cloudinary syntax)
+  const transformationString = transformations.join(',');
   return `${parts[0]}/upload/${transformationString}/${parts[1]}`;
 }
 

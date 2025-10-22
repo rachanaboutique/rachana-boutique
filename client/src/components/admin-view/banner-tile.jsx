@@ -12,11 +12,15 @@ function AdminBannerTile({ image, description, handleEdit, handleDelete }) {
   };
 
 
+  const safeImage = typeof image === 'string'
+    ? image.replace('/upload/f_avif/q_auto:best/', '/upload/f_avif,q_auto:best/')
+    : image;
+
   return (
     <div className="relative w-full h-[350px] rounded-t-lg">
       {/* Background Image */}
       <img
-        src={image}
+        src={safeImage}
         alt="Banner"
         className="absolute inset-0 w-full h-full object-cover rounded-t-lg"
       />
