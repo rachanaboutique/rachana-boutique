@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/main-logo.png";
+import { setUserData } from "@/utils/metaPixelAdvancedMatching";
+import { completeRegistrationEvent } from "@/utils/metaPixelEvents";
 
 const initialState = {
   userName: "",
@@ -48,6 +50,17 @@ function AuthRegister() {
 
     dispatch(registerUser(formData)).then((data) => {
       if (data?.payload?.success) {
+        // Track registration completion in Meta Pixel
+        completeRegistrationEvent();
+
+        // Set Meta Pixel advanced matching data with registration info
+        setUserData({
+          email: formData.email,
+          firstName: formData.userName?.split(' ')[0] || undefined,
+          lastName: formData.userName?.split(' ').slice(1).join(' ') || undefined,
+          country: 'IN'
+        });
+
         toast({
           title: data?.payload?.message,
         });

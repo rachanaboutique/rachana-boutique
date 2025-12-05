@@ -78,7 +78,7 @@ const ShoppingProductTile = ({
             num_items: 1
           });
 
-         
+
         }, 100);
 
         toast({
@@ -121,7 +121,7 @@ const ShoppingProductTile = ({
                   num_items: 1
                 });
 
-              
+
               }, 100); // Small delay to ensure proper event timing
             }
 
@@ -163,7 +163,7 @@ const ShoppingProductTile = ({
       >
         {/* Main product image */}
         {image && image.length > 0 ? (
-            <div className="h-[280px] w-full md:h-full md:aspect-[10/16] overflow-hidden">
+          <div className="h-[280px] w-full md:h-full md:aspect-[10/16] overflow-hidden">
             <img
               src={image[0]}
               alt={name}
@@ -215,13 +215,13 @@ const ShoppingProductTile = ({
             disabled={isAddingToCart}
           >
             <ShoppingBag size={18} className={isAddingToCart ? "opacity-20" : ""} />
-          
+
           </button>
           {isAddingToCart && (
-              <span className="text-white absolute inset-0 flex items-center justify-center text-md font-medium">
-                Adding...
-              </span>
-            )}
+            <span className="text-white absolute inset-0 flex items-center justify-center text-md font-medium">
+              Adding...
+            </span>
+          )}
 
           <button
             className="bg-white hover:bg-black hover:text-white text-black p-2 rounded-full shadow-md transition-colors duration-300"
@@ -231,7 +231,7 @@ const ShoppingProductTile = ({
           </button>
         </div>
 
-       
+
       </div>
 
       {/* Product Info */}
@@ -242,8 +242,8 @@ const ShoppingProductTile = ({
         >
           {name}
         </h3>
-       
-      
+
+
 
         <div className="">
           <div className="flex items-center justify-center">
@@ -257,7 +257,7 @@ const ShoppingProductTile = ({
             )}
           </div>
         </div>
-         {product.productCode && (
+        {product.productCode && (
           <p className="text-md text-gray-700 mb-2">Code: {product.productCode.toUpperCase()}</p>
         )}
       </div>

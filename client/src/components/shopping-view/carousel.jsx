@@ -66,26 +66,26 @@ const Carousel = ({ bannersList }) => {
         <img
             src={item.image}
             alt="Banner"
-            className="w-full h-full object-center object-cover md:object-top"
+            className="w-full h-full object-center object-fit md:object-fit"
             loading={index === 0 ? "eager" : "lazy"} // First image loads eagerly
           />
         </div>
 
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-10"></div>
 
           {/* Text Content */}
-          <div className="absolute bottom-16 md:bottom-24 left-4 md:left-16 text-white max-w-2xl">
+          <div className="absolute bottom-16 md:bottom-40 left-4 md:left-16 text-white max-w-2xl">
             <h2 className="w-4/5 md:w-full text-2xl md:text-6xl font-bold leading-snug tracking-wide drop-shadow-md animate-fade-slide-up ">
               {item?.description}
             </h2>
-            <div className="w-[160px] flex items-center justify-center px-4 py-2 border border-white rounded-full 
+            <div className="w-[160px] md:w-[250px] flex items-center justify-center px-4 py-2 border border-white rounded-full 
                 mt-4 group hover:cursor-pointer relative overflow-hidden 
                 bg-white/10 backdrop-blur-lg shadow-lg " onClick={() => navigate(`/shop/collections`)}>
               {/* Gradient Overlay for Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-              <span className="text-xs md:text-sm uppercase tracking-wider font-medium text-white relative z-10 transition-all duration-300 group-hover:tracking-widest">
+              <span className="text-xs md:text-2xl uppercase tracking-wider font-medium text-white relative z-10 transition-all duration-300 group-hover:tracking-widest">
                 Shop Now
               </span>
 

@@ -9,6 +9,7 @@ import logo from "@/assets/main-logo.png";
 import { getTempCartItems, copyTempCartToUser } from "@/utils/tempCartManager";
 import { addToCart } from "@/store/shop/cart-slice";
 import { startCartCopy, completeCartCopy, hasCartCopyCompleted } from "@/utils/cartCopyManager";
+import { setUserData } from "@/utils/metaPixelAdvancedMatching";
 
 const initialState = {
   email: "",
@@ -56,6 +57,21 @@ function AuthLogin() {
     dispatch(loginUser(formData)).then(async (data) => {
       if (data?.payload?.success) {
         const user = data?.payload?.user;
+
+        // Set Meta Pixel advanced matching data on successful login
+        if (user?.email) {
+          setUserData({
+            email: user.email,
+            phone: user.phone || undefined,
+            firstName: user.firstName || undefined,
+            lastName: user.lastName || undefined,
+            city: user.city || undefined,
+            state: user.state || undefined,
+            zipCode: user.zipCode || undefined,
+            country: user.country || 'IN',
+            externalId: user.id
+          });
+        }
 
         // Show initial login success message
         toast({

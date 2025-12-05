@@ -259,7 +259,7 @@ function ShoppingHome() {
 
 
       <div className="flex flex-col min-h-screen">
-        <div className="relative w-full h-[400px] md:h-[700px] mb-0">
+        <div className="relative w-full h-[60vh] md:h-[100vh] mb-0">
           <Carousel bannersList={bannersList} />
         </div>
 
@@ -447,7 +447,7 @@ function ShoppingHome() {
 
 
         {/* Watch and Buy Section - Desktop and Mobile versions */}
-        <section className="">
+        {/* <section className="">
           {hasWatchAndBuyProducts && (
             <>
            
@@ -461,7 +461,7 @@ function ShoppingHome() {
               </div>
             </>
           )}
-        </section>
+        </section> */}
 
         <section className="py-8">
           <Banner

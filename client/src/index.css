@@ -375,7 +375,7 @@ video::-webkit-media-controls {
 
 
 .bg-auth-bg {
-  background-image: url('./assets/login-2.png');
+  background-image: url('./assets/register.jpg');
   background-size: cover;
   background-position: top;
 }

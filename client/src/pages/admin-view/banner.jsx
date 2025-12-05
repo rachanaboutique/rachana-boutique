@@ -60,7 +60,7 @@ function AdminBanners() {
 
   function handleEditBanner(banner) {
     setFormData({
-      description: banner.description,
+      description: banner?.description || "",
     });
     setUploadedImageUrls([banner.image]);
     setOriginalImageUrls([banner.image]);
@@ -68,17 +68,24 @@ function AdminBanners() {
     setOpenCreateBannersDialog(true);
   }
 
+  function buildPayload() {
+    const trimmedDescription = formData.description?.trim();
+    return {
+      image: uploadedImageUrls[0],
+      ...(trimmedDescription ? { description: trimmedDescription } : {}),
+    };
+  }
+
   function onSubmit(event) {
     event.preventDefault();
+
+    const payload = buildPayload();
 
     if (currentEditedId !== null) {
       dispatch(
         editBanner({
           id: currentEditedId,
-          formData: {
-            ...formData,
-            image: uploadedImageUrls[0],
-          },
+          formData: payload,
         })
       ).then((data) => {
         if (data?.payload?.success) {
@@ -88,12 +95,7 @@ function AdminBanners() {
         }
       });
     } else {
-      dispatch(
-        addNewBanner({
-          ...formData,
-          image: uploadedImageUrls[0],
-        })
-      ).then((data) => {
+      dispatch(addNewBanner(payload)).then((data) => {
         if (data?.payload?.success) {
           sheetClosedBySubmitRef.current = true;
           dispatch(fetchAllBanners());
@@ -124,9 +126,14 @@ function AdminBanners() {
   }
 
   function isFormValid() {
-    //check if the image is still uploading
+    // Check if any image is still uploading
     if (imageLoadingStates?.includes(true)) return false;
-    return formData.description !== "";
+
+    // Ensure at least one image is uploaded
+    const hasImage = uploadedImageUrls && uploadedImageUrls.length > 0 && uploadedImageUrls[0];
+    if (!hasImage) return false;
+
+    return true;
   }
 
   useEffect(() => {

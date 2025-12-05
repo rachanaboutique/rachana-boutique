@@ -333,7 +333,7 @@ function ShoppingListing({ categorySlug }) {
             num_items: 1
           });
 
-      
+
         }, 100);
 
         toast({
@@ -381,8 +381,8 @@ function ShoppingListing({ categorySlug }) {
       let currentCartItems = cartItems.items || [];
       const itemIndex = currentCartItems.findIndex(
         (item) => item.productId === productId &&
-                  item.colors &&
-                  item.colors._id === colorId
+          item.colors &&
+          item.colors._id === colorId
       );
 
       if (itemIndex > -1) {
@@ -538,15 +538,15 @@ function ShoppingListing({ categorySlug }) {
           "@type": "Brand",
           "name": "Rachana Boutique"
         },
-        "offers": {
-          "@type": "AggregateOffer",
-          "offerCount": filteredProducts.length,
-          "lowPrice": filteredProducts.length > 0 ? Math.min(...filteredProducts.map(p => p.salePrice > 0 ? p.salePrice : p.price)) : 0,
-          "highPrice": filteredProducts.length > 0 ? Math.max(...filteredProducts.map(p => p.salePrice > 0 ? p.salePrice : p.price)) : 0,
-          "priceCurrency": "INR",
-          "itemCondition": "https://schema.org/NewCondition",
-          "availability": filteredProducts.length > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder"
-        }
+        // "offers": {
+        //   "@type": "AggregateOffer",
+        //   "offerCount": filteredProducts.length,
+        //   "lowPrice": filteredProducts.length > 0 ? Math.min(...filteredProducts.map(p => p.salePrice > 0 ? p.salePrice : p.price)) : 0,
+        //   "highPrice": filteredProducts.length > 0 ? Math.max(...filteredProducts.map(p => p.salePrice > 0 ? p.salePrice : p.price)) : 0,
+        //   "priceCurrency": "INR",
+        //   "itemCondition": "https://schema.org/NewCondition",
+        //   "availability": filteredProducts.length > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder"
+        // }
       };
     }
 
@@ -558,11 +558,11 @@ function ShoppingListing({ categorySlug }) {
   const isInitialLoading = (productsLoading && productList.length === 0) || (categoriesLoading && categoriesList.length === 0);
 
   if (isInitialLoading) return (
-<div className="flex items-center justify-center h-screen w-screen bg-white">
-  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-</div>
+    <div className="flex items-center justify-center h-screen w-screen bg-white">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+    </div>
 
-);
+  );
 
   return (
     <>
@@ -776,24 +776,24 @@ function ShoppingListing({ categorySlug }) {
 
               {/* Products Grid - Using Original ShoppingProductTile */}
               {productsLoading ? (
-  //               <div
-  //   style={{
-  //     display: "flex",
-  //     justifyContent: "center",
-  //     alignItems: "center",
-  //     height: "90vh",
-  //     color: "#333333",
-  //     fontSize: 24,
-  //     fontWeight: 600,
-  //     letterSpacing: 1,
-  //     textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
-  //   }}
-  // >
-  //   Loading...
-  // </div>
-  <div className="flex items-center justify-center h-screen w-screen bg-white">
-  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-</div>
+                //               <div
+                //   style={{
+                //     display: "flex",
+                //     justifyContent: "center",
+                //     alignItems: "center",
+                //     height: "90vh",
+                //     color: "#333333",
+                //     fontSize: 24,
+                //     fontWeight: 600,
+                //     letterSpacing: 1,
+                //     textShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
+                //   }}
+                // >
+                //   Loading...
+                // </div>
+                <div className="flex items-center justify-center h-screen w-screen bg-white">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                </div>
 
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -811,15 +811,15 @@ function ShoppingListing({ categorySlug }) {
               {/* Collection Description Section - Always visible */}
               <div className="mb-12 mt-8 p-6 bg-gray-50 rounded-lg">
                 <h2 className="text-2xl text-3xl font-semibold mb-4">
-                  {currentCategory ? 
-                    `About Our ${currentCategory.name}${currentCategory.name.toLowerCase().includes('collection') ? '' : ' Collection'}` : 
+                  {currentCategory ?
+                    `About Our ${currentCategory.name}${currentCategory.name.toLowerCase().includes('collection') ? '' : ' Collection'}` :
                     ''
                   }
                 </h2>
                 <div className="prose max-w-none">
-                  {currentCategory  &&
-                      <p className="text-md md:text-lg mb-4">{getCategoryDescription || ""}</p>
-                     }
+                  {currentCategory &&
+                    <p className="text-md md:text-lg mb-4">{getCategoryDescription || ""}</p>
+                  }
                 </div>
               </div>
 

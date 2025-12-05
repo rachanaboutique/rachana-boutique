@@ -48,6 +48,7 @@ import { startCartCopy, completeCartCopy, hasCartCopyCompleted, resetCartCopySta
 // Import Meta Pixel verification in development mode
 // Replaced dynamic import with static import for better iOS Safari compatibility
 import { verifyPixelInstallation } from "./utils/metaPixelVerification.js";
+import { restoreUserDataOnPageLoad, clearUserData, setUserData } from "./utils/metaPixelAdvancedMatching";
 
 
 
@@ -67,6 +68,32 @@ function App() {
       }
     }
   }, []);
+
+  // Restore Meta Pixel user data on page load
+  useEffect(() => {
+    restoreUserDataOnPageLoad();
+  }, []);
+
+  // Update Meta Pixel user data when authentication state changes
+  useEffect(() => {
+    if (isAuthenticated && user?.email) {
+      // Set user data when authenticated
+      setUserData({
+        email: user.email,
+        phone: user.phone || undefined,
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        city: user.city || undefined,
+        state: user.state || undefined,
+        zipCode: user.zipCode || undefined,
+        country: user.country || 'IN',
+        externalId: user.id
+      });
+    } else if (!isAuthenticated && !isLoading) {
+      // Clear user data when logged out
+      clearUserData();
+    }
+  }, [isAuthenticated, user, isLoading]);
 
   // Prevent context menu on all video elements
   useLayoutEffect(() => {

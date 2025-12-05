@@ -111,14 +111,18 @@
     }(window, document, 'script',
       'https://connect.facebook.net/en_US/fbevents.js');
 
-    // Initialize Meta Pixel with advanced matching
+    // Initialize Meta Pixel with manual advanced matching
+    // Note: User data will be set dynamically via setUserData() function
     fbq('init', '2456284341419492', {
-      em: 'auto', // Enable automatic advanced matching
+      em: 'auto', // Enable automatic advanced matching for form fields
       external_id: 'auto'
     });
 
     // Track initial PageView
     fbq('track', 'PageView');
+
+    // Store reference for manual advanced matching
+    window.metaPixelReady = true;
   </script>
 
 

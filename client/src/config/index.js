@@ -134,7 +134,7 @@ export const addBannerFormElements = [
     label: "Description",
     name: "description",
     componentType: "textarea",
-    placeholder: "Enter banner description",
+    placeholder: "Enter banner description (optional)",
   },
 
 ]
