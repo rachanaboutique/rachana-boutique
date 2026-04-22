@@ -495,13 +495,20 @@ const deleteProduct = async (req, res) => {
 
     // Attempt to delete associated Cloudinary images (best-effort)
     try {
-      const urls = Array.isArray(product.image) ? product.image : (product.image ? [product.image] : []);
-      const publicIds = urls.map(extractPublicIdFromUrl).filter(Boolean);
+      const mainImages = Array.isArray(product.image) ? product.image : (product.image ? [product.image] : []);
+      // Also collect images from the colors array
+      const colorImages = Array.isArray(product.colors) 
+        ? product.colors.map(color => color.image).filter(Boolean)
+        : [];
+      
+      const allUrls = [...mainImages, ...colorImages];
+      const publicIds = allUrls.map(extractPublicIdFromUrl).filter(Boolean);
+      
       if (publicIds.length > 0) {
         await cloudinary.api.delete_resources(publicIds, { resource_type: 'image' });
       }
     } catch (cloudErr) {
-      console.warn('Cloudinary image cleanup failed:', cloudErr?.message || cloudErr);
+      console.warn('Cloudinary image cleanup failed (including color images):', cloudErr?.message || cloudErr);
       // continue; product is already deleted in DB
     }
 

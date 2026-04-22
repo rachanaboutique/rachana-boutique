@@ -515,21 +515,24 @@ function ProductImageUpload({
                         <GripIcon className="w-4 h-4" />
                       </div>
                     )}
-                    {/* Keep the X button visible; disable during upload or delete */}
                     <button
                       type="button"
-                      className={`p-2 rounded-md bg-gray-100 absolute top-0 right-0 text-muted-foreground hover:bg-foreground hover:text-background ${
+                      className={`p-2 rounded-md bg-gray-100 absolute top-0 right-0 text-muted-foreground hover:bg-foreground hover:text-background grid place-items-center ${
                         (isUploading || isLoading || deletingMap[index]) ? 'opacity-60 cursor-not-allowed' : ''
                       }`}
                       onClick={() => handleRemoveImage(index)}
                       disabled={isUploading || isLoading || deletingMap[index]}
                     >
-                      <XIcon className="w-4 h-4" />
+                      {deletingMap[index] ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <XIcon className="w-4 h-4" />
+                      )}
                       <span className="sr-only">Remove Image</span>
                     </button>
 
-                    {/* Show spinner only for uploads (not for delete) */}
-                    {isLoading && (
+                    {/* Show loading overlay for uploads */}
+                    {isLoading && !deletingMap[index] && (
                       <div className="absolute top-0 right-0 p-2 rounded-md bg-gray-100">
                         <Loader2 className="w-4 h-4 animate-spin" />
                       </div>

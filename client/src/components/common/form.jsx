@@ -12,7 +12,7 @@ import {
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, XIcon } from "lucide-react";
 import { getOptimizedImageUrl, getOptimizedVideoUrl } from "../../lib/utils";
 import { optimizeImageForUpload, isValidImageFile, isValidFileSize } from "../../lib/imageOptimization";
 import { searchCitiesByState } from "@/utils/locationUtils";
@@ -37,14 +37,59 @@ function CommonForm({
   cityOptions = [],
   isLoadingStates = false,
   isLoadingCities = false,
+  isLoading = false,
   formErrors = {}
 }) {
   const [passwordVisibility, setPasswordVisibility] = useState({});
   // Track upload status for color items (by index) and video upload status.
   const [colorsUploadStatus, setColorsUploadStatus] = useState({});
+  const [colorsDeleteStatus, setColorsDeleteStatus] = useState({});
   const [videoUploadStatus, setVideoUploadStatus] = useState("idle"); // idle, uploading, uploaded, error
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState("");
+
+  const backendBaseUrl = import.meta.env.VITE_BACKEND_URL;
+
+  // Helper function to delete image from Cloudinary
+  const deleteCloudinaryImage = async (url) => {
+    try {
+      if (!url || typeof url !== 'string') return;
+      if (!/res\.cloudinary\.com/.test(url)) return; // only cloudinary urls
+      await axios.post(`${backendBaseUrl}/admin/products/delete-cloudinary-assets`, {
+        urls: [url],
+        resourceType: 'image',
+      });
+    } catch (err) {
+      console.warn('Failed to delete color image from Cloudinary:', err?.response?.data || err?.message || err);
+    }
+  };
+
+  // Helper to handle color image removal with deletion
+  const handleRemoveColorImage = async (idx, controlItem) => {
+    const colorsArray = Array.isArray(formData[controlItem.name]) ? formData[controlItem.name] : [];
+    const colorToRemove = colorsArray[idx];
+
+    if (colorToRemove?.image) {
+      setColorsDeleteStatus(prev => ({ ...prev, [idx]: true }));
+      try {
+        await deleteCloudinaryImage(colorToRemove.image);
+      } finally {
+        setColorsDeleteStatus(prev => {
+          const copy = { ...prev };
+          delete copy[idx];
+          return copy;
+        });
+      }
+    }
+
+    const updatedColors = colorsArray.filter((_, index) => index !== idx);
+    setFormData({ ...formData, [controlItem.name]: updatedColors });
+    setColorsUploadStatus((prevStatus) => {
+      const newStatus = { ...prevStatus };
+      delete newStatus[idx];
+      return newStatus;
+    });
+  };
 
   // City autocomplete state
   const [citySuggestions, setCitySuggestions] = useState([]);
@@ -468,10 +513,11 @@ const uploadVideo = async (file) => {
         case "colors": {
           const colorsArray = Array.isArray(value) ? value : [];
           element = (
-            <div>
+            <div className="flex flex-col gap-3 mt-1">
               {colorsArray.map((color, idx) => (
-                <div key={idx} className="flex flex-col gap-2 mb-2 border p-2 rounded">
-                  <div className="flex gap-2 items-center">
+                <div key={idx} className="flex flex-col gap-2 p-3 border rounded-lg bg-white shadow-sm relative group">
+                  <div className="flex gap-2 items-start pr-10">
+                    <div className="flex-1 grid gap-2">
                     <Input
                       placeholder="Color Title"
                       value={color.title || ""}
@@ -483,6 +529,7 @@ const uploadVideo = async (file) => {
                           [controlItem.name]: updatedColors,
                         });
                       }}
+                      className="h-9"
                     />
                     <Input
                       placeholder="Inventory"
@@ -497,61 +544,79 @@ const uploadVideo = async (file) => {
                           [controlItem.name]: updatedColors,
                         });
                       }}
-                      className="w-24"
+                      className="h-9 w-full"
                     />
-                    {color.image && (
-                      <img
-                        src={color.image}
-                        alt={`Color ${idx}`}
-                        className="w-16 h-16 object-cover rounded border"
-                      />
-                    )}
-                    {!color.image && colorsUploadStatus[idx] !== "uploading" && (
-                      <Input
-                        type="file"
-                        accept="image/*,.heic,.heif"
-                        onChange={async (event) => {
-                          const file = event.target.files[0];
-                          if (file) {
-                            await uploadColorImage(file, idx, controlItem);
-                          }
-                        }}
-                      />
-                    )}
+                    </div>
+                    <div className="relative">
+                      {color.image ? (
+                        <div className="relative h-20 w-20 border rounded-md overflow-hidden bg-gray-50 flex items-center justify-center">
+                          <img
+                            src={color.image}
+                            alt={`Color ${idx}`}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative h-20 w-20 border-2 border-dashed rounded-md bg-gray-50 flex items-center justify-center overflow-hidden">
+                          {colorsUploadStatus[idx] === "uploading" ? (
+                            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                          ) : (
+                            <Label className="cursor-pointer flex flex-col items-center justify-center text-[10px] text-gray-500 w-full h-full p-1 text-center">
+                              <span className="mb-1 text-base">+</span>
+                              <span>Image</span>
+                              <Input
+                                type="file"
+                                accept="image/*,.heic,.heif"
+                                className="hidden"
+                                onChange={async (event) => {
+                                  const file = event.target.files[0];
+                                  if (file) {
+                                    await uploadColorImage(file, idx, controlItem);
+                                  }
+                                }}
+                              />
+                            </Label>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Remove Button (X icon) */}
+                  <button
+                    type="button"
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full hover:text-red-500 text-gray-500 transition-colors shadow-sm grid place-items-center p-0 border-none outline-none disabled:opacity-50"
+                    onClick={() => handleRemoveColorImage(idx, controlItem)}
+                    disabled={colorsDeleteStatus[idx]}
+                  >
+                    {colorsDeleteStatus[idx] ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <XIcon className="mt-4 h-4 w-4" />
+                    )}
+                  </button>
+
                   <div className="flex items-center gap-2">
-                    <span className="text-sm">
-                      {colorsUploadStatus[idx] === "uploading" && "Uploading..."}
-                      {colorsUploadStatus[idx] === "uploaded" && "Uploaded"}
+                    <span className="text-[10px] font-medium uppercase tracking-wider">
+                      {colorsUploadStatus[idx] === "uploading" && <span className="text-blue-500">Uploading...</span>}
+                      {colorsUploadStatus[idx] === "uploaded" && <span className="text-green-500">Uploaded</span>}
                       {colorsUploadStatus[idx] === "error" && (
-                        <span className="text-red-600">Upload failed (check file format/size)</span>
+                        <span className="text-red-500">Failed (Check Size)</span>
                       )}
                     </span>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        const updatedColors = colorsArray.filter((_, index) => index !== idx);
-                        setFormData({ ...formData, [controlItem.name]: updatedColors });
-                        setColorsUploadStatus((prevStatus) => {
-                          const newStatus = { ...prevStatus };
-                          delete newStatus[idx];
-                          return newStatus;
-                        });
-                      }}
-                    >
-                      Remove
-                    </Button>
                   </div>
                 </div>
               ))}
               <Button
                 type="button"
+                variant="outline"
+                className="w-full border-dashed"
                 onClick={() => {
                   const updatedColors = [...colorsArray, { title: "", image: "" }];
                   setFormData({ ...formData, [controlItem.name]: updatedColors });
                 }}
               >
-                Add New Color
+                + Add New Color
               </Button>
             </div>
           );
@@ -634,23 +699,34 @@ const uploadVideo = async (file) => {
   };
 
   // Determine if button should be disabled
-  const shouldDisableButton = isBtnDisabled || isVideoUploadRequired() || videoUploadStatus === "uploading";
+  const shouldDisableButton = isBtnDisabled || isVideoUploadRequired() || videoUploadStatus === "uploading" || isLoading;
+
+  // Determine button text
+  const getButtonText = () => {
+    if (isLoading) {
+      if (buttonText === "Edit") return "Editing...";
+      if (buttonText === "Add") return "Adding...";
+      return "Submitting...";
+    }
+    return buttonText || "Submit";
+  };
 
   return (
     <form onSubmit={onSubmit}>
       <div className="flex flex-col gap-3">
         {formControls.map((controlItem) => (
           <div className="grid w-full gap-1.5" key={controlItem.name}>
-            <Label className="mb-1">{controlItem.label}</Label>
+            <Label className="mb-1 text-sm font-semibold">{controlItem.label}</Label>
             {renderInputsByComponentType(controlItem)}
             {formErrors[controlItem.name] && (
-              <span className="text-red-500 text-sm">{formErrors[controlItem.name]}</span>
+              <span className="text-red-500 text-xs">{formErrors[controlItem.name]}</span>
             )}
           </div>
         ))}
       </div>
-      <Button disabled={shouldDisableButton} type="submit" className="mt-2 w-full hover:bg-accent">
-        {buttonText || "Submit"}
+      <Button disabled={shouldDisableButton} type="submit" className="mt-4 w-full h-11 flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-xs transition-all active:scale-[0.98]">
+        {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {getButtonText()}
       </Button>
     </form>
   );

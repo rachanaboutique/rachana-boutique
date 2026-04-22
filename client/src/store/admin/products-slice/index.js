@@ -91,6 +91,36 @@ const AdminProductsSlice = createSlice({
       .addCase(fetchAllProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
+      })
+      // Handle addNewProduct lifecycle
+      .addCase(addNewProduct.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addNewProduct.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(addNewProduct.rejected, (state) => {
+        state.isLoading = false;
+      })
+      // Handle editProduct lifecycle
+      .addCase(editProduct.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(editProduct.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(editProduct.rejected, (state) => {
+        state.isLoading = false;
+      })
+      // Handle deleteProduct lifecycle
+      .addCase(deleteProduct.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteProduct.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(deleteProduct.rejected, (state) => {
+        state.isLoading = false;
       });
   },
 });

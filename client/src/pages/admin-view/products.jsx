@@ -464,6 +464,7 @@ function AdminProducts() {
               buttonText={currentEditedId !== null ? "Edit" : "Add"}
               formControls={dynamicAddProductFormElements}
               isBtnDisabled={!isFormValid()}
+              isLoading={isLoading}
             />
           </div>
         </SheetContent>
