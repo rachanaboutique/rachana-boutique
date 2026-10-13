@@ -59,9 +59,13 @@ app.use(
         "http://localhost:5173", 
         "https://rachana-boutique-chennai.web.app", 
         "https://rachanaboutique.in",
+        "https://www.rachanaboutique.in",
+        "https://rachana-boutique-frontend.vercel.app",
       ];
+      // Normalize origin by stripping any trailing slash
+      const cleanOrigin = origin ? origin.replace(/\/$/, "") : origin;
       // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      if (!cleanOrigin || allowedOrigins.indexOf(cleanOrigin) !== -1 || (cleanOrigin && cleanOrigin.endsWith(".vercel.app"))) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

@@ -1,5 +1,6 @@
 .qodo*
 history.sqlite*
 .qodo
+.vercel
 
 
